@@ -12,17 +12,17 @@ Haskell or another ML-like language before.
 
 This is a simple Core program that evaluates to 6:
 ```haskell
-main = addTwo 4
+main = addTwo 4 ;
 addTwo n = n + 2
 ```
 
 This is a more complex program showcasing all of Core's features:
 ```haskell
 main = let f = g Pack{1,0}
-        in f 4
+        in f 4 ;
 -- Lines starting like this are comments
 g a b = case a of
-          <1> -> b + 1
+          <1> -> b + 1 ;
           <2> -> b + 2
 ```
 
@@ -46,7 +46,7 @@ where `arg1 ... argN` are bound in `functionBody`.
 
 Values can be defined similarly, resembling nullary functions.
 ```haskell
-five = 5
+five = 5 ;
 seven = five + 2
 ```
 
@@ -57,7 +57,7 @@ entrypoint of the program.
 
 `let` statements allow defining values in a local scope.
 ```haskell
-f = let a = 4
+f = let a = 4 ;
         double x = x + x
      in double a
 ```
@@ -95,8 +95,8 @@ data Colour = Red | Green | Blue
 ```
 can be represented as
 ```haskell
-Red = Pack{1,0}
-Green = Pack{2,0}
+Red = Pack{1,0} ;
+Green = Pack{2,0} ;
 Blue = Pack{3,0}
 ```
 
@@ -108,7 +108,7 @@ data Tree
 ```
 translates to
 ```haskell
-Leaf = Pack{1,1}
+Leaf = Pack{1,1} ;
 Branch = Pack{2,2}
 ```
 
@@ -161,6 +161,93 @@ Integer negation is performed via the primitive function `negate`.
 [^3]: Compiling more expressive pattern matching into case expressions is a well studied
   problem and there are established algorithms for doing so. For more information on this,
   see Chapter 5 of [The Implementation of Functional Programming Languages][book].
+
+# Modelling the language
+
+Each implementation of the compiler will take as input a representation of a Core program,
+so we need to define what that is. Everything else will be built around this type.
+
+```haskell
+data Expr a
+  = EVar Name            -- variables
+  | ENum Int             -- numbers
+  | EConstr              -- constructor
+            Int          --   tag
+            Int          --   arity
+  | EAp (Expr a)         -- applications
+        (Expr a)
+  | ELet                 -- let(rec) expressions
+         Recursive       --   recursive (letrec) or nonrecursive (let)
+         [(a, Expr a)]   --   definitions
+         (Expr a)        --   body
+  | ECase                -- case expressions
+          (Expr a)       --   expression to scrutinise
+          [Alter a]      --   alternatives
+  deriving (Show)
+
+data Recursive = Recursive | NonRecursive
+
+-- We may change this to Text or ShortText later on, for greater performance
+type Name = String
+```
+
+`Expr` describes an expression in the Core language. It is parameterised over the type of
+its _binders_ - a binder is a name given to a variable on the left hand side of a
+`let(rec)` expression or function definition. This will allow us to model variable binding
+more sophisticatedly in later parts without changing the definition of `Expr`. For now we
+can make do with simple binders, so we define a type synonym for convenience.
+```haskell
+type CoreExpr = Expr Name
+```
+
+Function application is modelled by the `EAp` constructor. Applications of more than one
+argument are transformed into nested `EAp` nodes.
+```haskell
+f 1 2
+-- becomes
+EAp (EAp (EVar "f") (ENum 1)) (ENum 2)
+```
+
+Case expressions consist of a scrutinee and a list of alternatives, modelled by `Alter`,
+which is a tuple of the constructor tag, the constructor arguments and the result
+expression.
+```haskell
+type Alter a = (Int, [a], Expr a)
+--               0    1    2
+
+--            case s of
+--              [0] [1]   [2]
+--              <1> x y -> e
+```
+
+A _supercombinator_ is a function with no free variables - in Core all global definitions
+are supercombinators.
+```haskell
+type ScDefn a = (Name, [a], Expr a)
+```
+
+A Core program is a collection of supercombinator definitions, one of which is called
+"main".
+```haskell
+type Program a = [ScDefn a]
+type CoreProgram = Program Name
+```
+
+We can now define a complete Core program, as an example.
+```haskell
+-- main = double 21 ;
+-- double x = x + x
+exampleProgram :: CoreProgram
+exampleProgram
+  = [
+      ("main", [], EAp (EVar "double") (ENUm 21))
+    , ("double", ["x"], EAp (EAp (EVar "+") (EVar "x")) (EVar "x"))
+    ]
+```
+
+# Pretty Printing
+
+# Parsing
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
 [book]: https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/
