@@ -22,12 +22,12 @@ main =
     match "index.html" $ do
         route idRoute
         compile $ do
-            posts <- loadAll "posts/*"
-            let indexContext =
-                    listField "posts" defaultContext (pure posts) <>
-                    defaultContext
+          posts <- recentFirst =<< loadAll "posts/*"
+          let indexContext =
+                  listField "posts" defaultContext (pure posts) <>
+                  defaultContext
 
-            getResourceBody
-                >>= applyAsTemplate indexContext
-                >>= loadAndApplyTemplate "templates/default.html" indexContext
-                >>= relativizeUrls
+          getResourceBody
+              >>= applyAsTemplate indexContext
+              >>= loadAndApplyTemplate "templates/default.html" indexContext
+              >>= relativizeUrls
