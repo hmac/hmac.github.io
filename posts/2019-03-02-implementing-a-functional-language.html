@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/syntax.css" />
+  </head>
+  <body>
+    <style>
+      body {
+        max-width: 600px;
+        font-family: Palatino,Times New Roman,serif;
+        margin: 0px auto 0px auto;
+        font-size: 16px;
+      }
+      ol#post-list {
+        list-style-type: none
+      }
+      #header {
+        border-bottom: 1px solid black;
+        padding: 10px 0px 10px 0px;
+      }
+      #header #site {
+        font-family: monospace;
+        text-align: right
+      }
+      #header #name {
+        float: left
+      }
+      pre {
+      }
+    </style>
+    <div id="header">
+      <h2 id="name">Harry Maclean</h2>
+      <h2 id="site">hmac.dev</h2>
+    </div>
+    <h1 id="implementing-a-functional-language">Implementing A Functional Language</h1>
+<p>This is the first in a series of posts on implementing a simple functional language. What we’ll focus on is the evaluation step: how code is executed on the processor. A typical functional language compiler goes through the following steps to turn the code you write into a binary you run:</p>
+<pre><code>               PARSE  TYPECHECK  DESUGAR      COMPILE            CODEGEN
+[your code] -&gt; [ast] -&gt; [ast] -&gt; [core] -&gt; [abstract IR] -&gt; [backend language]</code></pre>
+<p>We will look at the transformation from <code>[core]</code> to <code>[abstract IR]</code>. In Haskell, this corresponds to the transformation from GHC Core to STG. This process is interesting because it is here that we define <em>how the program is evaluated</em>. We will look at several different designs for compilers, of increasing complexity, and consider problems such as laziness, sharing, garbage collection, strictness analysis and parallel evaluation.</p>
+<p>This series is heavily based on a fantastic book of the same name written by Simon Peyton Jones and David Lester in 2000. All credit goes to them for the content: I’ve simply altered the presentation and updated it slightly. There are a number of additional differences:</p>
+<ul>
+<li>The book uses Miranda as its implementation language, whereas we will use Haskell.</li>
+<li>Some time is spent in the book on introducing parser combinators and pretty printing, whereas we will not focus on these them. Parsing and pretty printing are topics in their own right, and there are better introductions to them elsewhere.</li>
+<li>No external libraries are used in the book, whereas we will use a few common ones in the interest of brevity.</li>
+<li>We will spend time on building a framework for visualising the evaluation process, as I think that makes it easier to understand how the compiler works.</li>
+</ul>
+<p>The book is freely available in PDF form <a href="https://www.microsoft.com/en-us/research/publication/implementing-functional-languages-a-tutorial/">here</a>. There’s also a broader overview of this area (again by Simon Peyton Jones) available <a href="https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/">here</a>. I highly recommend both of them.</p>
+<h2 id="structure">Structure</h2>
+<p>The structure of this series is as follows. However this is a work in progress, so I may change things as I complete each section.</p>
+<ol type="1">
+<li><a href="2019-03-03-the-core-language.html">The Core Language</a></li>
+<li>Template Instantiation</li>
+<li>The G-machine</li>
+<li>The Three Instruction Machine</li>
+<li>The Parallel G-machine</li>
+<li>Lambda Lifting</li>
+<li>The Spineless Tagless G-machine</li>
+</ol>
+  </body>
+</html>

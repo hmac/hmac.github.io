@@ -1,10 +1,52 @@
-<div>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="./css/syntax.css" />
+  </head>
+  <body>
+    <style>
+      body {
+        max-width: 600px;
+        font-family: Palatino,Times New Roman,serif;
+        margin: 0px auto 0px auto;
+        font-size: 16px;
+      }
+      ol#post-list {
+        list-style-type: none
+      }
+      #header {
+        border-bottom: 1px solid black;
+        padding: 10px 0px 10px 0px;
+      }
+      #header #site {
+        font-family: monospace;
+        text-align: right
+      }
+      #header #name {
+        float: left
+      }
+      pre {
+      }
+    </style>
+    <div id="header">
+      <h2 id="name">Harry Maclean</h2>
+      <h2 id="site">hmac.dev</h2>
+    </div>
+    <div>
   <h1>Recent posts</h1>
   <ol id="post-list">
-    $for(posts)$
+    
       <li>
-        <a href="$url$">$title$</a>
+        <a href="./posts/2019-03-02-implementing-a-functional-language.html">Implementing A Functional Language</a>
       </li>
-    $endfor$
+    
+      <li>
+        <a href="./posts/2019-03-03-the-core-language.html">Implementing A Functional Language Part I: The Core Language</a>
+      </li>
+    
   </ol>
 </div>
+
+  </body>
+</html>

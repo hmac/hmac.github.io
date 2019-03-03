@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/syntax.css" />
+  </head>
+  <body>
+    <style>
+      body {
+        max-width: 600px;
+        font-family: Palatino,Times New Roman,serif;
+        margin: 0px auto 0px auto;
+        font-size: 16px;
+      }
+      ol#post-list {
+        list-style-type: none
+      }
+      #header {
+        border-bottom: 1px solid black;
+        padding: 10px 0px 10px 0px;
+      }
+      #header #site {
+        font-family: monospace;
+        text-align: right
+      }
+      #header #name {
+        float: left
+      }
+      pre {
+      }
+    </style>
+    <div id="header">
+      <h2 id="name">Harry Maclean</h2>
+      <h2 id="site">hmac.dev</h2>
+    </div>
+    <p>This is part 1 of a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>.</p>
+<h1 id="the-core-language">The Core Language</h1>
+<p>Let’s look at the language we’re going to compile. It should look familiar if you’ve used Haskell or another ML-like language before.</p>
+<p>This is a simple Core program that evaluates to 6:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1">main <span class="fu">=</span> addTwo <span class="dv">4</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">addTwo n <span class="fu">=</span> n <span class="fu">+</span> <span class="dv">2</span></a></code></pre></div>
+<p>This is a more complex program showcasing all of Core’s features:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1">main <span class="fu">=</span> <span class="kw">let</span> f <span class="fu">=</span> g <span class="dt">Pack</span>{<span class="dv">1</span>,<span class="dv">0</span>}</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">        <span class="kw">in</span> f <span class="dv">4</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co">-- Lines starting like this are comments</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">g a b <span class="fu">=</span> <span class="kw">case</span> a <span class="kw">of</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">          <span class="fu">&lt;</span><span class="dv">1</span><span class="fu">&gt;</span> <span class="ot">-&gt;</span> b <span class="fu">+</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">          <span class="fu">&lt;</span><span class="dv">2</span><span class="fu">&gt;</span> <span class="ot">-&gt;</span> b <span class="fu">+</span> <span class="dv">2</span></a></code></pre></div>
+<p>We’ll briefly describe each in turn.</p>
+<h2 id="expressions-and-application">Expressions and application</h2>
+<p>All valid constructs are expressions - they evaluate to a result. Functions are applied to arguments via juxtaposition: <code>f 1 2</code>. A Core program consists of a series of <em>definitions</em>. Definitions are delineated by a semicolon <code>;</code>. Semicolons are also used where necessary in other constructs. You’ll see examples of this as we go on.</p>
+<h2 id="global-definitions">Global definitions</h2>
+<p>Functions can be defined at the global level, like <code>g</code> in the example above. The syntax is the same as any ML-like language.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1">functionName arg1 <span class="fu">...</span> argN <span class="fu">=</span> functionBody</a></code></pre></div>
+<p>where <code>arg1 ... argN</code> are bound in <code>functionBody</code>.</p>
+<p>Values can be defined similarly, resembling nullary functions.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1">five <span class="fu">=</span> <span class="dv">5</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">seven <span class="fu">=</span> five <span class="fu">+</span> <span class="dv">2</span></a></code></pre></div>
+<p>A valid Core program must have a nullary top level definition called <code>main</code>. This is the entrypoint of the program.</p>
+<h2 id="local-definitions">Local definitions</h2>
+<p><code>let</code> statements allow defining values in a local scope.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1">f <span class="fu">=</span> <span class="kw">let</span> a <span class="fu">=</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">        double x <span class="fu">=</span> x <span class="fu">+</span> x</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">     <span class="kw">in</span> double a</a></code></pre></div>
+<p><code>letrec</code> statements are similar, but allow recursive definitions. We make the distinction between the two because non-recursive <code>let</code>s are often easier to implement and we can take an approach that leads to more performant code than the recursive case<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
+<h2 id="data-types">Data Types</h2>
+<p>In Haskell, a data type might be defined as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Colour</span> <span class="fu">=</span> <span class="dt">Red</span> <span class="fu">|</span> <span class="dt">Green</span> <span class="fu">|</span> <span class="dt">Blue</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="kw">data</span> <span class="dt">Coord</span> <span class="fu">=</span> <span class="dt">MkCoord</span> <span class="dt">Int</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="kw">data</span> <span class="dt">Tree</span> a</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">  <span class="fu">=</span> <span class="dt">Leaf</span> a</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">  <span class="fu">|</span> <span class="dt">Branch</span> (<span class="dt">Tree</span> a)</a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">           (<span class="dt">Tree</span> a)</a></code></pre></div>
+<p>The first case defines a type with three distinct nullary constructors. The second case defines a type with a single constructor taking two arguments. The third case combines these two, and is also parameterised over an abstract type <code>a</code>.</p>
+<p>In Core we assume that typechecking has already happened, and so we don’t need to distinguish between constructors of different types. The constructor names are also not important<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. Core doesn’t support polymorphism, so type parameters don’t need to be considered. As such, we can simplify data type declaration. In Core, all type constructors take the form <code>Pack{t,n}</code> where <code>t</code> is the <em>tag</em> of the constructor and <code>n</code> is the <em>arity</em> of the constructor. The tag is an integer starting at 1 and distinguishes between constructors of the same type. The arity of a consntructor is the number of arguments it takes. For example,</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Colour</span> <span class="fu">=</span> <span class="dt">Red</span> <span class="fu">|</span> <span class="dt">Green</span> <span class="fu">|</span> <span class="dt">Blue</span></a></code></pre></div>
+<p>can be represented as</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="dt">Red</span> <span class="fu">=</span> <span class="dt">Pack</span>{<span class="dv">1</span>,<span class="dv">0</span>}</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="dt">Green</span> <span class="fu">=</span> <span class="dt">Pack</span>{<span class="dv">2</span>,<span class="dv">0</span>}</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="dt">Blue</span> <span class="fu">=</span> <span class="dt">Pack</span>{<span class="dv">3</span>,<span class="dv">0</span>}</a></code></pre></div>
+<p>Similarly,</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Tree</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">  <span class="fu">=</span> <span class="dt">Leaf</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">  <span class="fu">|</span> <span class="dt">Branch</span> <span class="dt">Tree</span> <span class="dt">Tree</span></a></code></pre></div>
+<p>translates to</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="dt">Leaf</span> <span class="fu">=</span> <span class="dt">Pack</span>{<span class="dv">1</span>,<span class="dv">1</span>}</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="dt">Branch</span> <span class="fu">=</span> <span class="dt">Pack</span>{<span class="dv">2</span>,<span class="dv">2</span>}</a></code></pre></div>
+<h2 id="case-expressions">Case expressions</h2>
+<p>We construct data with <code>Pack</code>, and deconstruct it with <code>case</code>. This is the only way to inspect data in Core, and subsumes all forms of pattern matching in the higher level language (e.g. multiple function definitions)<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>. Case expressions look like this:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1">isLeaf tree <span class="fu">=</span> <span class="kw">case</span> tree <span class="kw">of</span></a>
+<a class="sourceLine" id="cb11-2" data-line-number="2">  <span class="fu">&lt;</span><span class="dv">1</span><span class="fu">&gt;</span> v <span class="ot">-&gt;</span> <span class="dt">True</span> ;</a>
+<a class="sourceLine" id="cb11-3" data-line-number="3">  <span class="fu">&lt;</span><span class="dv">2</span><span class="fu">&gt;</span> t1 t2 <span class="ot">-&gt;</span> <span class="dt">False</span></a></code></pre></div>
+<p>A <code>case</code> expression consists of a <em>scrutinee</em> (<code>tree</code> in the example) followed by one or more <em>alternatives</em> separated by a semicolon. Alternatives take the form <code>&lt;t&gt; x1 ... xn -&gt; e</code> where <code>t</code> is the tag of the constructor and <code>x1 ... xn</code> are the arguments to the constructor. The number of arguments must match the arity of the constructor. If the tag of the constructor on the scrutinee matches the tag on the alternative, the whole case expression evaluates to <code>e</code>. Every constructor must have a matching alternative - the behaviour when a scrutinee’s tag has no corresponding alternative is not defined (our program will probably just crash).</p>
+<h2 id="built-in-primitives">Built-in primitives</h2>
+<p>Core has built in support for integers, and a small set of arithmetic and boolean operations defined as binary functions. The representation of Booleans themselves will vary between implementations - often we will map them to the integers 0 and 1.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Operation</th>
+<th style="text-align: right;">Symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Addition</td>
+<td style="text-align: right;"><code>+</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Subtraction</td>
+<td style="text-align: right;"><code>-</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Multiplication</td>
+<td style="text-align: right;"><code>*</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Division</td>
+<td style="text-align: right;"><code>/</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Equality</td>
+<td style="text-align: right;"><code>==</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Greater than</td>
+<td style="text-align: right;"><code>&gt;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Greater than or equal to</td>
+<td style="text-align: right;"><code>&gt;=</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Less than</td>
+<td style="text-align: right;"><code>&lt;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Less than or equal to</td>
+<td style="text-align: right;"><code>&lt;=</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">And</td>
+<td style="text-align: right;"><code>&amp;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Or</td>
+<td style="text-align: right;"><code>|</code></td>
+</tr>
+</tbody>
+</table>
+<p>Integer negation is performed via the primitive function <code>negate</code>.</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The higher-level source language might have a single unified <code>let</code> construct, with an analysis phase to determine which cases must be converted to <code>letrec</code> in Core.<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Except for providing useful error messages. Since you’d have to build this support into the compiler for your higher level language, we don’t consider it here.<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>Compiling more expressive pattern matching into case expressions is a well studied problem and there are established algorithms for doing so. For more information on this, see Chapter 5 of <a href="https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/">The Implementation of Functional Programming Languages</a>.<a href="#fnref3" class="footnote-back">↩</a></p></li>
+</ol>
+</section>
+  </body>
+</html>
