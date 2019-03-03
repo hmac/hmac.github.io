@@ -49,7 +49,13 @@ change things as I complete each section.
 5. The Parallel G-machine
 6. Lambda Lifting
 7. The Spineless Tagless G-machine
+8. [Appendix: Printing Core][appendixA]
+
+Each post will be a literate Haskell file, and will compile using Stackage `lts-12.2`.
+We'll use several libraries from Hackage, so you'll want to make sure you're using the
+same versions. Compiling with Stack and `lts-12.2` is the easiest way to do this.
 
 [0]: https://www.microsoft.com/en-us/research/publication/implementing-functional-languages-a-tutorial/
 [1]: https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/
 [part1]: 2019-03-03-the-core-language.html
+[appendixA]: 2019-03-03-printing-core.html
