@@ -4,7 +4,7 @@ title: "Implementing A Functional Language Part I: The Core Language"
 
 This is part 1 of a series in implementing a functional language. The introduction is
 [here][intro]. This is a literate Haskell file - you can download the source
-[here](https://github.com/hmac/hmac.github.io/blob/master/posts/2019-03-03-the-core-language.lhs).
+[here](https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs).
 To load it into GHCi and play around, you can use the following command:
 ```
 stack --resolver lts-12.2 \

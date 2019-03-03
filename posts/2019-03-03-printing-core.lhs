@@ -7,9 +7,9 @@ Implementing a Functional Language: Printing Core
 
 This is an appendix to a series in implementing a functional language. The introduction is
 [here][intro]. This is a literate Haskell file - you can download the source
-[here](https://github.com/hmac/hmac.github.io/blob/master/posts/2019-03-03-printing-core.lhs).
-To load it into GHCi and play around, you can use the following command (you'll need to
-download the source for the `Core.Language` which can be found [here][part1source]):
+[here][source]. To load it into GHCi and play around, you can use the following command
+(you'll need to download the source for the `Core.Language` which can be found
+[here][part1source]):
 ```
 stack --resolver lts-12.2 \
       ghci --package prettyprinter \
@@ -83,5 +83,5 @@ This is the entire pretty printer. Thanks to the fantastic `prettyprinter` libra
 short and quite readable.
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
-[source]: https://github.com/hmac/hmac.github.io/blob/master/posts/2019-03-03-printing-core.lhs
-[part1source]: https://github.com/hmac/hmac.github.io/blob/master/posts/2019-03-03-the-core-language.lhs
+[source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-printing-core.lhs
+[part1source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs
