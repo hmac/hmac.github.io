@@ -1,0 +1,33 @@
+#!/usr/bin/env stack
+-- stack --resolver lts-12.2 --install-ghc runghc --package hakyll
+
+-- vim: ft=haskell
+
+{-# LANGUAGE OverloadedStrings  #-}
+
+import Hakyll
+
+main =
+  hakyll $ do
+    match "templates/*" $ compile $ templateCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
+
+    match "posts/*" $ do
+      route $ setExtension ".html"
+      compile $ pandocCompiler
+        >>= loadAndApplyTemplate "templates/default.html" defaultContext
+        >>= relativizeUrls
+    match "index.html" $ do
+        route idRoute
+        compile $ do
+            posts <- loadAll "posts/*"
+            let indexContext =
+                    listField "posts" defaultContext (pure posts) <>
+                    defaultContext
+
+            getResourceBody
+                >>= applyAsTemplate indexContext
+                >>= loadAndApplyTemplate "templates/default.html" indexContext
+                >>= relativizeUrls
