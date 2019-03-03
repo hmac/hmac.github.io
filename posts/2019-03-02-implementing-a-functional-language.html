@@ -26,12 +26,19 @@
       #header #name {
         float: left
       }
-      pre {
+      #header a {
+        text-decoration: none;
+      }
+      #header a:visited {
+        color: black;
+      }
+      #header a:hover {
+        color: black;
       }
     </style>
     <div id="header">
       <h2 id="name">Harry Maclean</h2>
-      <h2 id="site">hmac.dev</h2>
+      <h2 id="site"><a href="../">hmac.dev</a></h2>
     </div>
     <h1 id="implementing-a-functional-language">Implementing A Functional Language</h1>
 <p>This is the first in a series of posts on implementing a simple functional language. What we’ll focus on is the evaluation step: how code is executed on the processor. A typical functional language compiler goes through the following steps to turn the code you write into a binary you run:</p>

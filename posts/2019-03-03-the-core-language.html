@@ -26,12 +26,19 @@
       #header #name {
         float: left
       }
-      pre {
+      #header a {
+        text-decoration: none;
+      }
+      #header a:visited {
+        color: black;
+      }
+      #header a:hover {
+        color: black;
       }
     </style>
     <div id="header">
       <h2 id="name">Harry Maclean</h2>
-      <h2 id="site">hmac.dev</h2>
+      <h2 id="site"><a href="../">hmac.dev</a></h2>
     </div>
     <p>This is part 1 of a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>.</p>
 <h1 id="the-core-language">The Core Language</h1>
