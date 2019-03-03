@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/syntax.css" />
+  </head>
+  <body>
+    <style>
+      body {
+        max-width: 600px;
+        font-family: Palatino,Times New Roman,serif;
+        margin: 0px auto 0px auto;
+        font-size: 16px;
+      }
+      ol#post-list {
+        list-style-type: none
+      }
+      #header {
+        border-bottom: 1px solid black;
+        padding: 10px 0px 10px 0px;
+      }
+      #header #site {
+        font-family: monospace;
+        text-align: right
+      }
+      #header #name {
+        float: left
+      }
+      #header a {
+        text-decoration: none;
+      }
+      #header a:visited {
+        color: black;
+      }
+      #header a:hover {
+        color: black;
+      }
+    </style>
+    <div id="header">
+      <h2 id="name">Harry Maclean</h2>
+      <h2 id="site"><a href="../">hmac.dev</a></h2>
+    </div>
+    <h1 id="implementing-a-functional-language-parsing-core">Implementing a Functional Language: Parsing Core</h1>
+<p>This is an appendix to a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-parsing-core.lhs">here</a>. To load it into GHCi and play around, you can use the following command (you’ll need the <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">source</a> for the <code>Core.Language</code> module as well):</p>
+<pre><code>stack --resolver lts-12.2         \
+      ghci --package megaparsec   \
+           --package text         \
+      2019-03-03-parsing-core.lhs \
+      2019-03-03-the-core-language.lhs</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">module</span> <span class="dt">Core.Parse</span> (parser, parseTest) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">import</span> <span class="dt">Core.Language</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></a></code></pre></div>
+<p>This module exports two functions: <code>parser</code> and <code>parseTest</code>. <code>parser</code> is the parser for our language. We can pass it to functions like <code>Text.Megaparsec.Parse</code> to parse input into a <code>Core.CoreProgram</code>. <code>parseTest</code> is a convenience function that will take a <code>String</code> as input and produce a <code>Core.CoreProgram</code>, throwing an error if the parse fails.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1">parser <span class="fu">=</span> error <span class="st">&quot;Not implemented yet!&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1">parseTest <span class="fu">=</span> error <span class="st">&quot;Not implemented yet!&quot;</span></a></code></pre></div>
+  </body>
+</html>

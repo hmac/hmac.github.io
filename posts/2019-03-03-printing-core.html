@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/syntax.css" />
+  </head>
+  <body>
+    <style>
+      body {
+        max-width: 600px;
+        font-family: Palatino,Times New Roman,serif;
+        margin: 0px auto 0px auto;
+        font-size: 16px;
+      }
+      ol#post-list {
+        list-style-type: none
+      }
+      #header {
+        border-bottom: 1px solid black;
+        padding: 10px 0px 10px 0px;
+      }
+      #header #site {
+        font-family: monospace;
+        text-align: right
+      }
+      #header #name {
+        float: left
+      }
+      #header a {
+        text-decoration: none;
+      }
+      #header a:visited {
+        color: black;
+      }
+      #header a:hover {
+        color: black;
+      }
+    </style>
+    <div id="header">
+      <h2 id="name">Harry Maclean</h2>
+      <h2 id="site"><a href="../">hmac.dev</a></h2>
+    </div>
+    <h1 id="implementing-a-functional-language-printing-core">Implementing a Functional Language: Printing Core</h1>
+<p>This is an appendix to a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-printing-core.lhs">here</a>. To load it into GHCi and play around, you can use the following command (you’ll need the <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">source</a> for the <code>Core.Language</code> module as well):</p>
+<pre><code>stack --resolver lts-12.2          \
+      ghci --package prettyprinter \
+           --package text          \
+      2019-03-03-printing-core.lhs \
+      2019-03-03-the-core-language.lhs</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">module</span> <span class="dt">Core.Print</span> (print) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Core.Language</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="kw">import</span> <span class="dt">Data.Text.Prettyprint.Doc</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">hiding</span> (print)</a></code></pre></div>
+<p>This module exports a single function: <code>print</code>. <code>print</code> pretty prints a <code>CoreProgram</code>, producing a <code>Doc a</code> which can be converted to a final output by the caller. <code>Doc</code> is a type provided by the <code>Prettyprint</code> package.</p>
+<p>We print a <code>CoreProgram</code> by printing each of its supercombinator definitions, separating each with a newline.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1">print<span class="ot"> ::</span> <span class="dt">CoreProgram</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">print <span class="fu">=</span> (vsep <span class="fu">.</span> map pScDefn)</a></code></pre></div>
+<p>We print supercombinator by printing its name and binders on one line, and printing the expression body across the rest of the line and possibly further lines below. The body will be indented to preserve the off-side rule.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="ot">pScDefn ::</span> <span class="dt">CoreScDefn</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">pScDefn (name, binders, expr)</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">  <span class="fu">=</span> pretty name <span class="fu">&lt;+&gt;</span> sepmap binders <span class="fu">&lt;+&gt;</span> equals <span class="fu">&lt;+&gt;</span> align (pExpr expr)</a></code></pre></div>
+<p>We print a Core expression by case analysis on its constructors.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ot">pExpr ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">pExpr (<span class="dt">EVar</span> v) <span class="fu">=</span> pretty v</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">pExpr (<span class="dt">ENum</span> n) <span class="fu">=</span> pretty n</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">pExpr (<span class="dt">EConstr</span> tag arity) <span class="fu">=</span> <span class="st">&quot;Pack{&quot;</span> <span class="fu">&lt;&gt;</span> pretty tag <span class="fu">&lt;&gt;</span> <span class="st">&quot;,&quot;</span> <span class="fu">&lt;&gt;</span> pretty arity <span class="fu">&lt;&gt;</span> <span class="st">&quot;}&quot;</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">pExpr (<span class="dt">EAp</span> e1 e2) <span class="fu">=</span> pAExpr e1 <span class="fu">&lt;+&gt;</span> pAExpr e2</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">pExpr (<span class="dt">ELet</span> <span class="dt">Recursive</span> defns expr)</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"> <span class="fu">=</span> <span class="st">&quot;letrec&quot;</span> <span class="fu">&lt;+&gt;</span> nest <span class="dv">2</span> (pDefns defns) <span class="fu">&lt;+&gt;</span> <span class="st">&quot;in&quot;</span> <span class="fu">&lt;+&gt;</span> pExpr expr</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">pExpr (<span class="dt">ELet</span> <span class="dt">NonRecursive</span> defns expr)</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"> <span class="fu">=</span> <span class="st">&quot;let&quot;</span> <span class="fu">&lt;+&gt;</span> nest <span class="dv">2</span> (pDefns defns) <span class="fu">&lt;+&gt;</span> <span class="st">&quot;in&quot;</span> <span class="fu">&lt;+&gt;</span> pExpr expr</a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">pExpr (<span class="dt">ECase</span> e alters)</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">  <span class="fu">=</span> <span class="st">&quot;case&quot;</span> <span class="fu">&lt;+&gt;</span> pExpr e <span class="fu">&lt;+&gt;</span> <span class="st">&quot;of&quot;</span> <span class="fu">&lt;+&gt;</span> hardline</a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">           <span class="fu">&lt;+&gt;</span> (align <span class="fu">.</span> vsep <span class="fu">.</span> punctuate semi) (map pAlter alters)</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">    <span class="kw">where</span> pAlter (tag, binders, expr)</a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">            <span class="fu">=</span> sep <span class="fu">$</span> angles (pretty tag) <span class="fu">:</span> map pretty binders <span class="fu">++</span> [<span class="st">&quot;-&gt;&quot;</span>, pExpr expr]</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">pDefns ::</span> [(<span class="dt">Name</span>, <span class="dt">Expr</span> <span class="dt">Name</span>)] <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">pDefns defns</a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">  <span class="fu">=</span> vsep <span class="fu">$</span> punctuate semi (map pDefn defns)</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">    <span class="kw">where</span> pDefn (name, expr) <span class="fu">=</span> pretty name <span class="fu">&lt;+&gt;</span> equals <span class="fu">&lt;+&gt;</span> align (pExpr expr)</a></code></pre></div>
+<p><code>pAExpr</code> is like <code>pExpr</code>, but wraps the result in parentheses unless it is a variable or number. This is naive but avoids ambiguity.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="ot">pAExpr ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">pAExpr (<span class="dt">EVar</span> v) <span class="fu">=</span> pretty v</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">pAExpr (<span class="dt">ENum</span> n) <span class="fu">=</span> pretty n</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">pAExpr e <span class="fu">=</span> parens (pExpr e)</a></code></pre></div>
+<p><code>sepmap</code> is a convenience function for printing each element in a list separated by spaces.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="ot">sepmap ::</span> <span class="dt">Pretty</span> a <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Doc</span> b</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">sepmap xs <span class="fu">=</span> sep (map pretty xs)</a></code></pre></div>
+<p>This is the entire pretty printer. Thanks to the fantastic <code>prettyprinter</code> library, it’s short and quite readable.</p>
+  </body>
+</html>
