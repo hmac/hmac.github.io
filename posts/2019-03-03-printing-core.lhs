@@ -8,20 +8,18 @@ Implementing a Functional Language: Printing Core
 This is an appendix to a series in implementing a functional language. The introduction is
 [here][intro]. This is a literate Haskell file - you can download the source
 [here][source]. To load it into GHCi and play around, you can use the following command
-(you'll need to download the source for the `Core.Language` which can be found
-[here][part1source]):
+(you'll need the [source][part1source] for the `Core.Language` module as well):
 ```
-stack --resolver lts-12.2 \
+stack --resolver lts-12.2          \
       ghci --package prettyprinter \
-           --package text \
-      2019-03-03-printing-core.lhs
+           --package text          \
+      2019-03-03-printing-core.lhs \
       2019-03-03-the-core-language.lhs
 ```
 
 > {-# LANGUAGE OverloadedStrings #-}
 > module Core.Print (print) where
 > import Core.Language
-> import Data.Text (Text)
 > import Data.Text.Prettyprint.Doc
 > import Prelude hiding (print)
 

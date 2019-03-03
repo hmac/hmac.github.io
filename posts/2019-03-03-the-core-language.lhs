@@ -142,7 +142,10 @@ isLeaf tree = case tree of
 ```
 
 A `case` expression consists of a _scrutinee_ (`tree` in the example) followed by one or more
-_alternatives_ separated by a semicolon. Alternatives take the form `<t> x1 ... xn -> e`
+_alternatives_ separated by a semicolon. Alternatives take the form
+```
+<t> x1 ... xn -> e
+```
 where `t` is the tag of the constructor and `x1 ... xn` are the arguments to the
 constructor. The number of arguments must match the arity of the constructor. If the tag
 of the constructor on the scrutinee matches the tag on the alternative, the whole case
