@@ -18,7 +18,7 @@ stack --resolver lts-12.2         \
 ```
 
 > {-# LANGUAGE OverloadedStrings #-}
-> module Core.Parse where
+> module Core.Parse (parser) where
 > import Core.Language
 > import Text.Megaparsec
 > import qualified Text.Megaparsec.Char.Lexer as L
@@ -33,9 +33,21 @@ This module exports one function: `parser`, which is the parser for our language
 pass it to functions like `Text.Megaparsec.Parse` to parse input into a
 `Core.CoreProgram`.
 
+Our parser is formed by combining together smaller parsers, in typical parser combinator
+style. We put very little effort into good error messages, in the interests of brevity.
+Here we define a type for all our parsers, which specifies a basic error type and an input
+type of Text. See the Megaparsec documentation for more information on this.
+
 > type Parser = Parsec (ErrorFancy Void) Text
 
-> -- Lexing
+Lexing
+------
+
+Lexing is the process of converting a stream of characters to a stream of tokens. It's
+typically used to strip out whitespace, comments, and other parts of the input that have
+no bearing on the parse result. To avoid having to process the input twice, we intersperse
+lexing with parsing by wrapping all primitive parsers in a _space consumer_ which is
+responsible for stripping any trailing "space".
 
 > spaceConsumer :: Parser ()
 > spaceConsumer = L.space space1 (L.skipLineComment "--") empty
@@ -63,24 +75,35 @@ pass it to functions like `Text.Megaparsec.Parse` to parse input into a
 >   rest <- many alphaNumChar
 >   pure $ tokensToChunk (Proxy :: Proxy Text) (first : rest)
 
+We build in support for Core's operators and keywords.
+
 > operators :: [Parser Text]
 > operators = map symbol ["==", "!=", ">=", "<=", "+", "-", "*", "/", ">", "<"]
 
 > keywords :: [Text]
 > keywords = ["let", "letrec", "case", "in", "of", "Pack", "->"]
 
-> -- Parsing
+Parsing
+-------
+
+A Core program is a collection of supercombinator definitions.
 
 > parser :: Parser CoreProgram
-> parser = supercombinator `sepBy1` char ';'
+> parser = supercombinator `sepBy1` semicolon
+
+A supercombinator is a name, an optional list of arguments, and a expression representing
+the function body.
 
 > supercombinator :: Parser CoreScDefn
 > supercombinator = do
 >   name <- var
 >   args <- many var
->   char '='
+>   symbol "="
 >   body <- expr
 >   pure (name, args, body)
+
+A variable name must start with an alphanumeric character and cannot be one of the
+built-in keywords.
 
 > var :: Parser Name
 > var = choice $ operators ++ [try alphaVar]
@@ -91,6 +114,10 @@ pass it to functions like `Text.Megaparsec.Parse` to parse input into a
 >                 fail . T.unpack $ "cannot use keyword " <> v <> " as variable"
 >               else
 >                 pure v
+
+An expression is either a let(rec), an application, a constructor, a numeric literal or a
+variable. To avoid the problem of left recursion we handle applications separately from
+simple expressions. If we didn't do this, parsing "f x" would recurse infinitely on 'f'.
 
 > expr :: Parser CoreExpr
 > expr = let_ <|> case_ <|> application <|> aexpr
@@ -139,6 +166,8 @@ pass it to functions like `Text.Megaparsec.Parse` to parse input into a
 >   symbol ","
 >   arity <- num
 >   pure $ EConstr tag arity
+
+This is all there is to the parser. Like the printer, it is short and sweet.
 
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
