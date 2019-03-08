@@ -17,6 +17,12 @@ stack --resolver lts-12.2         \
       2019-03-03-the-core-language.lhs
 ```
 
+---
+
+This module exports one function: `parser`, which is the parser for our language. We can
+pass it to functions like `Text.Megaparsec.Parse` to parse input into a
+`Core.CoreProgram`.
+
 > {-# LANGUAGE OverloadedStrings #-}
 > module Core.Parse (parser) where
 > import Core.Language
@@ -27,16 +33,13 @@ stack --resolver lts-12.2         \
 > import qualified Data.Text as T
 > import Data.Void
 > import Data.Proxy
-> import Control.Monad (guard)
-
-This module exports one function: `parser`, which is the parser for our language. We can
-pass it to functions like `Text.Megaparsec.Parse` to parse input into a
-`Core.CoreProgram`.
 
 Our parser is formed by combining together smaller parsers, in typical parser combinator
-style. We put very little effort into good error messages, in the interests of brevity.
-Here we define a type for all our parsers, which specifies a basic error type and an input
-type of Text. See the Megaparsec documentation for more information on this.
+style. In the interest of brevity, we put little effort into useful error messages.  Here
+we define a type for all our parsers, which specifies a basic error type and an input type
+of `Text`. See the Megaparsec
+[documentation](https://www.stackage.org/haddock/lts-12.2/megaparsec-6.5.0/Text-Megaparsec.html)
+for a description of the `Parsec` and `ErrorFancy` types.
 
 > type Parser = Parsec (ErrorFancy Void) Text
 
@@ -47,7 +50,8 @@ Lexing is the process of converting a stream of characters to a stream of tokens
 typically used to strip out whitespace, comments, and other parts of the input that have
 no bearing on the parse result. To avoid having to process the input twice, we intersperse
 lexing with parsing by wrapping all primitive parsers in a _space consumer_ which is
-responsible for stripping any trailing "space".
+responsible for stripping any trailing "space". Our space consumer will strip whitespace
+and any lines beginning with `--`.
 
 > spaceConsumer :: Parser ()
 > spaceConsumer = L.space space1 (L.skipLineComment "--") empty
@@ -55,7 +59,20 @@ responsible for stripping any trailing "space".
 > lexeme :: Parser a -> Parser a
 > lexeme = L.lexeme spaceConsumer 
 
+Parsing Primitives
+------------------
+
+`symbol` and `num` are our two primitive parsers - we'll build everything else out of
+them. `symbol` parses a specific string, and `num` parses a number.
+
+> symbol :: Text -> Parser Text
 > symbol = L.symbol spaceConsumer
+
+> num :: Parser Int
+> num = lexeme L.decimal
+
+We define some helpers that we'll rely on later on. `between` is a parser combinator which
+wraps a parser in a "left" and "right" parser which will parse either side of the input.
 
 > semicolon :: Parser Text
 > semicolon = symbol ";"
@@ -66,25 +83,14 @@ responsible for stripping any trailing "space".
 > angles :: Parser a -> Parser a
 > angles = between (symbol "<") (symbol ">")
 
-> num :: Parser Int
-> num = lexeme L.decimal
+A Core identifier (i.e. a variable name, supercombinator name or let binding name)
+consists of alphanumeric characters. The first character can't be a number.
 
 > identifier :: Parser Text
 > identifier = lexeme $ do
 >   first <- letterChar
 >   rest <- many alphaNumChar
 >   pure $ tokensToChunk (Proxy :: Proxy Text) (first : rest)
-
-We build in support for Core's operators and keywords.
-
-> operators :: [Parser Text]
-> operators = map symbol ["==", "!=", ">=", "<=", "+", "-", "*", "/", ">", "<"]
-
-> keywords :: [Text]
-> keywords = ["let", "letrec", "case", "in", "of", "Pack", "->"]
-
-Parsing
--------
 
 A Core program is a collection of supercombinator definitions.
 
@@ -102,8 +108,8 @@ the function body.
 >   body <- expr
 >   pure (name, args, body)
 
-A variable name must start with an alphanumeric character and cannot be one of the
-built-in keywords.
+A variable name is either an `identifier` or one of the built-in operators. It can't be a
+reserved keyword.
 
 > var :: Parser Name
 > var = choice $ operators ++ [try alphaVar]
@@ -115,9 +121,16 @@ built-in keywords.
 >               else
 >                 pure v
 
-An expression is either a let(rec), an application, a constructor, a numeric literal or a
-variable. To avoid the problem of left recursion we handle applications separately from
-simple expressions. If we didn't do this, parsing "f x" would recurse infinitely on 'f'.
+> operators :: [Parser Text]
+> operators = map symbol ["==", "!=", ">=", "<=", "+", "-", "*", "/", ">", "<"]
+
+> keywords :: [Text]
+> keywords = ["let", "letrec", "case", "in", "of", "Pack", "->"]
+
+An expression is either a let(rec), a case, an application, a constructor, a numeric
+literal or a variable. To avoid the problem of left recursion we handle applications
+separately from simple expressions. If we didn't do this, parsing `f x` would recurse
+infinitely on `f`.
 
 > expr :: Parser CoreExpr
 > expr = let_ <|> case_ <|> application <|> aexpr
@@ -168,7 +181,6 @@ simple expressions. If we didn't do this, parsing "f x" would recurse infinitely
 >   pure $ EConstr tag arity
 
 This is all there is to the parser. Like the printer, it is short and sweet.
-
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
 [source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-parsing-core.lhs

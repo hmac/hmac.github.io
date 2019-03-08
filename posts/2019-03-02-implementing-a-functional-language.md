@@ -50,7 +50,7 @@ change things as I complete each section.
 6. Lambda Lifting
 7. The Spineless Tagless G-machine
 8. [Appendix: Printing Core][printingCore]
-9. Appendix: Parsing Core
+9. [Appendix: Parsing Core][parsingCore]
 
 Each post will be a literate Haskell file, and will compile using Stackage `lts-12.2`.
 We'll use several libraries from Hackage, so you'll want to make sure you're using the
