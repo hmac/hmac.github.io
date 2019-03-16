@@ -2,6 +2,9 @@
 title: "Implementing A Functional Language Part I: The Core Language"
 ---
 
+Implementing a Functional Language I: The Core Language
+=======================================================
+
 This is part 1 of a series in implementing a functional language. The introduction is
 [here][intro]. This is a literate Haskell file - you can download the source
 [here](https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs).
@@ -12,6 +15,8 @@ stack --resolver lts-12.2 \
            --package text \
       2019-03-03-the-core-language.lhs
 ```
+
+---
 
 > {-# LANGUAGE OverloadedStrings #-}
 > module Core.Language where
@@ -175,6 +180,15 @@ And                       `&`
 Or                        `|`   
 
 Integer negation is performed via the primitive function `negate`.
+
+Lambda abstractions
+-------------------
+
+Notably absent from Core is _lambda abstraction_, or anonymous functions. Functions are
+always supercombinators. This is an explicit choice to simplify the implementation, and we
+do not lose any expressive power as a result. Lambda abstractions can be mechanically
+removed from a program through a process known as _lambda lifting_. We will cover this in
+more detail in later section.
 
 Modelling the language
 ======================

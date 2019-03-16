@@ -19,12 +19,12 @@ stack --resolver lts-12.2         \
 
 ---
 
-This module exports one function: `parser`, which is the parser for our language. We can
-pass it to functions like `Text.Megaparsec.Parse` to parse input into a
-`Core.CoreProgram`.
+This module exports the parser for our language (`parser`). It can be passed to functions
+like `Text.Megaparsec.parse` to parse input into a `Core.CoreProgram`. We also re-export
+`Text.Megaparsec.parse` for convenience.
 
 > {-# LANGUAGE OverloadedStrings #-}
-> module Core.Parse (parser) where
+> module Core.Parse (parser, parse) where
 > import Core.Language
 > import Text.Megaparsec
 > import qualified Text.Megaparsec.Char.Lexer as L
@@ -183,5 +183,5 @@ infinitely on `f`.
 This is all there is to the parser. Like the printer, it is short and sweet.
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
-[source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-parsing-core.lhs
+[source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-08-parsing-core.lhs
 [part1source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs

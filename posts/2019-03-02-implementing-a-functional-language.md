@@ -43,14 +43,15 @@ The structure of this series is as follows. However this is a work in progress, 
 change things as I complete each section.
 
 1. [The Core Language][part1]
-2. Template Instantiation
-3. The G-machine
-4. The Three Instruction Machine
-5. The Parallel G-machine
-6. Lambda Lifting
-7. The Spineless Tagless G-machine
-8. [Appendix: Printing Core][printingCore]
-9. [Appendix: Parsing Core][parsingCore]
+2. Graph Reduction
+3. Template Instantiation
+4. The G-machine
+5. The Three Instruction Machine
+6. The Parallel G-machine
+7. Lambda Lifting
+8. The Spineless Tagless G-machine
+9. [Appendix: Printing Core][printingCore]
+10. [Appendix: Parsing Core][parsingCore]
 
 Each post will be a literate Haskell file, and will compile using Stackage `lts-12.2`.
 We'll use several libraries from Hackage, so you'll want to make sure you're using the
