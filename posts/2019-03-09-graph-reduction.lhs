@@ -34,20 +34,24 @@ We use the symbol `@` to denote an application node. Note that though `f` takes 
 arguments, we apply each in turn via currying. Here's a more complicated example - the
 graph of `(+ (* 2 3) 4)`:
 
-```
-@
-| \
-|  \
-@   4
-| \
-|  \
-+   @
-    | \
-    |  \
-    @   3
-    | \
-    |  \
-    *   2
+```dot
+digraph {
+a [ label = "@" ]
+b [ label = "@" ]
+c [ label = "@" ]
+d [ label = "@" ]
+
+a -> b
+b -> "+"
+a -> 4
+b -> c
+c -> d
+c -> 3
+d -> "*"
+d -> 2
+
+"+" -> d [ style = invis ]
+}
 ```
 
 To evaluate the program, we'll repeatedly _reduce_ expressions in the graph. We'll stop
@@ -69,20 +73,25 @@ that both its arguments are evaluated, so we need to continue to reduce the firs
 argument. We descend into the right hand application node - the root of `(* 2 3)`. Here's
 where we are in the graph:
 
-```
-@
-| \
-|  \
-@   4
-| \
-|  \
-+   @  <-------- we are here
-    | \
-    |  \
-    @   3
-    | \
-    |  \
-    *   2
+```dot
+digraph {
+a [ label = "@" ]
+b [ label = "@" ]
+c [ label = "@", color = red ]
+d [ label = "@" ]
+
+
+a -> b
+a -> 4
+b -> "+"
+b -> c
+c -> d
+c -> 3
+d -> "*"
+d -> 2
+
+"+" -> d [ style = invis ]
+}
 ```
 
 As before, we descend into the child application node, finally reaching `*`. `*` takes two
