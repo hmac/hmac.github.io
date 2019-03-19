@@ -1,11 +1,17 @@
 #!/usr/bin/env stack
--- stack --resolver lts-12.2 --install-ghc runghc --package hakyll
+-- stack --resolver lts-12.2 --install-ghc runghc --package hakyll --package pandoc
 
 -- vim: ft=haskell
 
 {-# LANGUAGE OverloadedStrings  #-}
 
 import Hakyll
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
+import Text.Pandoc
+import System.Process ( readProcess )
+import System.IO.Unsafe ( unsafePerformIO )
+import Text.Pandoc.Walk ( walk )
 
 main =
   hakyll $ do
@@ -16,7 +22,7 @@ main =
 
     match "posts/*" $ do
       route $ setExtension ".html"
-      compile $ pandocCompiler
+      compile $ pandocGraphvizCompiler
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
     match "index.html" $ do
@@ -31,3 +37,22 @@ main =
               >>= applyAsTemplate indexContext
               >>= loadAndApplyTemplate "templates/default.html" indexContext
               >>= relativizeUrls
+
+pandocGraphvizCompiler :: Compiler (Item String)
+pandocGraphvizCompiler = pandocCompilerWithTransform
+    defaultHakyllReaderOptions
+    defaultHakyllWriterOptions
+    graphViz
+
+graphViz :: Pandoc -> Pandoc
+graphViz = walk codeBlock
+
+codeBlock :: Block -> Block
+codeBlock cb@(CodeBlock (id, classes, namevals) contents) =
+    if "dot" `elem` classes
+    then RawBlock (Format "html") $ svg contents
+    else cb
+codeBlock x = x
+
+svg :: String -> String
+svg contents = unsafePerformIO $ readProcess "dot" ["-Tsvg"] contents

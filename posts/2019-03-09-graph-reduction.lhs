@@ -15,22 +15,24 @@ concept: lazy graph reduction. This idea is simple but powerful, and it's what w
 introduce in this section.
 
 A functional program is really just a single large expression which evaluates to a result.
-We can model it as a tree of nested applications. For example, the expression `f 1 2`
+We can model it as a graph[^1] of nested applications. For example, the expression `f 1 2`
 looks like this:
 
-```
-@
-| \
-|  \
-@   2
-| \
-|  \
-f   1
+```dot
+digraph {
+a [ label = "@" ]
+b [ label = "@" ]
+
+a -> b
+b -> f
+b -> 1
+a -> 2
+}
 ```
 
 We use the symbol `@` to denote an application node. Note that though `f` takes two
 arguments, we apply each in turn via currying. Here's a more complicated example - the
-tree of `(+ (* 2 3) 4)`:
+graph of `(+ (* 2 3) 4)`:
 
 ```
 @
@@ -48,20 +50,24 @@ tree of `(+ (* 2 3) 4)`:
     *   2
 ```
 
-To evaluate the program, we'll _reduce_ the tree. This process turns it into a graph,
-because it some cases a node will have more than one edge pointing to it. Not all
-expressions can be reduced: `+ 1 2` reduces to `3` but `3` does not reduce any further. An
+To evaluate the program, we'll repeatedly _reduce_ expressions in the graph. We'll stop
+when there are no expressions left to reduce. The resulting graph is the result of the
+program. Reducing an expression typically involves applying a function to one or more
+arguments, producing a result, and then replacing the expression with the result.
+
+Not all expressions can be reduced: `+ 1 2` reduces to `3` but `3` does not reduce any
+further. Similarly, `+ 1` does not reduce because `+` requires two arguments. An
 expression which is reducible is known as a reducible expression, or redex. To evaluate an
 entire program, all we need to do is repeatedly identify the next redex to reduce, and
-then reduce it.
+then reduce it, stopping when there are no redexes left.
 
 Let's try to reduce the graph above. We start at the top, with an application node `@`.
 The child nodes are `@` (another application) and `4`. We can't immediately evaluate this
 expression, so we proceed down into the child application node, which itself has children
-`+` and `@`. `+` takes two arguments, in this case `(* 3 2)` and `4`. `+` also requires
-that its arguments are both numbers, so we need to continue to reduce the first argument.
-We descend into the right hand application node - the root of `(* 3 2)`. Here's where we
-are in the graph:
+`+` and `@`. `+` takes two arguments, in this case `(* 2 3)` and `4`. `+` also requires
+that both its arguments are evaluated, so we need to continue to reduce the first
+argument. We descend into the right hand application node - the root of `(* 2 3)`. Here's
+where we are in the graph:
 
 ```
 @
@@ -103,66 +109,76 @@ the redex. Performing the reduction, the graph now looks like this:
 @   4
 | \
 |  \
-+   6
++   6†
 ```
 
-Proceeding back up graph, we can see that the arguments to `+` are now both numbers, so
-we've found another redex. Reducing this, we end up with a single node `10`, which is the
-result of the whole expression.
+Notice that the expression `(* 2 3)` has been replaced with the result of its reduction
+(`6`). Proceeding back up graph, we can see that the arguments to `+` are now both
+evaluated, so we've found another redex. Reducing this, we end up with a single node `10`,
+which is the result of the whole expression.
 
-Selecting the next redex
-------------------------
+Reduction order
+---------------
 
-In the previous example example our two functions `+` and `*` required both of their
-arguments to be evaluated to numbers before they could be applied, but this is not a
-general rule. Take for example the function `K x y = x`: `x` and `y` could be an
-arbitrarily large, unevaluated expression and we would still be able to reduce an
-application of `K`. Visually:
+The order in which we reduce expressions in a program has a profound effect on the
+behaviour of the program. The approach we used in reducing the program above is called
+_normal order reduction_. Normal order reduction requires that we reduce the leftmost
+outermost redex first.
 
+One consequence of this is that we reduce applications before reducing their arguments.
+This is in contrast to a typical imperative language, where arguments to functions are
+evaluated before the function is called. Take for example the following program:
 ```
-@†----
-|     \
-|      \
-@       @---1
-| \      \
-|  \      \
-K   @      @---2
-    | \     \
-    |  \     \
-    @   2     @---3
-    | \        \
-    |  \        \
-    +   1        ...
+K x y = x
+main = K 1 (/ 1 0)
+```
+where we can assume that `(/ 1 0)` will raise an error if evaluated. Following normal
+order reduction, we will reduce the application of `K` first, resulting in the following:
+```
+main = 1
 ```
 
-reduces to
+Since the second argument to `K` is never used, we never evaluate it. In a typical
+imperative language, we would evaluate `(/ 1 0)` first, resulting in an error. This style
+of execution is called _lazy evaluation_, in contrast to _strict evaluation_. The two key
+properties of lazy evaluation are the following:
 
-```
-@
-| \
-|  \
-@   2
-| \
-|  \
-+   1
-```
+- Arguments to functions are only evaluated when needed.
+- Each argument is only evaluated once - further uses of the argument will use the result
+  from the initial evaluation.
 
-By choosing to reduce the application of `K` before reducing its arguments, we completely
-avoided having to evaluate the large expression on the right hand side of the tree. This
-is the essence of lazy evaluation: function arguments are evaluated _when needed_. By
-changing how we select the next redex, we can profoundly alter the semantics of our
-language.
+The second point doesn't affect program behaviour, but greatly improves efficiency.
 
-Core is a lazy language, so we will adopt the following rules:
-- we always select the _outermost_ redex. This corresponds to the outermost function
-  application.
-- for some built in primitives (such as the arithmetic operators) we will require that
-  inner redexes are reduced before reducing the redex of the primitive.
+Normal form and Weak head normal form
+-------------------------------------
+
+Normal order reduction specifies that we reduce the leftmost outermost redex first,
+but it doesn't specify when to _stop_. A natural assumption is to stop when there are no
+redexes left, but this is not our only option. If the output of our program is being
+printed to the screen, and we want to show progress as we go (or we're printing an
+infinite stream of values) then want to be able to produce output without having fulling
+evaluated it yet. Imagine a list made from a series of `Cons` cells linked together: we
+may want to print the first element before having evaluated the whole list.
+
+To do this, we need to stop reducing when there is no longer a _top-level_ redex. This
+will allow us to inspect the structure and decide what to evaluate next. An expression
+which has no top-level redexes (but may have inner redexes left) is in _weak head normal
+form_ (WHNF). An expression which has no redexes at all is in _normal form_ (NF). All
+expressions in WHNF are also in NF, but not vice versa. Here are some examples.
+
+Normal Form    Weak Head Normal Form
+-----------    -------------
+`3`            `3`                                   
+`(+ 1)`        `(+ 1)`                                   
+               `(+ (+ 2 3))`                                   
+-----------    -------------
+
+For Core we'll follow lazy evaluation and evaluate expressions to WHNF. For some built in
+functions (like `+`) we will adopt strict semantics, requiring arguments to be fully
+evaluated to normal form. For all user-defined functions we'll use lazy semantics.
 
 Reducing programs
 -----------------
-
-TODO: normal form, head normal form, weak head normal form
 
 Let's walk through the evaluation of the following program:
 ```
@@ -204,8 +220,8 @@ a pointer to the argument of the application. This gives us:
 ```
 
 We see that the inner redex `(square 3)` is now shared between two application nodes. The
-application of `*` cannot be reduced because `*` is a primitive and requires both its
-arguments to be evaluated first. Hence the only redex is the inner `(square 3)`. This
+application of `*` cannot be reduced because `*` is a strict primitive and requires both
+its arguments to be evaluated first. Hence the only redex is the inner `(square 3)`. This
 yields:
 
 ```
@@ -249,8 +265,8 @@ So the general steps are:
 Unwinding the spine
 -------------------
 
-To find the next redex, we first need to find the outermost function application. To do
-that, we follow these steps:
+To find the next redex, we need to find the leftmost outermost function application. To do
+that we follow these steps:
 
 1. From the root of the graph, follow the left branch until you reach a supercombinator or
 primitive.
@@ -363,5 +379,9 @@ When reducing an application, there are two things we must consider:
 
 Indirection nodes: TODO
 Redex updates: TODO
+
+[^1]: In this case we could call it a tree, but trees are just a specific type of graph.
+Later on we'll see that certain transformations on the tree will make it no longer a valid
+tree. So for simplicity we'll refer to everything as a graph.
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
