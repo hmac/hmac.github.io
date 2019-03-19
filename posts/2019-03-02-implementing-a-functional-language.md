@@ -61,4 +61,4 @@ same versions. Compiling with Stack and `lts-12.2` is the easiest way to do this
 [1]: https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/
 [part1]: 2019-03-03-the-core-language.html
 [printingCore]: 2019-03-03-printing-core.html
-[parsingCore]: 2019-03-03-parsing-core.html
+[parsingCore]: 2019-03-08-parsing-core.html
