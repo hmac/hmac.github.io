@@ -9,7 +9,7 @@ functional language compiler goes through the following steps to turn the code y
 into a binary you run:
 
 ```
-               PARSE  TYPECHECK  DESUGAR      COMPILE            CODEGEN
+           PARSE  TYPECHECK DESUGAR   COMPILE          CODEGEN
 [your code] -> [ast] -> [ast] -> [core] -> [abstract IR] -> [backend language]
 ```
 
