@@ -1,5 +1,6 @@
 ---
 title: "Implementing A Functional Language Part III: Template Instantiation"
+publish: false
 ---
 
 Implementing a Functional Language II: Template Instantiation

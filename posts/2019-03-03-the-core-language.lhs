@@ -1,5 +1,6 @@
 ---
 title: "Implementing A Functional Language Part I: The Core Language"
+publish: true
 ---
 
 Implementing a Functional Language I: The Core Language

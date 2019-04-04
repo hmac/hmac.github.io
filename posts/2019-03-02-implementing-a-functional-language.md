@@ -1,5 +1,6 @@
 ---
 title: Implementing A Functional Language
+publish: true
 ---
 # Implementing A Functional Language
 

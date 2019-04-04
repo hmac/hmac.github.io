@@ -1,5 +1,6 @@
 ---
 title: "Implementing a Functional Language: Parsing Core"
+publish: true
 ---
 
 Implementing a Functional Language: Parsing Core

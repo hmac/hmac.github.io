@@ -1,5 +1,6 @@
 ---
 title: "Implementing a Functional Language: Printing Core"
+publish: true
 ---
 
 Implementing a Functional Language: Printing Core

@@ -12,6 +12,7 @@ import Text.Pandoc
 import System.Process ( readProcess )
 import System.IO.Unsafe ( unsafePerformIO )
 import Text.Pandoc.Walk ( walk )
+import Control.Monad (filterM)
 
 main =
   hakyll $ do
@@ -28,7 +29,9 @@ main =
     match "index.html" $ do
         route idRoute
         compile $ do
-          posts <- recentFirst =<< loadAll "posts/*"
+          let published :: MonadMetadata m => Item String -> m Bool
+              published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)
+          posts <- loadAll "posts/*" >>= filterM published >>= recentFirst
           let indexContext =
                   listField "posts" defaultContext (pure posts) <>
                   defaultContext
@@ -49,10 +52,15 @@ graphViz = walk codeBlock
 
 codeBlock :: Block -> Block
 codeBlock cb@(CodeBlock (id, classes, namevals) contents) =
-    if "dot" `elem` classes
-    then RawBlock (Format "html") $ svg contents
-    else cb
+    if "tree" `elem` classes
+    then RawBlock (Format "html") $ renderTree contents
+    else if "graph" `elem` classes
+         then RawBlock (Format "html") $ renderGraph contents
+         else cb
 codeBlock x = x
 
-svg :: String -> String
-svg contents = unsafePerformIO $ readProcess "dot" ["-Tsvg"] contents
+renderTree :: String -> String
+renderTree contents = unsafePerformIO $ readProcess "dot" [] contents >>= readProcess "gvpr" ["-c", "-ftree.gv"] >>= readProcess "neato" ["-n", "-Tsvg"]
+
+renderGraph :: String -> String
+renderGraph contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier", "-Tsvg"] contents

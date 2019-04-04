@@ -1,5 +1,6 @@
 ---
 title: "Implementing A Functional Language Part II: Graph Reduction"
+publish: true
 ---
 
 Implementing a Functional Language II: Graph Reduction
@@ -18,7 +19,7 @@ A functional program is really just a single large expression which evaluates to
 We can model it as a graph[^1] of nested applications. For example, the expression `f 1 2`
 looks like this:
 
-```dot
+```tree
 digraph {
 a [ label = "@" ]
 b [ label = "@" ]
@@ -34,23 +35,22 @@ We use the symbol `@` to denote an application node. Note that though `f` takes 
 arguments, we apply each in turn via currying. Here's a more complicated example - the
 graph of `(+ (* 2 3) 4)`:
 
-```dot
+```tree
 digraph {
 a [ label = "@" ]
 b [ label = "@" ]
-c [ label = "@" ]
 d [ label = "@" ]
 
 a -> b
 b -> "+"
 a -> 4
+
+c [ label = "@" ]
 b -> c
 c -> d
 c -> 3
 d -> "*"
 d -> 2
-
-"+" -> d [ style = invis ]
 }
 ```
 
@@ -73,24 +73,23 @@ that both its arguments are evaluated, so we need to continue to reduce the firs
 argument. We descend into the right hand application node - the root of `(* 2 3)`. Here's
 where we are in the graph:
 
-```dot
+```tree
 digraph {
 a [ label = "@" ]
 b [ label = "@" ]
-c [ label = "@", color = red ]
 d [ label = "@" ]
 
 
 a -> b
-a -> 4
 b -> "+"
+a -> 4
+
+c [ label = "@", color = red ]
 b -> c
 c -> d
 c -> 3
 d -> "*"
 d -> 2
-
-"+" -> d [ style = invis ]
 }
 ```
 
@@ -98,27 +97,34 @@ As before, we descend into the child application node, finally reaching `*`. `*`
 numeric arguments, and we have two arguments in `2` and `3`. We've found a reducible
 expression! Specifically, the subgraph
 
-```
-@†
-| \
-|  \
-@   3
-| \
-|  \
-*   2
+```tree
+digraph {
+a [ label = "@", color = red ]
+b [ label = "@" ]
+
+
+a -> b
+a -> 3
+b -> "*"
+b -> 2
+}
 ```
 
-can be reduced to the single numeric node `6`. The node marked with a † is the _root_ of
+can be reduced to the single numeric node `6`. The node marked in red is the _root_ of
 the redex. Performing the reduction, the graph now looks like this:
 
-```
-@
-| \
-|  \
-@   4
-| \
-|  \
-+   6†
+```tree
+digraph {
+a [ label = "@" ]
+b [ label = "@" ]
+
+
+a -> b
+a -> 4
+b -> "+"
+c [ label = "6", color = red ]
+b -> c
+}
 ```
 
 Notice that the expression `(* 2 3)` has been replaced with the result of its reduction
@@ -136,7 +142,7 @@ outermost redex first.
 
 One consequence of this is that we reduce applications before reducing their arguments.
 This is in contrast to a typical imperative language, where arguments to functions are
-evaluated before the function is called. Take for example the following program:
+evaluated before the function is called. Take for example the following Core program:
 ```
 K x y = x
 main = K 1 (/ 1 0)
@@ -156,7 +162,7 @@ properties of lazy evaluation are the following:
 - Each argument is only evaluated once - further uses of the argument will use the result
   from the initial evaluation.
 
-The second point doesn't affect program behaviour, but greatly improves efficiency.
+The second property doesn't affect program behaviour but greatly improves efficiency.
 
 Normal form and Weak head normal form
 -------------------------------------
@@ -165,7 +171,7 @@ Normal order reduction specifies that we reduce the leftmost outermost redex fir
 but it doesn't specify when to _stop_. A natural assumption is to stop when there are no
 redexes left, but this is not our only option. If the output of our program is being
 printed to the screen, and we want to show progress as we go (or we're printing an
-infinite stream of values) then want to be able to produce output without having fulling
+infinite stream of values) then we want to be able to produce output without having fulling
 evaluated it yet. Imagine a list made from a series of `Cons` cells linked together: we
 may want to print the first element before having evaluated the whole list.
 
@@ -173,7 +179,7 @@ To do this, we need to stop reducing when there is no longer a _top-level_ redex
 will allow us to inspect the structure and decide what to evaluate next. An expression
 which has no top-level redexes (but may have inner redexes left) is in _weak head normal
 form_ (WHNF). An expression which has no redexes at all is in _normal form_ (NF). All
-expressions in WHNF are also in NF, but not vice versa. Here are some examples.
+expressions in NF are also in WHNF, but not vice versa. Here are some examples.
 
 Normal Form    Weak Head Normal Form
 -----------    -------------
@@ -195,73 +201,121 @@ square x = * x x ;
 main = square (square 3)
 ```
 
-To start with, the graph of our program consists of just the node `main`. `main` is a
+To start with, the graph of our program consists of just the node `main`. For reference
+we've also drawn the graph of the supercombinator `square`, though we don't evaluate this
+until it appears in `main`.
+
+```tree
+digraph {
+main
+}
+```
+
+```graph
+digraph {
+label = "square"
+a [ label = "@" ]
+b [ label = "@" ]
+a -> b
+
+c [ label = "@" ]
+b -> c
+
+a -> x
+b -> x
+
+c -> "*"
+}
+```
+
+`main` is a
 supercombinator with no arguments, so it is a redex. We reduce it by replacing it with its
 body, yielding the following graph:
 
-```
-@
-| \
-|  \
-|   @---3
-|    \
-|     \
-|      square
-square
+```tree
+digraph {
+a [ label = "@", color = "red" ]
+square1 [ label = "square" ]
+a -> square1
+
+b [ label = "@" ]
+a -> b
+
+square2 [ label = "square" ]
+b -> square2
+b -> "3"
+}
 ```
 
 The outermost redex is the top node - the outer application of `square`. To reduce it, we
 replace the redex with an instance of the function body, substituting any parameters with
 a pointer to the argument of the application. This gives us:
 
-```
-@
-| \
-|  \
-|   @---3
-|   |\
-|   | \
-|   |  square
-@---
-|
-|
-*
+```graph
+digraph {
+a [ label = "@", color = "blue" ]
+b [ label = "@", color = "blue" ]
+star [ label = "*", color = "blue" ]
+a -> b [ color = "blue" ]
+
+b -> star [ color = "blue" ]
+b -> c [ color = "blue" ]
+
+c [ label = "@" ]
+a -> c [ color = "blue" ]
+c -> "square"
+c -> "3"
+
+}
 ```
 
-We see that the inner redex `(square 3)` is now shared between two application nodes. The
-application of `*` cannot be reduced because `*` is a strict primitive and requires both
-its arguments to be evaluated first. Hence the only redex is the inner `(square 3)`. This
-yields:
+We see that the inner redex `(square 3)` is now shared between two application nodes.
+Notice that this transformation has resulted in a true _graph_ rather than a tree. The
+subgraph coloured blue is the instantiated body of `square`.
 
-```
-@
-| \
-|  \
-|   @---3
-|   |\  |
-|   | \ |
-|   |  @
-@---    \
-|        \
-|         *
-*
+The application of `*` cannot be reduced because `*` is a strict primitive and requires
+both its arguments to be evaluated first. Hence the only redex is the inner `(square 3)`.
+This yields:
+
+```graph
+digraph {
+a [ label = "@" ]
+b [ label = "@" ]
+"3" [ color = "blue" ]
+a -> b
+
+star1 [ label = "*" ]
+b -> star1
+c [ label = "@", color = "blue" ]
+b -> c
+
+a -> c
+d [ label = "@", color = "blue" ]
+star2 [ label = "*", color = "blue" ]
+c -> d [ color = "blue" ]
+d -> star2 [ color = "blue" ]
+c -> "3" [ color = "blue" ]
+d -> "3" [ color = "blue" ]
+a -> "3" [ style = "invis" ]
+}
 ```
 
-The only redex is now the inner multiplication, so we reduce that.
+The subgraph coloured blue is the second instantiation of `square`. The only redex is now
+the inner multiplication, so we reduce that.
 
-```
-@
-| \
-|  \
-|   9
-|   |
-|   |
-|   |
-@---
-|
-|
-*
-```
+ ```graph
+ digraph {
+ a [ label = "@" ]
+ b [ label = "@" ]
+
+ a -> b
+ b -> "*"
+
+ nine [ label = "9" ]
+ a -> nine
+ b -> nine
+ }
+ ```
 
 And now we can reduce the outer multiplication, which directly yields `81`.
 
@@ -313,14 +367,17 @@ let y = 3
 
 is represented as
 
-```
-@
-| \
-|  \
-@---3
-|
-|
-+
+```graph
+digraph {
+a [ label = "@" ]
+b [ label = "@" ]
+
+a -> b
+b -> "+"
+b -> "3"
+
+a -> "3"
+}
 ```
 
 The `let` expression defines a sub-expression `3`, which is named `y`. The body of the
@@ -337,45 +394,59 @@ main = f 3
 
 We start with the `main` supercombinator:
 
-```
-main
-```
-which reduces to
-```
-@
-| \
-|  \
-f   3
+```graph
+digraph { main }
 ```
 which reduces to
+```graph
+digraph {
+a [ label = "@" ]
+a -> f
+a -> "3"
+}
 ```
-@
-| \
-|  \
-@---@[y]
-|   | \
-|   |  \
-+   @---3
-    |
-    |
-    *
+which reduces to
+```graph
+digraph {
+node [ fontname = "courier" ]
+a [ label = "@" ]
+b [ label = "@" ]
+
+a -> b
+b -> "+"
+
+c [ label = "@ (y)" ]
+a -> c
+b -> c
+
+d [ label = "@" ]
+c -> d
+d -> "*"
+c -> "3"
+d -> "3"
+}
 ```
 We can see that both arguments to `+` point to the same sub-expression (labelled `y`) and
 both arguments to `*` point to the same instance of `3`. The outermost application is that
 of `+`, but it requires both of its arguments to be evaluated first. Both arguments are
 the inner application of `*`, which we can reduce.
-```
-@
-| \
-|  \
-@---9
-|
-|
-+
+```graph
+digraph {
+node [ fontname = "courier" ]
+a [ label = "@" ]
+b [ label = "@" ]
+
+a -> b
+b -> "+"
+a -> "9"
+b -> "9"
+}
 ```
 which reduces to
-```
+```graph
+digraph {
 18
+}
 ```
 
 Lazy Evaluation
