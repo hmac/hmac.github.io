@@ -4,17 +4,21 @@ publish: true
 ---
 # Implementing A Functional Language
 
-This is the first in a series of posts on implementing a simple functional language. What
-we'll focus on is the evaluation step: how code is executed on the processor. A typical
-functional language compiler goes through the following steps to turn the code you write
-into a binary you run:
+This is the first in a series of posts on implementing a simple functional language. A
+typical functional language compiler goes through the following steps to turn the code you
+write into a binary you run:
 
-```
-           PARSE  TYPECHECK DESUGAR   COMPILE          CODEGEN
-[your code] -> [ast] -> [ast] -> [core] -> [abstract IR] -> [backend language]
+```graph
+digraph {
+"your code" -> ast [label = " PARSE"]
+ast -> "annotated ast" [label = " TYPECHECK"]
+"annotated ast" -> core [label = " DESUGAR"]
+core -> "abstract IR" [label = " COMPILE", color = blue]
+"abstract IR" -> "backend language" [label = " CODEGEN"]
+}
 ```
 
-We will look at the transformation from `[core]` to `[abstract IR]`. In Haskell, this
+We will look at the transformation from `core` to `abstract IR`. In Haskell, this
 corresponds to the transformation from GHC Core to STG. This process is interesting
 because it is here that we define _how the program is evaluated_. We will look at several
 different designs for compilers, of increasing complexity, and consider problems such as
@@ -22,8 +26,7 @@ laziness, sharing, garbage collection, strictness analysis and parallel evaluati
 
 This series is heavily based on a fantastic book of the same name written by Simon Peyton
 Jones and David Lester in 2000. All credit goes to them for the content: I've simply
-altered the presentation and updated it slightly. There are a number of additional
-differences:
+altered the presentation and updated it slightly. There are a number of differences:
 
 - The book uses Miranda as its implementation language, whereas we will use Haskell.
 - Some time is spent in the book on introducing parser combinators and pretty printing,
