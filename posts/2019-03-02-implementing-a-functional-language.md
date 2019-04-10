@@ -47,7 +47,7 @@ The structure of this series is as follows. However this is a work in progress, 
 change things as I complete each section.
 
 1. [The Core Language][part1]
-2. Graph Reduction
+2. [Graph Reduction][part2]
 3. Template Instantiation
 4. The G-machine
 5. The Three Instruction Machine
@@ -64,5 +64,6 @@ same versions. Compiling with Stack and `lts-12.2` is the easiest way to do this
 [0]: https://www.microsoft.com/en-us/research/publication/implementing-functional-languages-a-tutorial/
 [1]: https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/
 [part1]: 2019-03-03-the-core-language.html
+[part2]: 2019-03-09-graph-reduction.html
 [printingCore]: 2019-03-03-printing-core.html
 [parsingCore]: 2019-03-08-parsing-core.html

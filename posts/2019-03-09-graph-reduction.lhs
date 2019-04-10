@@ -1,6 +1,6 @@
 ---
 title: "Implementing A Functional Language Part II: Graph Reduction"
-publish: false
+publish: true
 ---
 
 Implementing a Functional Language II: Graph Reduction
@@ -351,10 +351,8 @@ a stack of stacks, known as a _dump_. When we need to evaluate an argument we pu
 current stack on to the dump, and when we've finished evaluating it we pop the old stack
 off the dump.
 
-TODO: graphical example
-
-Reducing supercombinator applications
--------------------------------------
+Reducing `let(rec)` expressions
+-------------------------------
 
 A supercombinator is reduced by substituting arguments into its body. If there are
 `let(rec)` expressions in the body, they are represented as paths in the graph. For
@@ -449,16 +447,90 @@ digraph {
 }
 ```
 
-Lazy Evaluation
----------------
+Reducing supercombinator applications
+-------------------------------------
 
 When reducing an application, there are two things we must consider:
 
 - The argument may contain redexes, so we want to avoid copying it.
 - The redex may be shared, so we want to update it with its result after reduction.
 
-Indirection nodes: TODO
-Redex updates: TODO
+To do this we construct a new instance of the supercombinator body, substituting a
+_pointer_ to the argument in place of the function parameter. This avoids having to copy
+the argument, which may be large. Once we've reduced a redex, we overwrite the root of the
+redex with the result of the reduction. This ensures that any other references to it will
+not have to reduce it again.
+
+There's one case we need to be careful of, however. Consider the following Core program:
+```
+id x = x
+main = let y = 4
+        in * (id y) y
+```
+
+After some reduction, the graph of this program looks like this:
+```graph
+digraph {
+a1 [ label = "@" ]
+a2 [ label = "@" ]
+a1 -> a2
+
+
+a1 -> 4
+
+a2 -> "*"
+y [ label = "@" ]
+y -> "id"
+y -> 4
+a2 -> y
+
+}
+```
+
+Let's consider the reduction of `(id 4)`. If we were to naively update the root of the
+redex with the result, we'd end up with the following.
+
+```graph
+digraph {
+a1 [ label = "@" ]
+a2 [ label = "@" ]
+a1 -> a2
+
+
+a1 -> 4
+
+a2 -> "*"
+z [ label = "4" ]
+a2 -> z
+
+}
+```
+
+We've duplicated `4`! If this was a large expression, we would be at risk of doing extra
+work reducing it twice. To get around this, we can add a new type of node: an _indirection
+node_. This node simply points to another node, and we can use it to update the root of
+the redex without duplicating the result. Using an indirection node (marked by a `#`) we
+get the following:
+
+```graph
+digraph {
+a1 [ label = "@" ]
+a2 [ label = "@" ]
+a1 -> a2
+
+
+a1 -> 4
+
+a2 -> "*"
+ind [ label = "#" ]
+ind -> 4
+a2 -> ind
+
+}
+```
+
+Those are the basics of graph reduction. In the next section we'll apply this theory to
+our first compiler: the template instantiation machine.
 
 [^1]: In this case we could call it a tree, but trees are just a specific type of graph.
 Later on we'll see that certain transformations on the tree will make it no longer a valid
