@@ -1,6 +1,6 @@
 ---
 title: "Implementing A Functional Language Part II: Graph Reduction"
-publish: true
+publish: false
 ---
 
 Implementing a Functional Language II: Graph Reduction
