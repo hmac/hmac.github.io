@@ -1,11 +1,18 @@
 #!/usr/bin/env stack
--- stack --resolver lts-12.2 --install-ghc runghc --package hakyll
+-- stack --resolver lts-12.2 --install-ghc runghc --package hakyll --package pandoc
 
 -- vim: ft=haskell
 
 {-# LANGUAGE OverloadedStrings  #-}
 
 import Hakyll
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
+import Text.Pandoc
+import System.Process ( readProcess )
+import System.IO.Unsafe ( unsafePerformIO )
+import Text.Pandoc.Walk ( walk )
+import Control.Monad (filterM)
 
 main =
   hakyll $ do
@@ -16,18 +23,44 @@ main =
 
     match "posts/*" $ do
       route $ setExtension ".html"
-      compile $ pandocCompiler
+      compile $ pandocGraphvizCompiler
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
     match "index.html" $ do
         route idRoute
         compile $ do
-            posts <- loadAll "posts/*"
-            let indexContext =
-                    listField "posts" defaultContext (pure posts) <>
-                    defaultContext
+          let published :: MonadMetadata m => Item String -> m Bool
+              published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)
+          posts <- loadAll "posts/*" >>= filterM published >>= recentFirst
+          let indexContext =
+                  listField "posts" defaultContext (pure posts) <>
+                  defaultContext
 
-            getResourceBody
-                >>= applyAsTemplate indexContext
-                >>= loadAndApplyTemplate "templates/default.html" indexContext
-                >>= relativizeUrls
+          getResourceBody
+              >>= applyAsTemplate indexContext
+              >>= loadAndApplyTemplate "templates/default.html" indexContext
+              >>= relativizeUrls
+
+pandocGraphvizCompiler :: Compiler (Item String)
+pandocGraphvizCompiler = pandocCompilerWithTransform
+    defaultHakyllReaderOptions
+    defaultHakyllWriterOptions
+    graphViz
+
+graphViz :: Pandoc -> Pandoc
+graphViz = walk codeBlock
+
+codeBlock :: Block -> Block
+codeBlock cb@(CodeBlock (id, classes, namevals) contents) =
+    if "tree" `elem` classes
+    then RawBlock (Format "html") $ renderTree contents
+    else if "graph" `elem` classes
+         then RawBlock (Format "html") $ renderGraph contents
+         else cb
+codeBlock x = x
+
+renderTree :: String -> String
+renderTree contents = unsafePerformIO $ readProcess "dot" [] contents >>= readProcess "gvpr" ["-c", "-ftree.gv"] >>= readProcess "neato" ["-n", "-Tsvg"]
+
+renderGraph :: String -> String
+renderGraph contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier", "-Tsvg"] contents
