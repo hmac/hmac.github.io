@@ -1,0 +1,43 @@
+Configuring hslua-0.9.5.2...
+Preprocessing library for hslua-0.9.5.2..
+Building library for hslua-0.9.5.2..
+[ 1 of 12] Compiling Foreign.Lua.Api.Types ( .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api/Types.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api/Types.o )
+[ 2 of 12] Compiling Foreign.Lua.Api.RawBindings ( .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api/RawBindings.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api/RawBindings.o )
+[ 3 of 12] Compiling Foreign.Lua.Api.Constants ( .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api/Constants.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api/Constants.o )
+[ 4 of 12] Compiling Foreign.Lua.Types.Lua ( src/Foreign/Lua/Types/Lua.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Types/Lua.o )
+[ 5 of 12] Compiling Foreign.Lua.Types.Error ( src/Foreign/Lua/Types/Error.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Types/Error.o )
+[ 6 of 12] Compiling Foreign.Lua.Api  ( src/Foreign/Lua/Api.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Api.o )
+[ 7 of 12] Compiling Foreign.Lua.Types.FromLuaStack ( src/Foreign/Lua/Types/FromLuaStack.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Types/FromLuaStack.o )
+[ 8 of 12] Compiling Foreign.Lua.Types.ToLuaStack ( src/Foreign/Lua/Types/ToLuaStack.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Types/ToLuaStack.o )
+[ 9 of 12] Compiling Foreign.Lua.Types ( src/Foreign/Lua/Types.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Types.o )
+[10 of 12] Compiling Foreign.Lua.Util ( src/Foreign/Lua/Util.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Util.o )
+[11 of 12] Compiling Foreign.Lua.FunctionCalling ( src/Foreign/Lua/FunctionCalling.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/FunctionCalling.o )
+[12 of 12] Compiling Foreign.Lua      ( src/Foreign/Lua.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for hslua-0.9.5.2..
+Running Haddock on library for hslua-0.9.5.2..
+Warning: The documentation for the following packages are not installed. No
+links will be generated to these packages: fail-4.9.0.0
+Haddock coverage:
+ 100% ( 30 / 30) in 'Foreign.Lua.Api.Types'
+  99% ( 81 / 82) in 'Foreign.Lua.Api.RawBindings'
+  Missing documentation for:
+    hslua_call_hs_ptr (src/Foreign/Lua/Api/RawBindings.hsc:651)
+ 100% (  5 /  5) in 'Foreign.Lua.Api.Constants'
+ 100% (  7 /  7) in 'Foreign.Lua.Types.Lua'
+ 100% (  6 /  6) in 'Foreign.Lua.Types.Error'
+  99% (136 /138) in 'Foreign.Lua.Api'
+  Missing documentation for:
+    throwTopMessageAsError (src/Foreign/Lua/Api.hs:211)
+    throwTopMessageAsError' (src/Foreign/Lua/Api.hs:214)
+ 100% (  6 /  6) in 'Foreign.Lua.Types.FromLuaStack'
+ 100% (  3 /  3) in 'Foreign.Lua.Types.ToLuaStack'
+ 100% (  5 /  5) in 'Foreign.Lua.Types'
+ 100% (  8 /  8) in 'Foreign.Lua.Util'
+ 100% ( 13 / 13) in 'Foreign.Lua.FunctionCalling'
+ 100% ( 41 / 41) in 'Foreign.Lua'
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/hslua/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/hslua/hslua.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/hslua-0.9.5.2-I9JB7zQn1V8DlgyB7J4lSU
+Registering library for hslua-0.9.5.2..

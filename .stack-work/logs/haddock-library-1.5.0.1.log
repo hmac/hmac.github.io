@@ -1,0 +1,52 @@
+Configuring haddock-library-1.5.0.1...
+Preprocessing library 'attoparsec' for haddock-library-1.5.0.1..
+Building library 'attoparsec' for haddock-library-1.5.0.1..
+[ 1 of 11] Compiling Data.Attoparsec.ByteString.FastSet ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/FastSet.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/ByteString/FastSet.o )
+[ 2 of 11] Compiling Data.Attoparsec.Internal.Fhthagn ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/Internal/Fhthagn.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/Internal/Fhthagn.o )
+[ 3 of 11] Compiling Data.Attoparsec.ByteString.Buffer ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Buffer.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/ByteString/Buffer.o )
+[ 4 of 11] Compiling Data.Attoparsec.Internal.Types ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/Internal/Types.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/Internal/Types.o )
+[ 5 of 11] Compiling Data.Attoparsec.Internal ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/Internal.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/Internal.o )
+[ 6 of 11] Compiling Data.Attoparsec.Combinator ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/Combinator.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/Combinator.o )
+[ 7 of 11] Compiling Data.Attoparsec.ByteString.Internal ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Internal.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/ByteString/Internal.o )
+[ 8 of 11] Compiling Data.Attoparsec.ByteString ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/ByteString.o )
+[ 9 of 11] Compiling Data.Attoparsec.ByteString.Char8 ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Char8.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/ByteString/Char8.o )
+[10 of 11] Compiling Data.Attoparsec  ( vendor/attoparsec-0.13.1.0/Data/Attoparsec.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec.o )
+[11 of 11] Compiling Data.Attoparsec.Number ( vendor/attoparsec-0.13.1.0/Data/Attoparsec/Number.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/attoparsec/Data/Attoparsec/Number.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for haddock-library-1.5.0.1..
+Building library for haddock-library-1.5.0.1..
+[1 of 7] Compiling Documentation.Haddock.Types ( src/Documentation/Haddock/Types.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Types.o )
+[2 of 7] Compiling Documentation.Haddock.Markup ( src/Documentation/Haddock/Markup.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Markup.o )
+[3 of 7] Compiling Documentation.Haddock.Doc ( src/Documentation/Haddock/Doc.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Doc.o )
+[4 of 7] Compiling Documentation.Haddock.Utf8 ( src/Documentation/Haddock/Utf8.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Utf8.o )
+[5 of 7] Compiling Documentation.Haddock.Parser.Monad ( src/Documentation/Haddock/Parser/Monad.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Parser/Monad.o )
+[6 of 7] Compiling Documentation.Haddock.Parser.Util ( src/Documentation/Haddock/Parser/Util.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Parser/Util.o )
+[7 of 7] Compiling Documentation.Haddock.Parser ( src/Documentation/Haddock/Parser.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Documentation/Haddock/Parser.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library 'attoparsec' for haddock-library-1.5.0.1..
+Running Haddock on library 'attoparsec' for haddock-library-1.5.0.1..
+Haddock coverage:
+ 100% ( 24 / 24) in 'Data.Attoparsec.Combinator'
+  97% ( 66 / 68) in 'Data.Attoparsec.ByteString'
+  Missing documentation for:
+    Parser (vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Internal.hs:95)
+    Result (vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Internal.hs:96)
+  98% ( 86 / 88) in 'Data.Attoparsec.ByteString.Char8'
+  Missing documentation for:
+    Parser (vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Internal.hs:95)
+    Result (vendor/attoparsec-0.13.1.0/Data/Attoparsec/ByteString/Internal.hs:96)
+Warning: Data.Attoparsec.Combinator: could not find link destinations for:
+    Parser Chunk ChunkElem
+Warning: Data.Attoparsec.ByteString: could not find link destinations for:
+    Parser Chunk
+Warning: Data.Attoparsec.ByteString.Char8: could not find link destinations for:
+    Parser Chunk
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/haddock-library/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/haddock-library/haddock-library.txt
+Preprocessing library for haddock-library-1.5.0.1..
+Running Haddock on library for haddock-library-1.5.0.1..
+Cabal-simple_mPHDZzAJ_2.2.0.1_ghc-8.4.3: internal error when calculating
+transitive package dependencies.
+Debug info: []
+

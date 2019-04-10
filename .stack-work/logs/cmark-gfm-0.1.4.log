@@ -1,0 +1,40 @@
+Configuring cmark-gfm-0.1.4...
+Preprocessing library for cmark-gfm-0.1.4..
+Building library for cmark-gfm-0.1.4..
+[1 of 1] Compiling CMarkGFM         ( .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/CMarkGFM.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/CMarkGFM.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for cmark-gfm-0.1.4..
+Running Haddock on library for cmark-gfm-0.1.4..
+Haddock coverage:
+  28% (  9 / 32) in 'CMarkGFM'
+  Missing documentation for:
+    Module header
+    nodeToHtml (CMarkGFM.hsc:125)
+    nodeToXml (CMarkGFM.hsc:135)
+    nodeToMan (CMarkGFM.hsc:139)
+    nodeToLaTeX (CMarkGFM.hsc:142)
+    nodeToCommonmark (CMarkGFM.hsc:145)
+    extStrikethrough (CMarkGFM.hsc:288)
+    extTable (CMarkGFM.hsc:291)
+    extAutolink (CMarkGFM.hsc:294)
+    extTagfilter (CMarkGFM.hsc:297)
+    Node (CMarkGFM.hsc:194)
+    NodeType (CMarkGFM.hsc:229)
+    PosInfo (CMarkGFM.hsc:256)
+    DelimType (CMarkGFM.hsc:197)
+    ListType (CMarkGFM.hsc:202)
+    ListAttributes (CMarkGFM.hsc:207)
+    Url (CMarkGFM.hsc:214)
+    Title (CMarkGFM.hsc:216)
+    Level (CMarkGFM.hsc:218)
+    Info (CMarkGFM.hsc:220)
+    TableCellAlignment (CMarkGFM.hsc:226)
+    CMarkOption (CMarkGFM.hsc:263)
+    CMarkExtension (CMarkGFM.hsc:286)
+Warning: CMarkGFM: could not find link destinations for:
+    OnEnter OnExit
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/cmark-gfm/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/cmark-gfm/cmark-gfm.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/cmark-gfm-0.1.4-FBJafkXEQi3DH2UxpV9ALu
+Registering library for cmark-gfm-0.1.4..

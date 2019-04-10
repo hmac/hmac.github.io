@@ -1,0 +1,42 @@
+Configuring http-conduit-2.3.2...
+Preprocessing library for http-conduit-2.3.2..
+Building library for http-conduit-2.3.2..
+[1 of 3] Compiling Network.HTTP.Client.Conduit ( Network/HTTP/Client/Conduit.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Network/HTTP/Client/Conduit.o )
+[2 of 3] Compiling Network.HTTP.Conduit ( Network/HTTP/Conduit.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Network/HTTP/Conduit.o )
+[3 of 3] Compiling Network.HTTP.Simple ( Network/HTTP/Simple.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Network/HTTP/Simple.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for http-conduit-2.3.2..
+Running Haddock on library for http-conduit-2.3.2..
+Haddock coverage:
+  88% ( 77 / 88) in 'Network.HTTP.Client.Conduit'
+  Missing documentation for:
+    removeExistingCookieFromCookieJar
+    destroyCookieJar
+    createCookieJar
+    isIpAddress
+    HttpExceptionContent
+    Cookie
+    CookieJar
+    HasHttpManager
+    requestBodySource (Network/HTTP/Client/Conduit.hs:129)
+    requestBodySourceChunked (Network/HTTP/Client/Conduit.hs:132)
+    bodyReaderSource (Network/HTTP/Client/Conduit.hs:117)
+  86% ( 69 / 80) in 'Network.HTTP.Conduit'
+  Missing documentation for:
+    http (Network/HTTP/Conduit.hs:310)
+    requestBodySource (Network/HTTP/Conduit.hs:321)
+    requestBodySourceChunked (Network/HTTP/Conduit.hs:324)
+    requestBodySourceIO (Network/HTTP/Conduit.hs:344)
+    requestBodySourceChunkedIO (Network/HTTP/Conduit.hs:347)
+    Cookie
+    CookieJar
+    createCookieJar
+    destroyCookieJar
+    lbsResponse (Network/HTTP/Conduit.hs:301)
+    HttpExceptionContent
+ 100% ( 57 / 57) in 'Network.HTTP.Simple'
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/http-conduit/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/http-conduit/http-conduit.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/http-conduit-2.3.2-4IvnVlleCS72csJBtSslkB
+Registering library for http-conduit-2.3.2..

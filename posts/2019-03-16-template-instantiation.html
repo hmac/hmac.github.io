@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/syntax.css" />
+  </head>
+  <body>
+    <style>
+      body {
+        max-width: 600px;
+        font-family: Palatino,Times New Roman,serif;
+        margin: 0px auto 0px auto;
+        font-size: 16px;
+      }
+      ol#post-list {
+        list-style-type: none
+      }
+      #header {
+        border-bottom: 1px solid black;
+        padding: 10px 0px 10px 0px;
+      }
+      #header #site {
+        font-family: monospace;
+        text-align: right
+      }
+      #header #name {
+        float: left
+      }
+      #header a {
+        text-decoration: none;
+      }
+      #header a:visited {
+        color: black;
+      }
+      #header a:hover {
+        color: black;
+      }
+    </style>
+    <div id="header">
+      <h2 id="name">Harry Maclean</h2>
+      <h2 id="site"><a href="../">hmac.dev</a></h2>
+    </div>
+    <h1 id="implementing-a-functional-language-ii-template-instantiation">Implementing a Functional Language II: Template Instantiation</h1>
+<p>This is part 3 of a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-16-template-instantiation.lhs">here</a>. To load it into GHCi and play around, you can use the following command:</p>
+<pre><code>stack --resolver lts-12.2                        \
+      ghci --package prettyprinter               \
+           --package containers                  \
+           --package text                        \
+           2019-03-03-the-core-language.lhs      \
+           2019-03-16-template-instantiation.lhs</code></pre>
+<hr />
+<h2 id="the-state-transition-system">The state transition system</h2>
+<p>In part 2 we covered the theory behind lazy graph reduction. Now we’re going to use it to construct our first compiler. For this and every successive compiler, we will describe the behavior through a <em>state transition system</em>. This allows us to be precise about how the compiler works while abstracting us from the actual code. The state transition system will be a sort of specification of the compiler. The book spends some time on describing state transition systems, but they’re quite intuitive so we’re going to explain things as we go along.</p>
+<p>A state transition system consists, unsurprisingly, of an initial <em>state</em> and a series of <em>transition rules</em> which describe how the state evolves. The compiler proceeds by repeatedly firing one of the transition rules until a terminal state is reached.</p>
+<p>Our state is a triple</p>
+<pre><code>(stack, heap, globals)</code></pre>
+<p>or <code>(s,h,g)</code> for short.</p>
+<p>The <em>stack</em> is a stack of addresses, each of which identifies a <em>node</em> in the heap. These nodes form the spine of the expression being evaluated. The notation <code>a : s</code> denotes a stack whose top element is <code>a</code> and whose remaining elements form the stack <code>s</code>.</p>
+<p>The <em>heap</em> is a collection of <em>nodes</em>, indexed by their address. The notation <code>h[a : n]</code> denotes a heap <code>h</code> in which the address <code>a</code> points to the node <code>n</code>.</p>
+<p>The <em>gobals</em> are a collection of addresses for each supercombinator and primitive in the program.</p>
+<p>A heap node can take one of the following forms: - <code>NAp a b</code> represents the application of the node with address <code>a</code> to the node with address <code>b</code>. - <code>NSupercomb args body</code> represents a supercombinator. - <code>NNum n</code> represents the number <code>n</code>.</p>
+<p>These forms look similar to the <code>Expr</code> data type defined for the syntax of the language, but they’re distinct. <code>Expr</code> describes the <em>syntactic</em> structure of the language whereas the heap nodes describe the <em>operational</em> structure. Conversion from one to the other is a key part of our compiler that we’ll discuss later on.</p>
+<p>Here is our first transition rule:</p>
+<pre><code>    a : s      h[a : NAp a1 a2] g
+-&gt; a1 : a : s  h                g</code></pre>
+<p>This describes how we unwind an application node onto the stack. This rule will only fire if the address on the top of the stack points to an <code>NAp</code> node. Repeated application of this rule will unwind the entire spine of the expression onto the stack.</p>
+<p>Our second rule describes how to perform a supercombinator reduction:</p>
+<pre><code>   a0 : a1 : ... : an : s h[a0 : NSupercomb [x1, ..., xn] body] g
+-&gt;                 ar : s h'                                    g
+  where (h', ar) = instantiate body h g[x1 -&gt; a2, ..., xn -&gt; an]</code></pre>
+<p><code>instantiate</code> is a function which takes as arguments the supercombinator body, the heap and the globals, augmented with a binding of each supercombinator parameter to the address of its argument. It returns the address of the instantiated supercombinator body, along with a modified heap containing the address.</p>
+<p>Note that this rule doesn’t update the root of the redex - it simply replaces it with the result. This will result in repeated and unnecessary reduction of this expression if it is shared, as we discussed in the previous section. We’ll improve on this later on.</p>
+<p>TODO: go direct to the sharing implementation?</p>
+<h2 id="implementation">Implementation</h2>
+<p>With the formalities out of the way, we can start implementing the compiler.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">module</span> <span class="dt">Core.Compiler.Template</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Data.Map</span> (<span class="dt">Map</span>)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Map</span> <span class="kw">as</span> <span class="dt">Map</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">import</span> <span class="dt">Core.Language</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="kw">import</span> <span class="dt">Data.List</span> (mapAccumL)</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="kw">import</span> <span class="dt">Data.Text</span> (unpack)</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="kw">import</span> <span class="dt">Data.Text.Prettyprint.Doc</span></a></code></pre></div>
+<p>We define the type for our state transition system.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">data</span> <span class="dt">TiState</span> <span class="fu">=</span> <span class="dt">TiState</span> {<span class="ot"> tiStack ::</span> [<span class="dt">Addr</span>]</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">                       ,<span class="ot"> tiHeap ::</span> <span class="dt">Heap</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">                       ,<span class="ot"> tiGlobals ::</span> <span class="dt">Globals</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">                       }</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5"><span class="kw">type</span> <span class="dt">Globals</span> <span class="fu">=</span> <span class="dt">Map</span> <span class="dt">Name</span> <span class="dt">Addr</span></a></code></pre></div>
+<p>The fields match each part of the state in our transition system. We model the stack as a linked list of addresses. The <code>Heap</code> type is a glorified map which provides functions for looking up nodes by their address and allocating new nodes. We model globals as a map of <code>Name</code> to <code>Addr</code>.</p>
+<p>We also define the <code>Node</code> type.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Node</span> <span class="fu">=</span> <span class="dt">NAp</span> <span class="dt">Addr</span> <span class="dt">Addr</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">          <span class="fu">|</span> <span class="dt">NSupercomb</span> <span class="dt">Name</span>     <span class="co">-- name</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">                       [<span class="dt">Name</span>]   <span class="co">-- argument names</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">                       <span class="dt">CoreExpr</span> <span class="co">-- body</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">          <span class="fu">|</span> <span class="dt">NNum</span> <span class="dt">Int</span></a></code></pre></div>
+<p>The <code>compile</code> function takes a program and creates from it the initial state of the machine.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="ot">compile ::</span> <span class="dt">CoreProgram</span> <span class="ot">-&gt;</span> <span class="dt">TiState</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">compile program</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">  <span class="fu">=</span> <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [mainAddr], tiHeap <span class="fu">=</span> initialHeap, tiGlobals <span class="fu">=</span> globals }</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">    <span class="kw">where</span> supercombinatorDefinitions <span class="fu">=</span> program <span class="fu">++</span> prelude</a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">          (initialHeap, globals) <span class="fu">=</span> buildInitialHeap supercombinatorDefinitions</a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">          mainAddr <span class="fu">=</span> Map.findWithDefault (error <span class="st">&quot;main is not defined&quot;</span>) <span class="st">&quot;main&quot;</span> globals</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="ot">buildInitialHeap ::</span> [<span class="dt">CoreScDefn</span>] <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, <span class="dt">Globals</span>)</a>
+<a class="sourceLine" id="cb8-9" data-line-number="9">buildInitialHeap defs <span class="fu">=</span> <span class="kw">let</span> (heap, globals) <span class="fu">=</span> mapAccumL allocateSc emptyHeap defs</a>
+<a class="sourceLine" id="cb8-10" data-line-number="10">                         <span class="kw">in</span> (heap, Map.fromList globals)</a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">  <span class="kw">where</span><span class="ot"> allocateSc ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> <span class="dt">CoreScDefn</span> <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, (<span class="dt">Name</span>, <span class="dt">Addr</span>))</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12">        allocateSc heap (name, args, body) <span class="fu">=</span> (heap', (name, addr))</a>
+<a class="sourceLine" id="cb8-13" data-line-number="13">          <span class="kw">where</span> (heap', addr) <span class="fu">=</span> halloc heap (<span class="dt">NSupercomb</span> name args body)</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="ot">prelude ::</span> [<span class="dt">CoreScDefn</span>]</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">prelude <span class="fu">=</span> [</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">            (<span class="st">&quot;I&quot;</span>, [<span class="st">&quot;x&quot;</span>], <span class="dt">EVar</span> <span class="st">&quot;x&quot;</span>)</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">          , (<span class="st">&quot;K&quot;</span>, [<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>], <span class="dt">EVar</span> <span class="st">&quot;x&quot;</span>)</a>
+<a class="sourceLine" id="cb9-5" data-line-number="5">          , (<span class="st">&quot;K1&quot;</span>, [<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>], <span class="dt">EVar</span> <span class="st">&quot;y&quot;</span>)</a>
+<a class="sourceLine" id="cb9-6" data-line-number="6">          ]</a></code></pre></div>
+<p>We start by collecting all our supercombinator definitions: those defined in the program and those listed in our built-in <code>prelude</code>. We allocate each of these on the (initially empty) heap by converting them into a <code>NSupercomb</code> and passing this to <code>halloc</code>. We thread the heap through each iteration so that the final heap contains every supercombinator. The globals object is just a map from each supercombinator name to the address of the node we have allocated in the heap. The initial address on the stack is the address of <code>main</code>, which we expect to be defined in the program.</p>
+<p>The <code>eval</code> function takes an initial state and repeatedly runs the machine, producing a list of each state it passes through.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="ot">eval ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> [<span class="dt">TiState</span>]</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">eval state <span class="fu">=</span> state <span class="fu">:</span> rest</a>
+<a class="sourceLine" id="cb10-3" data-line-number="3">  <span class="kw">where</span> rest <span class="fu">|</span> final state <span class="fu">=</span> []</a>
+<a class="sourceLine" id="cb10-4" data-line-number="4">             <span class="fu">|</span> otherwise <span class="fu">=</span> eval nextState</a>
+<a class="sourceLine" id="cb10-5" data-line-number="5">        nextState <span class="fu">=</span> step state</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="ot">final ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb11-2" data-line-number="2">final <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [addr], tiHeap <span class="fu">=</span> heap } <span class="fu">=</span> isDataNode (hlookup heap addr)</a>
+<a class="sourceLine" id="cb11-3" data-line-number="3">final <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [] } <span class="fu">=</span> error <span class="st">&quot;Empty stack&quot;</span></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4">final _ <span class="fu">=</span> <span class="dt">False</span></a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="ot">isDataNode ::</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2">isDataNode (<span class="dt">NNum</span> _) <span class="fu">=</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb12-3" data-line-number="3">isDataNode _ <span class="fu">=</span> <span class="dt">False</span></a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="ot">step ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> <span class="dt">TiState</span></a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">step state <span class="fu">=</span>dispatch (hlookup heap a)</a>
+<a class="sourceLine" id="cb13-3" data-line-number="3">  <span class="kw">where</span> a <span class="fu">:</span> stack <span class="fu">=</span> tiStack state</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4">        heap <span class="fu">=</span> tiHeap state</a>
+<a class="sourceLine" id="cb13-5" data-line-number="5">        dispatch (<span class="dt">NNum</span> n) <span class="fu">=</span> error <span class="st">&quot;number applied as a function&quot;</span></a>
+<a class="sourceLine" id="cb13-6" data-line-number="6">        dispatch (<span class="dt">NAp</span> a1 a2) <span class="fu">=</span> apStep state a1 a2</a>
+<a class="sourceLine" id="cb13-7" data-line-number="7">        dispatch (<span class="dt">NSupercomb</span> name args body) <span class="fu">=</span> scStep state name args body</a></code></pre></div>
+<p><code>apStep</code> is a direct translation of our first transition rule, which unwinds the spine.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="ot">apStep ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> <span class="dt">Addr</span> <span class="ot">-&gt;</span> <span class="dt">Addr</span> <span class="ot">-&gt;</span> <span class="dt">TiState</span></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">apStep state a1 a2 <span class="fu">=</span> state { tiStack <span class="fu">=</span> a1 <span class="fu">:</span> stack }</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">  <span class="kw">where</span> stack <span class="fu">=</span> tiStack state</a></code></pre></div>
+<p><code>scStep</code> is a translation of our second transition rule, which reduces a supercombinator application.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="ot">scStep ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> <span class="dt">Name</span> <span class="ot">-&gt;</span> [<span class="dt">Name</span>] <span class="ot">-&gt;</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">TiState</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2">scStep state scName argNames body <span class="fu">=</span> state { tiStack <span class="fu">=</span> stack', tiHeap <span class="fu">=</span> heap' }</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">  <span class="kw">where</span> stack <span class="fu">=</span> tiStack state</a>
+<a class="sourceLine" id="cb15-4" data-line-number="4">        heap <span class="fu">=</span> tiHeap state</a>
+<a class="sourceLine" id="cb15-5" data-line-number="5">        globals <span class="fu">=</span> tiGlobals state</a>
+<a class="sourceLine" id="cb15-6" data-line-number="6">        (heap', addr) <span class="fu">=</span> instantiate body heap (argBindings <span class="fu">&lt;&gt;</span> globals)</a>
+<a class="sourceLine" id="cb15-7" data-line-number="7">        argBindings <span class="fu">=</span> Map.fromList <span class="fu">$</span> zip argNames (getArgs heap stack)</a>
+<a class="sourceLine" id="cb15-8" data-line-number="8">        stack' <span class="fu">=</span> addr <span class="fu">:</span> drop ((length argNames) <span class="fu">+</span> <span class="dv">1</span>) stack</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="ot">getArgs ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> [<span class="dt">Addr</span>] <span class="ot">-&gt;</span> [<span class="dt">Addr</span>]</a>
+<a class="sourceLine" id="cb16-2" data-line-number="2">getArgs heap (sc <span class="fu">:</span> stack) <span class="fu">=</span> map getArg stack</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">  <span class="kw">where</span> getArg addr <span class="fu">=</span> <span class="kw">case</span> hlookup heap addr <span class="kw">of</span></a>
+<a class="sourceLine" id="cb16-4" data-line-number="4">                        <span class="dt">NAp</span> _ a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb16-5" data-line-number="5">                        _ <span class="ot">-&gt;</span> error <span class="st">&quot;Unexpected argument node&quot;</span></a></code></pre></div>
+<p><code>instantiate</code> is responsible for converting a <code>CoreExpr</code> into a <code>Node</code> and allocating it on the heap. It takes as an argument a collection of argument bindings, mapping argument names to addresses on the heap.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="ot">instantiate ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Name</span> <span class="dt">Addr</span> <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, <span class="dt">Addr</span>)</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2">instantiate (<span class="dt">ENum</span> n) heap _ <span class="fu">=</span> halloc heap (<span class="dt">NNum</span> n)</a>
+<a class="sourceLine" id="cb17-3" data-line-number="3">instantiate (<span class="dt">EAp</span> e1 e2) heap env <span class="fu">=</span> <span class="kw">let</span> (heap1, a1) <span class="fu">=</span> instantiate e1 heap env</a>
+<a class="sourceLine" id="cb17-4" data-line-number="4">                                       (heap2, a2) <span class="fu">=</span> instantiate e2 heap1 env</a>
+<a class="sourceLine" id="cb17-5" data-line-number="5">                                    <span class="kw">in</span> halloc heap2 (<span class="dt">NAp</span> a1 a2)</a>
+<a class="sourceLine" id="cb17-6" data-line-number="6">instantiate (<span class="dt">EVar</span> v) heap env <span class="fu">=</span> <span class="kw">case</span> Map.lookup v env <span class="kw">of</span></a>
+<a class="sourceLine" id="cb17-7" data-line-number="7">                                  <span class="dt">Just</span> a <span class="ot">-&gt;</span> (heap, a)</a>
+<a class="sourceLine" id="cb17-8" data-line-number="8">                                  <span class="dt">Nothing</span> <span class="ot">-&gt;</span> error <span class="fu">$</span> <span class="st">&quot;undefined name &quot;</span> <span class="fu">&lt;&gt;</span> unpack v</a></code></pre></div>
+<p>These definitions belong in a utils module, but for now they live here.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="kw">type</span> <span class="dt">Addr</span> <span class="fu">=</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"><span class="kw">data</span> <span class="dt">Heap</span> <span class="fu">=</span> <span class="dt">Heap</span> <span class="dt">Addr</span> (<span class="dt">Map</span> <span class="dt">Addr</span> <span class="dt">Node</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="ot">emptyHeap ::</span> <span class="dt">Heap</span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">emptyHeap <span class="fu">=</span> <span class="dt">Heap</span> <span class="dv">0</span> mempty</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="ot">halloc ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, <span class="dt">Addr</span>)</a>
+<a class="sourceLine" id="cb20-2" data-line-number="2">halloc (<span class="dt">Heap</span> nextAddr h) a <span class="fu">=</span> (<span class="dt">Heap</span> (nextAddr <span class="fu">+</span> <span class="dv">1</span>) (Map.insert nextAddr a h), nextAddr)</a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="ot">hlookup ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> <span class="dt">Addr</span> <span class="ot">-&gt;</span> <span class="dt">Node</span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2">hlookup (<span class="dt">Heap</span> _ h) a <span class="fu">=</span> Map.findWithDefault (error <span class="st">&quot;invalid address&quot;</span>) a h</a></code></pre></div>
+<p>Here we define functions to pretty-print the machine state.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="ot">printStates ::</span> [<span class="dt">TiState</span>] <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb22-2" data-line-number="2">printStates <span class="fu">=</span> vsep <span class="fu">.</span> map pretty</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">Pretty</span> <span class="dt">Node</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb23-2" data-line-number="2">  pretty (<span class="dt">NNum</span> n) <span class="fu">=</span> <span class="st">&quot;NNum&quot;</span> <span class="fu">&lt;+&gt;</span> pretty n</a>
+<a class="sourceLine" id="cb23-3" data-line-number="3">  pretty (<span class="dt">NAp</span> a1 a2) <span class="fu">=</span> <span class="st">&quot;NAp&quot;</span> <span class="fu">&lt;+&gt;</span> pretty a1 <span class="fu">&lt;+&gt;</span> pretty a2</a>
+<a class="sourceLine" id="cb23-4" data-line-number="4">  pretty (<span class="dt">NSupercomb</span> name _ _) <span class="fu">=</span> <span class="st">&quot;NSupercomb&quot;</span> <span class="fu">&lt;+&gt;</span> pretty name</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb24-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">Pretty</span> <span class="dt">TiState</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb24-2" data-line-number="2">  pretty <span class="dt">TiState</span> { tiStack <span class="fu">=</span> stack, tiHeap <span class="fu">=</span> heap } <span class="fu">=</span> pStack heap stack</a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="ot">pStack ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> [<span class="dt">Addr</span>] <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</a>
+<a class="sourceLine" id="cb25-2" data-line-number="2">pStack heap stack <span class="fu">=</span> <span class="st">&quot;Stack [&quot;</span> <span class="fu">&lt;&gt;</span> align (vsep (map pStackItem stack)) <span class="fu">&lt;&gt;</span> <span class="st">&quot;]&quot;</span></a>
+<a class="sourceLine" id="cb25-3" data-line-number="3">  <span class="kw">where</span> pStackItem addr <span class="fu">=</span> pretty addr <span class="fu">&lt;&gt;</span> <span class="st">&quot;:&quot;</span> <span class="fu">&lt;+&gt;</span> pStackNode heap (hlookup heap addr)</a>
+<a class="sourceLine" id="cb25-4" data-line-number="4">        pStackNode heap (<span class="dt">NAp</span> fAddr argAddr)</a>
+<a class="sourceLine" id="cb25-5" data-line-number="5">          <span class="fu">=</span> <span class="kw">let</span> node <span class="fu">=</span> (hlookup heap argAddr)</a>
+<a class="sourceLine" id="cb25-6" data-line-number="6">             <span class="kw">in</span> <span class="st">&quot;NAp&quot;</span> <span class="fu">&lt;+&gt;</span> pretty fAddr <span class="fu">&lt;+&gt;</span> pretty argAddr <span class="fu">&lt;+&gt;</span> parens (pretty node)</a>
+<a class="sourceLine" id="cb25-7" data-line-number="7">        pStackNode heap node <span class="fu">=</span> pretty node</a></code></pre></div>
+<p>TODO: examples</p>
+  </body>
+</html>

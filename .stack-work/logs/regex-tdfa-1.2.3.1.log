@@ -1,0 +1,379 @@
+Configuring regex-tdfa-1.2.3.1...
+Preprocessing library for regex-tdfa-1.2.3.1..
+Building library for regex-tdfa-1.2.3.1..
+[ 1 of 23] Compiling Data.IntMap.CharMap2 ( Data/IntMap/CharMap2.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Data/IntMap/CharMap2.o )
+
+[;1mData/IntMap/CharMap2.hs:258:24: [;1m[35mwarning:[0m[0m[;1m [[;1m[35m-Wdeprecations[0m[0m[;1m][0m[0m[;1m
+    In the use of ‘showTree’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."[0m[0m
+[;1m[34m    |[0m[0m
+[;1m[34m258 |[0m[0m showTree (CharMap m) = [;1m[35mMD.showTree[0m[0m m
+[;1m[34m    |[0m[0m[;1m[35m                        ^^^^^^^^^^^[0m[0m
+[0m[0m[0m
+[;1mData/IntMap/CharMap2.hs:261:34: [;1m[35mwarning:[0m[0m[;1m [[;1m[35m-Wdeprecations[0m[0m[;1m][0m[0m[;1m
+    In the use of ‘showTreeWith’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."[0m[0m
+[;1m[34m    |[0m[0m
+[;1m[34m261 |[0m[0m showTreeWith b1 b2 (CharMap m) = [;1m[35mMD.showTreeWith[0m[0m b1 b2 m
+[;1m[34m    |[0m[0m[;1m[35m                                  ^^^^^^^^^^^^^^^[0m[0m
+[0m[0m[0m[ 2 of 23] Compiling Data.IntSet.EnumSet2 ( Data/IntSet/EnumSet2.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Data/IntSet/EnumSet2.o )
+[ 3 of 23] Compiling Data.IntMap.EnumMap2 ( Data/IntMap/EnumMap2.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Data/IntMap/EnumMap2.o )
+
+[;1mData/IntMap/EnumMap2.hs:255:24: [;1m[35mwarning:[0m[0m[;1m [[;1m[35m-Wdeprecations[0m[0m[;1m][0m[0m[;1m
+    In the use of ‘showTree’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."[0m[0m
+[;1m[34m    |[0m[0m
+[;1m[34m255 |[0m[0m showTree (EnumMap m) = [;1m[35mMD.showTree[0m[0m m
+[;1m[34m    |[0m[0m[;1m[35m                        ^^^^^^^^^^^[0m[0m
+[0m[0m[0m
+[;1mData/IntMap/EnumMap2.hs:258:34: [;1m[35mwarning:[0m[0m[;1m [[;1m[35m-Wdeprecations[0m[0m[;1m][0m[0m[;1m
+    In the use of ‘showTreeWith’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."[0m[0m
+[;1m[34m    |[0m[0m
+[;1m[34m258 |[0m[0m showTreeWith b1 b2 (EnumMap m) = [;1m[35mMD.showTreeWith[0m[0m b1 b2 m
+[;1m[34m    |[0m[0m[;1m[35m                                  ^^^^^^^^^^^^^^^[0m[0m
+[0m[0m[0m[ 4 of 23] Compiling Paths_regex_tdfa ( .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/autogen/Paths_regex_tdfa.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Paths_regex_tdfa.o )
+[ 5 of 23] Compiling Text.Regex.TDFA.IntArrTrieSet ( Text/Regex/TDFA/IntArrTrieSet.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/IntArrTrieSet.o )
+[ 6 of 23] Compiling Text.Regex.TDFA.Common ( Text/Regex/TDFA/Common.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/Common.o )
+[ 7 of 23] Compiling Text.Regex.TDFA.NewDFA.Uncons ( Text/Regex/TDFA/NewDFA/Uncons.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/Uncons.o )
+[ 8 of 23] Compiling Text.Regex.TDFA.NewDFA.MakeTest ( Text/Regex/TDFA/NewDFA/MakeTest.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/MakeTest.o )
+[ 9 of 23] Compiling Text.Regex.TDFA.NewDFA.Tester ( Text/Regex/TDFA/NewDFA/Tester.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/Tester.o )
+[10 of 23] Compiling Text.Regex.TDFA.NewDFA.Engine_NC_FA ( Text/Regex/TDFA/NewDFA/Engine_NC_FA.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/Engine_NC_FA.o )
+[11 of 23] Compiling Text.Regex.TDFA.NewDFA.Engine_NC ( Text/Regex/TDFA/NewDFA/Engine_NC.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/Engine_NC.o )
+[12 of 23] Compiling Text.Regex.TDFA.NewDFA.Engine_FA ( Text/Regex/TDFA/NewDFA/Engine_FA.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/Engine_FA.o )
+[13 of 23] Compiling Text.Regex.TDFA.NewDFA.Engine ( Text/Regex/TDFA/NewDFA/Engine.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/NewDFA/Engine.o )
+[14 of 23] Compiling Text.Regex.TDFA.Pattern ( Text/Regex/TDFA/Pattern.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/Pattern.o )
+[15 of 23] Compiling Text.Regex.TDFA.CorePattern ( Text/Regex/TDFA/CorePattern.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/CorePattern.o )
+[16 of 23] Compiling Text.Regex.TDFA.ReadRegex ( Text/Regex/TDFA/ReadRegex.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/ReadRegex.o )
+[17 of 23] Compiling Text.Regex.TDFA.TNFA ( Text/Regex/TDFA/TNFA.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/TNFA.o )
+[18 of 23] Compiling Text.Regex.TDFA.TDFA ( Text/Regex/TDFA/TDFA.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/TDFA.o )
+[19 of 23] Compiling Text.Regex.TDFA.String ( Text/Regex/TDFA/String.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/String.o )
+[20 of 23] Compiling Text.Regex.TDFA.Sequence ( Text/Regex/TDFA/Sequence.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/Sequence.o )
+[21 of 23] Compiling Text.Regex.TDFA.ByteString.Lazy ( Text/Regex/TDFA/ByteString/Lazy.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/ByteString/Lazy.o )
+[22 of 23] Compiling Text.Regex.TDFA.ByteString ( Text/Regex/TDFA/ByteString.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA/ByteString.o )
+[23 of 23] Compiling Text.Regex.TDFA  ( Text/Regex/TDFA.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/TDFA.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for regex-tdfa-1.2.3.1..
+Running Haddock on library for regex-tdfa-1.2.3.1..
+
+Data/IntMap/CharMap2.hs:258:24: warning: [-Wdeprecations]
+    In the use of ‘showTree’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."
+    |
+258 | showTree (CharMap m) = MD.showTree m
+    |                        ^^^^^^^^^^^
+
+Data/IntMap/CharMap2.hs:261:34: warning: [-Wdeprecations]
+    In the use of ‘showTreeWith’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."
+    |
+261 | showTreeWith b1 b2 (CharMap m) = MD.showTreeWith b1 b2 m
+    |                                  ^^^^^^^^^^^^^^^
+
+Data/IntMap/EnumMap2.hs:255:24: warning: [-Wdeprecations]
+    In the use of ‘showTree’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."
+    |
+255 | showTree (EnumMap m) = MD.showTree m
+    |                        ^^^^^^^^^^^
+
+Data/IntMap/EnumMap2.hs:258:34: warning: [-Wdeprecations]
+    In the use of ‘showTreeWith’
+    (imported from Data.IntMap, but defined in containers-0.5.11.0:Data.IntMap.Internal.DeprecatedDebug):
+    Deprecated: "These debugging functions will be removed from this module. They are available from Data.IntMap.Internal.Debug."
+    |
+258 | showTreeWith b1 b2 (EnumMap m) = MD.showTreeWith b1 b2 m
+    |                                  ^^^^^^^^^^^^^^^
+Haddock coverage:
+   0% (  0 / 69) in 'Data.IntMap.CharMap2'
+  Missing documentation for:
+    Module header
+    CharMap (Data/IntMap/CharMap2.hs:24)
+    Key (Data/IntMap/CharMap2.hs:36)
+    ! (Data/IntMap/CharMap2.hs:38)
+    \\ (Data/IntMap/CharMap2.hs:41)
+    null (Data/IntMap/CharMap2.hs:44)
+    size (Data/IntMap/CharMap2.hs:47)
+    member (Data/IntMap/CharMap2.hs:50)
+    notMember (Data/IntMap/CharMap2.hs:53)
+    lookup (Data/IntMap/CharMap2.hs:56)
+    findWithDefault (Data/IntMap/CharMap2.hs:59)
+    empty (Data/IntMap/CharMap2.hs:62)
+    singleton (Data/IntMap/CharMap2.hs:65)
+    insert (Data/IntMap/CharMap2.hs:68)
+    insertWith (Data/IntMap/CharMap2.hs:71)
+    insertWithKey (Data/IntMap/CharMap2.hs:74)
+    insertLookupWithKey (Data/IntMap/CharMap2.hs:78)
+    delete (Data/IntMap/CharMap2.hs:83)
+    adjust (Data/IntMap/CharMap2.hs:86)
+    adjustWithKey (Data/IntMap/CharMap2.hs:89)
+    update (Data/IntMap/CharMap2.hs:93)
+    updateWithKey (Data/IntMap/CharMap2.hs:96)
+    updateLookupWithKey (Data/IntMap/CharMap2.hs:100)
+    union (Data/IntMap/CharMap2.hs:105)
+    unionWith (Data/IntMap/CharMap2.hs:108)
+    unionWithKey (Data/IntMap/CharMap2.hs:111)
+    unions (Data/IntMap/CharMap2.hs:115)
+    unionsWith (Data/IntMap/CharMap2.hs:118)
+    difference (Data/IntMap/CharMap2.hs:121)
+    differenceWith (Data/IntMap/CharMap2.hs:124)
+    differenceWithKey (Data/IntMap/CharMap2.hs:127)
+    intersection (Data/IntMap/CharMap2.hs:131)
+    intersectionWith (Data/IntMap/CharMap2.hs:134)
+    intersectionWithKey (Data/IntMap/CharMap2.hs:137)
+    map (Data/IntMap/CharMap2.hs:141)
+    mapWithKey (Data/IntMap/CharMap2.hs:144)
+    mapAccum (Data/IntMap/CharMap2.hs:148)
+    mapAccumWithKey (Data/IntMap/CharMap2.hs:152)
+    fold (Data/IntMap/CharMap2.hs:157)
+    foldWithKey (Data/IntMap/CharMap2.hs:160)
+    elems (Data/IntMap/CharMap2.hs:164)
+    keys (Data/IntMap/CharMap2.hs:167)
+    keysSet (Data/IntMap/CharMap2.hs:170)
+    assocs (Data/IntMap/CharMap2.hs:173)
+    toList (Data/IntMap/CharMap2.hs:176)
+    fromList (Data/IntMap/CharMap2.hs:179)
+    fromListWith (Data/IntMap/CharMap2.hs:182)
+    fromListWithKey (Data/IntMap/CharMap2.hs:185)
+    toAscList (Data/IntMap/CharMap2.hs:189)
+    fromAscList (Data/IntMap/CharMap2.hs:192)
+    fromAscListWith (Data/IntMap/CharMap2.hs:195)
+    fromAscListWithKey (Data/IntMap/CharMap2.hs:198)
+    fromDistinctAscList (Data/IntMap/CharMap2.hs:202)
+    filter (Data/IntMap/CharMap2.hs:205)
+    filterWithKey (Data/IntMap/CharMap2.hs:208)
+    partition (Data/IntMap/CharMap2.hs:212)
+    partitionWithKey (Data/IntMap/CharMap2.hs:216)
+    mapMaybe (Data/IntMap/CharMap2.hs:221)
+    mapMaybeWithKey (Data/IntMap/CharMap2.hs:224)
+    mapEither (Data/IntMap/CharMap2.hs:228)
+    mapEitherWithKey (Data/IntMap/CharMap2.hs:232)
+    split (Data/IntMap/CharMap2.hs:237)
+    splitLookup (Data/IntMap/CharMap2.hs:241)
+    isSubmapOf (Data/IntMap/CharMap2.hs:245)
+    isSubmapOfBy (Data/IntMap/CharMap2.hs:248)
+    isProperSubmapOf (Data/IntMap/CharMap2.hs:251)
+    isProperSubmapOfBy (Data/IntMap/CharMap2.hs:254)
+    showTree (Data/IntMap/CharMap2.hs:257)
+    showTreeWith (Data/IntMap/CharMap2.hs:260)
+   0% (  0 / 31) in 'Data.IntSet.EnumSet2'
+  Missing documentation for:
+    Module header
+    EnumSet (Data/IntSet/EnumSet2.hs:7)
+    \\ (Data/IntSet/EnumSet2.hs:17)
+    null (Data/IntSet/EnumSet2.hs:20)
+    size (Data/IntSet/EnumSet2.hs:23)
+    member (Data/IntSet/EnumSet2.hs:26)
+    notMember (Data/IntSet/EnumSet2.hs:29)
+    isSubsetOf (Data/IntSet/EnumSet2.hs:32)
+    isProperSubsetOf (Data/IntSet/EnumSet2.hs:35)
+    empty (Data/IntSet/EnumSet2.hs:38)
+    singleton (Data/IntSet/EnumSet2.hs:41)
+    insert (Data/IntSet/EnumSet2.hs:44)
+    delete (Data/IntSet/EnumSet2.hs:47)
+    union (Data/IntSet/EnumSet2.hs:50)
+    unions (Data/IntSet/EnumSet2.hs:53)
+    difference (Data/IntSet/EnumSet2.hs:56)
+    intersection (Data/IntSet/EnumSet2.hs:59)
+    filter (Data/IntSet/EnumSet2.hs:62)
+    partition (Data/IntSet/EnumSet2.hs:66)
+    split (Data/IntSet/EnumSet2.hs:71)
+    splitMember (Data/IntSet/EnumSet2.hs:75)
+    map (Data/IntSet/EnumSet2.hs:79)
+    fold (Data/IntSet/EnumSet2.hs:83)
+    elems (Data/IntSet/EnumSet2.hs:87)
+    toList (Data/IntSet/EnumSet2.hs:90)
+    fromList (Data/IntSet/EnumSet2.hs:93)
+    toAscList (Data/IntSet/EnumSet2.hs:96)
+    fromAscList (Data/IntSet/EnumSet2.hs:99)
+    fromDistinctAscList (Data/IntSet/EnumSet2.hs:102)
+    showTree (Data/IntSet/EnumSet2.hs:105)
+    showTreeWith (Data/IntSet/EnumSet2.hs:108)
+   0% (  0 / 68) in 'Data.IntMap.EnumMap2'
+  Missing documentation for:
+    Module header
+    EnumMap (Data/IntMap/EnumMap2.hs:17)
+    ! (Data/IntMap/EnumMap2.hs:33)
+    \\ (Data/IntMap/EnumMap2.hs:36)
+    null (Data/IntMap/EnumMap2.hs:39)
+    size (Data/IntMap/EnumMap2.hs:42)
+    member (Data/IntMap/EnumMap2.hs:45)
+    notMember (Data/IntMap/EnumMap2.hs:48)
+    lookup (Data/IntMap/EnumMap2.hs:52)
+    findWithDefault (Data/IntMap/EnumMap2.hs:55)
+    empty (Data/IntMap/EnumMap2.hs:58)
+    singleton (Data/IntMap/EnumMap2.hs:61)
+    insert (Data/IntMap/EnumMap2.hs:64)
+    insertWith (Data/IntMap/EnumMap2.hs:67)
+    insertWithKey (Data/IntMap/EnumMap2.hs:70)
+    insertLookupWithKey (Data/IntMap/EnumMap2.hs:74)
+    delete (Data/IntMap/EnumMap2.hs:79)
+    adjust (Data/IntMap/EnumMap2.hs:82)
+    adjustWithKey (Data/IntMap/EnumMap2.hs:85)
+    update (Data/IntMap/EnumMap2.hs:89)
+    updateWithKey (Data/IntMap/EnumMap2.hs:92)
+    updateLookupWithKey (Data/IntMap/EnumMap2.hs:96)
+    union (Data/IntMap/EnumMap2.hs:101)
+    unionWith (Data/IntMap/EnumMap2.hs:104)
+    unionWithKey (Data/IntMap/EnumMap2.hs:107)
+    unions (Data/IntMap/EnumMap2.hs:111)
+    unionsWith (Data/IntMap/EnumMap2.hs:114)
+    difference (Data/IntMap/EnumMap2.hs:117)
+    differenceWith (Data/IntMap/EnumMap2.hs:120)
+    differenceWithKey (Data/IntMap/EnumMap2.hs:123)
+    intersection (Data/IntMap/EnumMap2.hs:127)
+    intersectionWith (Data/IntMap/EnumMap2.hs:130)
+    intersectionWithKey (Data/IntMap/EnumMap2.hs:133)
+    map (Data/IntMap/EnumMap2.hs:137)
+    mapWithKey (Data/IntMap/EnumMap2.hs:140)
+    mapAccum (Data/IntMap/EnumMap2.hs:144)
+    mapAccumWithKey (Data/IntMap/EnumMap2.hs:148)
+    fold (Data/IntMap/EnumMap2.hs:153)
+    foldWithKey (Data/IntMap/EnumMap2.hs:156)
+    elems (Data/IntMap/EnumMap2.hs:160)
+    keys (Data/IntMap/EnumMap2.hs:163)
+    keysSet (Data/IntMap/EnumMap2.hs:167)
+    assocs (Data/IntMap/EnumMap2.hs:170)
+    toList (Data/IntMap/EnumMap2.hs:173)
+    fromList (Data/IntMap/EnumMap2.hs:176)
+    fromListWith (Data/IntMap/EnumMap2.hs:179)
+    fromListWithKey (Data/IntMap/EnumMap2.hs:182)
+    toAscList (Data/IntMap/EnumMap2.hs:186)
+    fromAscList (Data/IntMap/EnumMap2.hs:189)
+    fromAscListWith (Data/IntMap/EnumMap2.hs:192)
+    fromAscListWithKey (Data/IntMap/EnumMap2.hs:195)
+    fromDistinctAscList (Data/IntMap/EnumMap2.hs:199)
+    filter (Data/IntMap/EnumMap2.hs:202)
+    filterWithKey (Data/IntMap/EnumMap2.hs:205)
+    partition (Data/IntMap/EnumMap2.hs:209)
+    partitionWithKey (Data/IntMap/EnumMap2.hs:213)
+    mapMaybe (Data/IntMap/EnumMap2.hs:218)
+    mapMaybeWithKey (Data/IntMap/EnumMap2.hs:221)
+    mapEither (Data/IntMap/EnumMap2.hs:225)
+    mapEitherWithKey (Data/IntMap/EnumMap2.hs:229)
+    split (Data/IntMap/EnumMap2.hs:234)
+    splitLookup (Data/IntMap/EnumMap2.hs:238)
+    isSubmapOf (Data/IntMap/EnumMap2.hs:242)
+    isSubmapOfBy (Data/IntMap/EnumMap2.hs:245)
+    isProperSubmapOf (Data/IntMap/EnumMap2.hs:248)
+    isProperSubmapOfBy (Data/IntMap/EnumMap2.hs:251)
+    showTree (Data/IntMap/EnumMap2.hs:254)
+    showTreeWith (Data/IntMap/EnumMap2.hs:257)
+  83% (  5 /  6) in 'Text.Regex.TDFA.IntArrTrieSet'
+  Missing documentation for:
+    TrieSet (Text/Regex/TDFA/IntArrTrieSet.hs:17)
+  59% ( 29 / 49) in 'Text.Regex.TDFA.Common'
+  Missing documentation for:
+    look (Text/Regex/TDFA/Common.hs:24)
+    common_error (Text/Regex/TDFA/Common.hs:27)
+    on (Text/Regex/TDFA/Common.hs:31)
+    mapFst (Text/Regex/TDFA/Common.hs:48)
+    mapSnd (Text/Regex/TDFA/Common.hs:51)
+    fst3 (Text/Regex/TDFA/Common.hs:54)
+    snd3 (Text/Regex/TDFA/Common.hs:57)
+    thd3 (Text/Regex/TDFA/Common.hs:60)
+    flipOrder (Text/Regex/TDFA/Common.hs:63)
+    noWin (Text/Regex/TDFA/Common.hs:68)
+    ExecOption (Text/Regex/TDFA/Common.hs:100)
+    WinEmpty (Text/Regex/TDFA/Common.hs:160)
+    Transition (Text/Regex/TDFA/Common.hs:215)
+    Action (Text/Regex/TDFA/Common.hs:274)
+    OrbitTransformer (Text/Regex/TDFA/Common.hs:275)
+    OrbitLog (Text/Regex/TDFA/Common.hs:276)
+    showQT (Text/Regex/TDFA/Common.hs:286)
+    indent (Text/Regex/TDFA/Common.hs:302)
+    showDT (Text/Regex/TDFA/Common.hs:305)
+    seeDTrans (Text/Regex/TDFA/Common.hs:349)
+   0% (  0 /  2) in 'Text.Regex.TDFA.NewDFA.Uncons'
+  Missing documentation for:
+    Module header
+    Uncons (Text/Regex/TDFA/NewDFA/Uncons.hs:7)
+   0% (  0 /  3) in 'Text.Regex.TDFA.NewDFA.MakeTest'
+  Missing documentation for:
+    Module header
+    test_singleline (Text/Regex/TDFA/NewDFA/MakeTest.hs:10)
+    test_multiline (Text/Regex/TDFA/NewDFA/MakeTest.hs:10)
+  50% (  1 /  2) in 'Text.Regex.TDFA.NewDFA.Tester'
+  Missing documentation for:
+    matchTest (Text/Regex/TDFA/NewDFA/Tester.hs:22)
+  50% (  1 /  2) in 'Text.Regex.TDFA.NewDFA.Engine_NC_FA'
+  Missing documentation for:
+    execMatch (Text/Regex/TDFA/NewDFA/Engine_NC_FA.hs:34)
+  50% (  1 /  2) in 'Text.Regex.TDFA.NewDFA.Engine_NC'
+  Missing documentation for:
+    execMatch (Text/Regex/TDFA/NewDFA/Engine_NC.hs:47)
+  50% (  1 /  2) in 'Text.Regex.TDFA.NewDFA.Engine_FA'
+  Missing documentation for:
+    execMatch (Text/Regex/TDFA/NewDFA/Engine_FA.hs:68)
+  50% (  1 /  2) in 'Text.Regex.TDFA.NewDFA.Engine'
+  Missing documentation for:
+    execMatch (Text/Regex/TDFA/NewDFA/Engine.hs:77)
+  67% ( 10 / 15) in 'Text.Regex.TDFA.Pattern'
+  Missing documentation for:
+    PatternSet (Text/Regex/TDFA/Pattern.hs:92)
+    PatternSetCharacterClass (Text/Regex/TDFA/Pattern.hs:117)
+    PatternSetCollatingElement (Text/Regex/TDFA/Pattern.hs:119)
+    PatternSetEquivalenceClass (Text/Regex/TDFA/Pattern.hs:121)
+    starTrans' (Text/Regex/TDFA/Pattern.hs:168)
+  23% (  3 / 13) in 'Text.Regex.TDFA.CorePattern'
+  Missing documentation for:
+    Q (Text/Regex/TDFA/CorePattern.hs:75)
+    P (Text/Regex/TDFA/CorePattern.hs:60)
+    Wanted (Text/Regex/TDFA/CorePattern.hs:121)
+    TestInfo (Text/Regex/TDFA/CorePattern.hs:85)
+    SetTestInfo (Text/Regex/TDFA/CorePattern.hs:89)
+    NullView (Text/Regex/TDFA/CorePattern.hs:105)
+    patternToQ (Text/Regex/TDFA/CorePattern.hs:303)
+    cleanNullView (Text/Regex/TDFA/CorePattern.hs:189)
+    cannotAccept (Text/Regex/TDFA/CorePattern.hs:241)
+    mustAccept (Text/Regex/TDFA/CorePattern.hs:235)
+ 100% (  2 /  2) in 'Text.Regex.TDFA.ReadRegex'
+  83% (  5 /  6) in 'Text.Regex.TDFA.TNFA'
+  Missing documentation for:
+    patternToNFA (Text/Regex/TDFA/TNFA.hs:79)
+  43% (  3 /  7) in 'Text.Regex.TDFA.TDFA'
+  Missing documentation for:
+    patternToRegex (Text/Regex/TDFA/TDFA.hs:159)
+    examineDFA (Text/Regex/TDFA/TDFA.hs:175)
+    nfaToDFA (Text/Regex/TDFA/TDFA.hs:50)
+    dfaMap (Text/Regex/TDFA/TDFA.hs:162)
+  64% (  7 / 11) in 'Text.Regex.TDFA.String'
+  Missing documentation for:
+    ExecOption (Text/Regex/TDFA/Common.hs:100)
+    compile (Text/Regex/TDFA/String.hs:40)
+    execute (Text/Regex/TDFA/String.hs:53)
+    regexec (Text/Regex/TDFA/String.hs:58)
+  43% (  3 /  7) in 'Text.Regex.TDFA.Sequence'
+  Missing documentation for:
+    ExecOption (Text/Regex/TDFA/Common.hs:100)
+    compile (Text/Regex/TDFA/Sequence.hs:62)
+    execute (Text/Regex/TDFA/Sequence.hs:71)
+    regexec (Text/Regex/TDFA/Sequence.hs:76)
+  43% (  3 /  7) in 'Text.Regex.TDFA.ByteString.Lazy'
+  Missing documentation for:
+    ExecOption (Text/Regex/TDFA/Common.hs:100)
+    compile (Text/Regex/TDFA/ByteString/Lazy.hs:73)
+    execute (Text/Regex/TDFA/ByteString/Lazy.hs:82)
+    regexec (Text/Regex/TDFA/ByteString/Lazy.hs:87)
+  43% (  3 /  7) in 'Text.Regex.TDFA.ByteString'
+  Missing documentation for:
+    ExecOption (Text/Regex/TDFA/Common.hs:100)
+    compile (Text/Regex/TDFA/ByteString.hs:57)
+    execute (Text/Regex/TDFA/ByteString.hs:66)
+    regexec (Text/Regex/TDFA/ByteString.hs:71)
+  75% (  6 /  8) in 'Text.Regex.TDFA'
+  Missing documentation for:
+    getVersion_Text_Regex_TDFA (Text/Regex/TDFA.hs:70)
+    ExecOption (Text/Regex/TDFA/Common.hs:100)
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/regex-tdfa/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/regex-tdfa/regex-tdfa.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/regex-tdfa-1.2.3.1-9PkkapJrmiKFVG38JA02jN
+Registering library for regex-tdfa-1.2.3.1..

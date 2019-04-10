@@ -40,11 +40,13 @@
       <h2 id="name">Harry Maclean</h2>
       <h2 id="site"><a href="../">hmac.dev</a></h2>
     </div>
-    <p>This is part 1 of a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">here</a>. To load it into GHCi and play around, you can use the following command:</p>
+    <h1 id="implementing-a-functional-language-i-the-core-language">Implementing a Functional Language I: The Core Language</h1>
+<p>This is part 1 of a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">here</a>. To load it into GHCi and play around, you can use the following command:</p>
 <pre><code>stack --resolver lts-12.2 \
       ghci --package prettyprinter \
            --package text \
       2019-03-03-the-core-language.lhs</code></pre>
+<hr />
 <div class="sourceCode" id="cb2"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">module</span> <span class="dt">Core.Language</span> <span class="kw">where</span></a>
 <a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Data.Text</span> (<span class="dt">Text</span>)</a></code></pre></div>
@@ -164,6 +166,8 @@ Branch = Pack{2,2}</code></pre>
 </tbody>
 </table>
 <p>Integer negation is performed via the primitive function <code>negate</code>.</p>
+<h2 id="lambda-abstractions">Lambda abstractions</h2>
+<p>Notably absent from Core is <em>lambda abstraction</em>, or anonymous functions. Functions are always supercombinators. This is an explicit choice to simplify the implementation, and we do not lose any expressive power as a result. Lambda abstractions can be mechanically removed from a program through a process known as <em>lambda lifting</em>. We will cover this in more detail in later section.</p>
 <h1 id="modelling-the-language">Modelling the language</h1>
 <p>Each implementation of the compiler will take as input a representation of a Core program, so we need to define what that is. Everything else will be built around this type.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Expr</span> a</a>

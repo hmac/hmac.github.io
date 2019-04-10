@@ -1,0 +1,21 @@
+Configuring Glob-0.9.2...
+Preprocessing library for Glob-0.9.2..
+Building library for Glob-0.9.2..
+[1 of 7] Compiling System.FilePath.Glob.Utils ( System/FilePath/Glob/Utils.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob/Utils.o )
+[2 of 7] Compiling System.FilePath.Glob.Base ( System/FilePath/Glob/Base.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob/Base.o )
+[3 of 7] Compiling System.FilePath.Glob.Simplify ( System/FilePath/Glob/Simplify.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob/Simplify.o )
+[4 of 7] Compiling System.FilePath.Glob.Primitive ( System/FilePath/Glob/Primitive.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob/Primitive.o )
+[5 of 7] Compiling System.FilePath.Glob.Match ( System/FilePath/Glob/Match.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob/Match.o )
+[6 of 7] Compiling System.FilePath.Glob.Directory ( System/FilePath/Glob/Directory.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob/Directory.o )
+[7 of 7] Compiling System.FilePath.Glob ( System/FilePath/Glob.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/System/FilePath/Glob.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for Glob-0.9.2..
+Running Haddock on library for Glob-0.9.2..
+Haddock coverage:
+ 100% (  7 /  7) in 'System.FilePath.Glob.Primitive'
+ 100% ( 32 / 32) in 'System.FilePath.Glob'
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/Glob/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/Glob/Glob.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/Glob-0.9.2-3XHJhGlzzma6mxJBZaVko0
+Registering library for Glob-0.9.2..

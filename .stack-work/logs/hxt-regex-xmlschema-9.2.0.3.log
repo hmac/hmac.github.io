@@ -1,0 +1,89 @@
+Configuring hxt-regex-xmlschema-9.2.0.3...
+Preprocessing library for hxt-regex-xmlschema-9.2.0.3..
+Building library for hxt-regex-xmlschema-9.2.0.3..
+[1 of 9] Compiling Text.Regex.XMLSchema.Generic.StringLike ( src/Text/Regex/XMLSchema/Generic/StringLike.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/XMLSchema/Generic/StringLike.o )
+[2 of 9] Compiling Text.Regex.XMLSchema.Generic.Regex ( src/Text/Regex/XMLSchema/Generic/Regex.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/XMLSchema/Generic/Regex.o )
+[3 of 9] Compiling Text.Regex.XMLSchema.Generic.RegexParser ( src/Text/Regex/XMLSchema/Generic/RegexParser.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/XMLSchema/Generic/RegexParser.o )
+[4 of 9] Compiling Text.Regex.XMLSchema.Generic.Matching ( src/Text/Regex/XMLSchema/Generic/Matching.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/XMLSchema/Generic/Matching.o )
+[5 of 9] Compiling Text.Regex.XMLSchema.Generic ( src/Text/Regex/XMLSchema/Generic.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/XMLSchema/Generic.o )
+[6 of 9] Compiling Text.Regex.Glob.Generic.RegexParser ( src/Text/Regex/Glob/Generic/RegexParser.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/Glob/Generic/RegexParser.o )
+[7 of 9] Compiling Text.Regex.Glob.Generic ( src/Text/Regex/Glob/Generic.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/Glob/Generic.o )
+[8 of 9] Compiling Text.Regex.Glob.String ( src/Text/Regex/Glob/String.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/Glob/String.o )
+[9 of 9] Compiling Text.Regex.XMLSchema.String ( src/Text/Regex/XMLSchema/String.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Text/Regex/XMLSchema/String.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for hxt-regex-xmlschema-9.2.0.3..
+Running Haddock on library for hxt-regex-xmlschema-9.2.0.3..
+Haddock coverage:
+ 100% (  2 /  2) in 'Text.Regex.XMLSchema.Generic.StringLike'
+  67% ( 26 / 39) in 'Text.Regex.XMLSchema.Generic.Regex'
+  Missing documentation for:
+    GenRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:87)
+    mkZero' (src/Text/Regex/XMLSchema/Generic/Regex.hs:155)
+    mkInterleave (src/Text/Regex/XMLSchema/Generic/Regex.hs:399)
+    mkBr' (src/Text/Regex/XMLSchema/Generic/Regex.hs:411)
+    isZero (src/Text/Regex/XMLSchema/Generic/Regex.hs:486)
+    errRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:491)
+    nullable (src/Text/Regex/XMLSchema/Generic/Regex.hs:498)
+    nullable' (src/Text/Regex/XMLSchema/Generic/Regex.hs:503)
+    delta1 (src/Text/Regex/XMLSchema/Generic/Regex.hs:581)
+    delta (src/Text/Regex/XMLSchema/Generic/Regex.hs:620)
+    matchWithRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:633)
+    matchWithRegex' (src/Text/Regex/XMLSchema/Generic/Regex.hs:638)
+    splitWithRegexCS (src/Text/Regex/XMLSchema/Generic/Regex.hs:657)
+  67% (  4 /  6) in 'Text.Regex.XMLSchema.Generic.RegexParser'
+  Missing documentation for:
+    parseRegex' (src/Text/Regex/XMLSchema/Generic/RegexParser.hs:54)
+    parseRegexExt' (src/Text/Regex/XMLSchema/Generic/RegexParser.hs:71)
+  92% ( 24 / 26) in 'Text.Regex.XMLSchema.Generic.Matching'
+  Missing documentation for:
+    sedExt (src/Text/Regex/XMLSchema/Generic/Matching.hs:369)
+    tokenizeExt' (src/Text/Regex/XMLSchema/Generic/Matching.hs:278)
+  80% ( 47 / 59) in 'Text.Regex.XMLSchema.Generic'
+  Missing documentation for:
+    GenRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:87)
+    Regex (src/Text/Regex/XMLSchema/Generic.hs:100)
+    RegexText (src/Text/Regex/XMLSchema/Generic.hs:101)
+    RegexTextLazy (src/Text/Regex/XMLSchema/Generic.hs:102)
+    RegexByteString (src/Text/Regex/XMLSchema/Generic.hs:103)
+    RegexByteStringLazy (src/Text/Regex/XMLSchema/Generic.hs:104)
+    sedExt (src/Text/Regex/XMLSchema/Generic/Matching.hs:369)
+    tokenizeExt' (src/Text/Regex/XMLSchema/Generic/Matching.hs:278)
+    mkZero' (src/Text/Regex/XMLSchema/Generic/Regex.hs:155)
+    mkBr' (src/Text/Regex/XMLSchema/Generic/Regex.hs:411)
+    isZero (src/Text/Regex/XMLSchema/Generic/Regex.hs:486)
+    errRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:491)
+  67% (  2 /  3) in 'Text.Regex.Glob.Generic.RegexParser'
+  Missing documentation for:
+    parseRegexNoCase (src/Text/Regex/Glob/Generic/RegexParser.hs:39)
+  18% (  2 / 11) in 'Text.Regex.Glob.Generic'
+  Missing documentation for:
+    GenRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:87)
+    Regex (src/Text/Regex/XMLSchema/Generic.hs:100)
+    RegexText (src/Text/Regex/XMLSchema/Generic.hs:101)
+    RegexTextLazy (src/Text/Regex/XMLSchema/Generic.hs:102)
+    RegexByteString (src/Text/Regex/XMLSchema/Generic.hs:103)
+    RegexByteStringLazy (src/Text/Regex/XMLSchema/Generic.hs:104)
+    match (src/Text/Regex/Glob/Generic.hs:45)
+    matchNoCase (src/Text/Regex/Glob/Generic.hs:48)
+    parseRegexNoCase (src/Text/Regex/Glob/Generic/RegexParser.hs:39)
+  17% (  1 /  6) in 'Text.Regex.Glob.String'
+  Missing documentation for:
+    Regex (src/Text/Regex/XMLSchema/Generic.hs:100)
+    match (src/Text/Regex/Glob/String.hs:32)
+    matchNoCase (src/Text/Regex/Glob/String.hs:35)
+    parseRegex (src/Text/Regex/Glob/String.hs:38)
+    parseRegexNoCase (src/Text/Regex/Glob/String.hs:41)
+  90% ( 47 / 52) in 'Text.Regex.XMLSchema.String'
+  Missing documentation for:
+    Regex (src/Text/Regex/XMLSchema/Generic.hs:100)
+    sedExt (src/Text/Regex/XMLSchema/String.hs:304)
+    tokenizeExt' (src/Text/Regex/XMLSchema/String.hs:234)
+    isZero (src/Text/Regex/XMLSchema/Generic/Regex.hs:486)
+    errRegex (src/Text/Regex/XMLSchema/Generic/Regex.hs:491)
+Warning: Text.Regex.XMLSchema.Generic.Regex: could not find link destinations for:
+    Nullable SubexResults
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/hxt-regex-xmlschema/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/hxt-regex-xmlschema/hxt-regex-xmlschema.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/hxt-regex-xmlschema-9.2.0.3-A6MHU8Fr4h51Bn5Dtn5uwa
+Registering library for hxt-regex-xmlschema-9.2.0.3..

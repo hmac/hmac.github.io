@@ -1,0 +1,16 @@
+Configuring hslua-module-text-0.1.2.1...
+Preprocessing library for hslua-module-text-0.1.2.1..
+Building library for hslua-module-text-0.1.2.1..
+[1 of 1] Compiling Foreign.Lua.Module.Text ( src/Foreign/Lua/Module/Text.hs, .stack-work/dist/x86_64-osx/Cabal-2.2.0.1/build/Foreign/Lua/Module/Text.o )
+ignoring (possibly broken) abi-depends field for packages
+Preprocessing library for hslua-module-text-0.1.2.1..
+Running Haddock on library for hslua-module-text-0.1.2.1..
+Warning: The documentation for the following packages are not installed. No
+links will be generated to these packages: fail-4.9.0.0
+Haddock coverage:
+ 100% (  3 /  3) in 'Foreign.Lua.Module.Text'
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/hslua-module-text/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.2.0.1/doc/html/hslua-module-text/hslua-module-text.txt
+Installing library in /Users/harry/.stack/snapshots/x86_64-osx/lts-12.2/8.4.3/lib/x86_64-osx-ghc-8.4.3/hslua-module-text-0.1.2.1-FP3GBmazmbVF55igZSWD1e
+Registering library for hslua-module-text-0.1.2.1..
