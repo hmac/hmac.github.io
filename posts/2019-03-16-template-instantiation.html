@@ -13,6 +13,9 @@
         font-size: 16px;
         line-height: 1.25;
       }
+      pre {
+        font-size: 14px;
+      }
       ol#post-list {
         list-style-type: none
       }
@@ -59,7 +62,12 @@
 <p>The <em>stack</em> is a stack of addresses, each of which identifies a <em>node</em> in the heap. These nodes form the spine of the expression being evaluated. The notation <code>a : s</code> denotes a stack whose top element is <code>a</code> and whose remaining elements form the stack <code>s</code>.</p>
 <p>The <em>heap</em> is a collection of <em>nodes</em>, indexed by their address. The notation <code>h[a : n]</code> denotes a heap <code>h</code> in which the address <code>a</code> points to the node <code>n</code>.</p>
 <p>The <em>gobals</em> are a collection of addresses for each supercombinator and primitive in the program.</p>
-<p>A heap node can take one of the following forms: - <code>NAp a b</code> represents the application of the node with address <code>a</code> to the node with address <code>b</code>. - <code>NSupercomb args body</code> represents a supercombinator. - <code>NNum n</code> represents the number <code>n</code>.</p>
+<p>A heap node can take one of the following forms:</p>
+<ul>
+<li><code>NAp a b</code> represents the application of the node with address <code>a</code> to the node with address <code>b</code>.</li>
+<li><code>NSupercomb args body</code> represents a supercombinator.</li>
+<li><code>NNum n</code> represents the number <code>n</code>.</li>
+</ul>
 <p>These forms look similar to the <code>Expr</code> data type defined for the syntax of the language, but they’re distinct. <code>Expr</code> describes the <em>syntactic</em> structure of the language whereas the heap nodes describe the <em>operational</em> structure. Conversion from one to the other is a key part of our compiler that we’ll discuss later on.</p>
 <p>Here is our first transition rule:</p>
 <pre><code>    a : s      h[a : NAp a1 a2] g
@@ -98,17 +106,24 @@
 <p>The <code>compile</code> function takes a program and creates from it the initial state of the machine.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="ot">compile ::</span> <span class="dt">CoreProgram</span> <span class="ot">-&gt;</span> <span class="dt">TiState</span></a>
 <a class="sourceLine" id="cb8-2" data-line-number="2">compile program</a>
-<a class="sourceLine" id="cb8-3" data-line-number="3">  <span class="fu">=</span> <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [mainAddr], tiHeap <span class="fu">=</span> initialHeap, tiGlobals <span class="fu">=</span> globals }</a>
-<a class="sourceLine" id="cb8-4" data-line-number="4">    <span class="kw">where</span> supercombinatorDefinitions <span class="fu">=</span> program <span class="fu">++</span> prelude</a>
-<a class="sourceLine" id="cb8-5" data-line-number="5">          (initialHeap, globals) <span class="fu">=</span> buildInitialHeap supercombinatorDefinitions</a>
-<a class="sourceLine" id="cb8-6" data-line-number="6">          mainAddr <span class="fu">=</span> Map.findWithDefault (error <span class="st">&quot;main is not defined&quot;</span>) <span class="st">&quot;main&quot;</span> globals</a>
-<a class="sourceLine" id="cb8-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="ot">buildInitialHeap ::</span> [<span class="dt">CoreScDefn</span>] <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, <span class="dt">Globals</span>)</a>
-<a class="sourceLine" id="cb8-9" data-line-number="9">buildInitialHeap defs <span class="fu">=</span> <span class="kw">let</span> (heap, globals) <span class="fu">=</span> mapAccumL allocateSc emptyHeap defs</a>
-<a class="sourceLine" id="cb8-10" data-line-number="10">                         <span class="kw">in</span> (heap, Map.fromList globals)</a>
-<a class="sourceLine" id="cb8-11" data-line-number="11">  <span class="kw">where</span><span class="ot"> allocateSc ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> <span class="dt">CoreScDefn</span> <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, (<span class="dt">Name</span>, <span class="dt">Addr</span>))</a>
-<a class="sourceLine" id="cb8-12" data-line-number="12">        allocateSc heap (name, args, body) <span class="fu">=</span> (heap', (name, addr))</a>
-<a class="sourceLine" id="cb8-13" data-line-number="13">          <span class="kw">where</span> (heap', addr) <span class="fu">=</span> halloc heap (<span class="dt">NSupercomb</span> name args body)</a></code></pre></div>
+<a class="sourceLine" id="cb8-3" data-line-number="3">  <span class="fu">=</span> <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [mainAddr]</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">            , tiHeap <span class="fu">=</span> initialHeap</a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">            , tiGlobals <span class="fu">=</span> globals</a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">            }</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7">    <span class="kw">where</span> supercombinatorDefinitions <span class="fu">=</span> program <span class="fu">++</span> prelude</a>
+<a class="sourceLine" id="cb8-8" data-line-number="8">          (initialHeap, globals) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb8-9" data-line-number="9">            buildInitialHeap supercombinatorDefinitions</a>
+<a class="sourceLine" id="cb8-10" data-line-number="10">          mainAddr <span class="fu">=</span></a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">            Map.findWithDefault (error <span class="st">&quot;main is not defined&quot;</span>) <span class="st">&quot;main&quot;</span> globals</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="ot">buildInitialHeap ::</span> [<span class="dt">CoreScDefn</span>] <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, <span class="dt">Globals</span>)</a>
+<a class="sourceLine" id="cb8-14" data-line-number="14">buildInitialHeap defs <span class="fu">=</span></a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">  <span class="kw">let</span> (heap, globals) <span class="fu">=</span> mapAccumL allocateSc emptyHeap defs</a>
+<a class="sourceLine" id="cb8-16" data-line-number="16">   <span class="kw">in</span> (heap, Map.fromList globals)</a>
+<a class="sourceLine" id="cb8-17" data-line-number="17">  <span class="kw">where</span><span class="ot"> allocateSc ::</span> <span class="dt">Heap</span> <span class="ot">-&gt;</span> <span class="dt">CoreScDefn</span> <span class="ot">-&gt;</span> (<span class="dt">Heap</span>, (<span class="dt">Name</span>, <span class="dt">Addr</span>))</a>
+<a class="sourceLine" id="cb8-18" data-line-number="18">        allocateSc heap (name, args, body) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb8-19" data-line-number="19">          <span class="kw">let</span> (heap', addr) <span class="fu">=</span> halloc heap (<span class="dt">NSupercomb</span> name args body)</a>
+<a class="sourceLine" id="cb8-20" data-line-number="20">           <span class="kw">in</span> (heap', (name, addr))</a></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="ot">prelude ::</span> [<span class="dt">CoreScDefn</span>]</a>
 <a class="sourceLine" id="cb9-2" data-line-number="2">prelude <span class="fu">=</span> [</a>
 <a class="sourceLine" id="cb9-3" data-line-number="3">            (<span class="st">&quot;I&quot;</span>, [<span class="st">&quot;x&quot;</span>], <span class="dt">EVar</span> <span class="st">&quot;x&quot;</span>)</a>
@@ -120,8 +135,7 @@
 <div class="sourceCode" id="cb10"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="ot">eval ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> [<span class="dt">TiState</span>]</a>
 <a class="sourceLine" id="cb10-2" data-line-number="2">eval state <span class="fu">=</span> state <span class="fu">:</span> rest</a>
 <a class="sourceLine" id="cb10-3" data-line-number="3">  <span class="kw">where</span> rest <span class="fu">|</span> final state <span class="fu">=</span> []</a>
-<a class="sourceLine" id="cb10-4" data-line-number="4">             <span class="fu">|</span> otherwise <span class="fu">=</span> eval nextState</a>
-<a class="sourceLine" id="cb10-5" data-line-number="5">        nextState <span class="fu">=</span> step state</a></code></pre></div>
+<a class="sourceLine" id="cb10-4" data-line-number="4">             <span class="fu">|</span> otherwise <span class="fu">=</span> eval (step state)</a></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="ot">final ::</span> <span class="dt">TiState</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
 <a class="sourceLine" id="cb11-2" data-line-number="2">final <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [addr], tiHeap <span class="fu">=</span> heap } <span class="fu">=</span> isDataNode (hlookup heap addr)</a>
 <a class="sourceLine" id="cb11-3" data-line-number="3">final <span class="dt">TiState</span> { tiStack <span class="fu">=</span> [] } <span class="fu">=</span> error <span class="st">&quot;Empty stack&quot;</span></a>
