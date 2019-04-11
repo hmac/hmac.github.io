@@ -60,7 +60,7 @@ codeBlock cb@(CodeBlock (id, classes, namevals) contents) =
 codeBlock x = x
 
 renderTree :: String -> String
-renderTree contents = unsafePerformIO $ readProcess "dot" [] contents >>= readProcess "gvpr" ["-c", "-ftree.gv"] >>= readProcess "neato" ["-n", "-Tsvg"]
+renderTree contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier"] contents >>= readProcess "gvpr" ["-c", "-ftree.gv"] >>= readProcess "neato" ["-n", "-Tsvg"]
 
 renderGraph :: String -> String
 renderGraph contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier", "-Tsvg"] contents

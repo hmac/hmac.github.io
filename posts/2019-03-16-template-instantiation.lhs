@@ -53,6 +53,7 @@ The _gobals_ are a collection of addresses for each supercombinator and primitiv
 program.
 
 A heap node can take one of the following forms:
+
 - `NAp a b` represents the application of the node with address `a` to the node with
   address `b`.
 - `NSupercomb args body` represents a supercombinator.
@@ -133,17 +134,24 @@ machine.
 
 > compile :: CoreProgram -> TiState
 > compile program
->   = TiState { tiStack = [mainAddr], tiHeap = initialHeap, tiGlobals = globals }
+>   = TiState { tiStack = [mainAddr]
+>             , tiHeap = initialHeap
+>             , tiGlobals = globals
+>             }
 >     where supercombinatorDefinitions = program ++ prelude
->           (initialHeap, globals) = buildInitialHeap supercombinatorDefinitions
->           mainAddr = Map.findWithDefault (error "main is not defined") "main" globals
+>           (initialHeap, globals) =
+>             buildInitialHeap supercombinatorDefinitions
+>           mainAddr =
+>             Map.findWithDefault (error "main is not defined") "main" globals
 >
 > buildInitialHeap :: [CoreScDefn] -> (Heap, Globals)
-> buildInitialHeap defs = let (heap, globals) = mapAccumL allocateSc emptyHeap defs
->                          in (heap, Map.fromList globals)
+> buildInitialHeap defs =
+>   let (heap, globals) = mapAccumL allocateSc emptyHeap defs
+>    in (heap, Map.fromList globals)
 >   where allocateSc :: Heap -> CoreScDefn -> (Heap, (Name, Addr))
->         allocateSc heap (name, args, body) = (heap', (name, addr))
->           where (heap', addr) = halloc heap (NSupercomb name args body)
+>         allocateSc heap (name, args, body) =
+>           let (heap', addr) = halloc heap (NSupercomb name args body)
+>            in (heap', (name, addr))
 
 > prelude :: [CoreScDefn]
 > prelude = [
@@ -166,8 +174,7 @@ list of each state it passes through.
 > eval :: TiState -> [TiState]
 > eval state = state : rest
 >   where rest | final state = []
->              | otherwise = eval nextState
->         nextState = step state
+>              | otherwise = eval (step state)
 
 > final :: TiState -> Bool
 > final TiState { tiStack = [addr], tiHeap = heap } = isDataNode (hlookup heap addr)
