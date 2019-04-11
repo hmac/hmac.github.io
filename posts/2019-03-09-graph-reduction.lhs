@@ -218,13 +218,10 @@ a [ label = "@" ]
 b [ label = "@" ]
 a -> b
 
-c [ label = "@" ]
-b -> c
-
+b -> "*"
 a -> x
 b -> x
 
-c -> "*"
 }
 ```
 
@@ -427,7 +424,7 @@ d -> "3"
 We can see that both arguments to `+` point to the same sub-expression (labelled `y`) and
 both arguments to `*` point to the same instance of `3`. The outermost application is that
 of `+`, but it requires both of its arguments to be evaluated first. Both arguments are
-the inner application of `*`, which we can reduce.
+the inner application of `*`, which we can reduce. This gives us the following:
 ```graph
 digraph {
 node [ fontname = "courier" ]
@@ -528,6 +525,9 @@ a2 -> ind
 
 }
 ```
+
+We can then reduce this in the normal way. When we encounter an indirection node we simply
+skip over it and look at its target. In one step this reduces to `16`.
 
 Those are the basics of graph reduction. In the next section we'll apply this theory to
 our first compiler: the template instantiation machine.
