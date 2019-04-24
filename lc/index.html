@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script src="output.js"></script>
+    <style>
+      textarea {
+        font-family: Courier New;
+        font-size: 14pt;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Input</h3>
+    <textarea id="input" cols=80 rows=10></textarea>
+    <h3>Output</h3>
+    <textarea id="output" cols=80 rows=10></textarea>
+    <script>
+      let run = PS["Main"].run_;
+
+      let input_box = document.querySelector("#input");
+      let output_box = document.querySelector("#output");
+      input_box.addEventListener("change", function(event) {
+        let input = input_box.value;
+        let output = run(input);
+        output_box.value = output;
+      });
+    </script>
+  </body>
+</html>
