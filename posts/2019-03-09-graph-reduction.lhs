@@ -245,8 +245,8 @@ b -> "3"
 ```
 
 The outermost redex is the top node - the outer application of `square`. To reduce it, we
-replace the redex with an instance of the function body, substituting any parameters with
-a pointer to the argument of the application. This gives us:
+replace the redex with an instance of the supercombinator body, substituting any
+parameters with a pointer to the argument of the application. This gives us:
 
 ```graph
 digraph {
@@ -447,10 +447,10 @@ digraph {
 Reducing supercombinator applications
 -------------------------------------
 
-When reducing an application, there are two things we must consider:
+When reducing a supercombinator application, there are two things we must consider:
 
-- The argument may contain redexes, so we want to avoid copying it.
-- The redex may be shared, so we want to update it with its result after reduction.
+1. The argument may contain redexes, so we want to avoid copying it.
+2. The redex may be shared, so we want to update it with its result after reduction.
 
 To do this we construct a new instance of the supercombinator body, substituting a
 _pointer_ to the argument in place of the function parameter. This avoids having to copy
