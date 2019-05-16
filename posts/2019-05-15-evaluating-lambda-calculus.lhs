@@ -9,7 +9,8 @@ Evaluating the Untyped Lamda Calculus
 Recently I was working through some problems related to the Untyped Lambda Calculus and
 was getting tired of reducing expressions by hand. I tried writing a small evaluator to
 help, and was surprised how straightforward it turned out to be. The evaluator is only 40
-lines or so - easily small enough to fit in a blog post. So here it is!
+lines or so - easily small enough to fit in a blog post. So here it is! The source for
+this post is [here][source].
 
 > module Lambda where
 
@@ -114,3 +115,5 @@ calculus, in particular the different type systems T, F etc. I'll probably write
 another blog post on what I've learned but you can until then the experiments are [on
 GitHub](https://github.com/hmac/lc). There's also an online version which you can use to
 play around with the different lambda calculi [here](https://hmac.dev/lc/index.html).
+
+[source]: https://github.com/hmac/hmac.github.io/blob/src/posts/2019-05-15-evaluating-lambda-calculus.lhs
