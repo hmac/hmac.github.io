@@ -1,6 +1,6 @@
 ---
 title: "Evaluating the Untyped Lambda Calculus"
-publish: false
+publish: true
 ---
 
 Evaluating the Untyped Lamda Calculus
