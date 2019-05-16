@@ -45,7 +45,7 @@
       <h2 id="site"><a href="../">hmac.dev</a></h2>
     </div>
     <h1 id="evaluating-the-untyped-lamda-calculus">Evaluating the Untyped Lamda Calculus</h1>
-<p>Recently I was working through some problems related to the Untyped Lambda Calculus and was getting tired of reducing expressions by hand. I tried writing a small evaluator to help, and was surprised how straightforward it turned out to be. The evaluator is only 40 lines or so - easily small enough to fit in a blog post. So here it is!</p>
+<p>Recently I was working through some problems related to the Untyped Lambda Calculus and was getting tired of reducing expressions by hand. I tried writing a small evaluator to help, and was surprised how straightforward it turned out to be. The evaluator is only 40 lines or so - easily small enough to fit in a blog post. So here it is! The source for this post is <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-05-15-evaluating-lambda-calculus.lhs">here</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">module</span> <span class="dt">Lambda</span> <span class="kw">where</span></a></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">import</span> <span class="dt">Data.Maybe</span> (fromMaybe)</a></code></pre></div>
 <p>The first thing we need is a representation for lambda terms. The lambda calculus is very simple: we have lambda abstraction (i.e. functions), variables, and applications.</p>
