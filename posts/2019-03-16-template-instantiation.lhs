@@ -3,8 +3,8 @@ title: "Implementing A Functional Language Part III: Template Instantiation"
 publish: false
 ---
 
-Implementing a Functional Language II: Template Instantiation
-=============================================================
+Implementing a Functional Language III: Template Instantiation
+==============================================================
 
 This is part 3 of a series in implementing a functional language. The introduction is
 [here][intro]. This is a literate Haskell file - you can download the source

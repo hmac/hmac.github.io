@@ -29,8 +29,6 @@ main =
     match "index.html" $ do
         route idRoute
         compile $ do
-          let published :: MonadMetadata m => Item String -> m Bool
-              published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)
           posts <- loadAll "posts/*" >>= filterM published >>= recentFirst
           let indexContext =
                   listField "posts" postContext (pure posts) <>
@@ -40,6 +38,9 @@ main =
               >>= applyAsTemplate indexContext
               >>= loadAndApplyTemplate "templates/default.html" indexContext
               >>= relativizeUrls
+
+published :: MonadMetadata m => Item String -> m Bool
+published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)
 
 postContext :: Context String
 postContext = dateField "date" "%B %e, %Y" <> defaultContext
