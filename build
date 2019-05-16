@@ -24,7 +24,7 @@ main =
     match "posts/*" $ do
       route $ setExtension ".html"
       compile $ pandocGraphvizCompiler
-        >>= loadAndApplyTemplate "templates/default.html" defaultContext
+        >>= loadAndApplyTemplate "templates/default.html" postContext
         >>= relativizeUrls
     match "index.html" $ do
         route idRoute
@@ -33,13 +33,16 @@ main =
               published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)
           posts <- loadAll "posts/*" >>= filterM published >>= recentFirst
           let indexContext =
-                  listField "posts" defaultContext (pure posts) <>
-                  defaultContext
+                  listField "posts" postContext (pure posts) <>
+                  postContext
 
           getResourceBody
               >>= applyAsTemplate indexContext
               >>= loadAndApplyTemplate "templates/default.html" indexContext
               >>= relativizeUrls
+
+postContext :: Context String
+postContext = dateField "date" "%B %e, %Y" <> defaultContext
 
 pandocGraphvizCompiler :: Compiler (Item String)
 pandocGraphvizCompiler = pandocCompilerWithTransform

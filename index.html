@@ -3,7 +3,11 @@
   <ol id="post-list">
     $for(posts)$
       <li>
-        <a href="$url$">$title$</a>
+        <a href="$url$">
+          <h3 class="post-link">
+          $title$
+          </h3>
+        </a>
       </li>
     $endfor$
   </ol>
