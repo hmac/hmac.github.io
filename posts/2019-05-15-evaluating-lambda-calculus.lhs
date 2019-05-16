@@ -112,7 +112,7 @@ straightforward. I might tackle that in a future blog post.
 
 Since writing this evaluator I've been experimenting with the other variants of lambda
 calculus, in particular the different type systems T, F etc. I'll probably write at least
-another blog post on what I've learned but you can until then the experiments are [on
+another blog post on what I've learned but until then the experiments are [on
 GitHub](https://github.com/hmac/lc). There's also an online version which you can use to
 play around with the different lambda calculi [here](https://hmac.dev/lc/index.html).
 
