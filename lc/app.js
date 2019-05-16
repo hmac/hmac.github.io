@@ -5438,7 +5438,7 @@ var PS = {};
               };
               if (v1 instanceof Expr.App && (v1.value1 instanceof Expr.Var && v1.value1.value1 === "Succ")) {
                   var rec = new Expr.App(v.value1.value0, new Expr.App(v.value1.value0, new Expr.App(v.value1.value1.value0, new Expr.Var(v.value1.value1.value1.value0, "Rec"), v.value1.value1.value2), v.value1.value2), v1.value2);
-                  return infer(ctx)(new Expr.App(U.value, new Expr.App(U.value, v.value1.value1.value2, v.value2), rec));
+                  return infer(ctx)(new Expr.App(U.value, new Expr.App(U.value, v.value1.value1.value2, v1.value2), rec));
               };
               return new Expr.App(v.value0, new Expr.App(v.value1.value0, new Expr.App(v.value1.value1.value0, new Expr.Var(v.value1.value1.value1.value0, "Rec"), v.value1.value1.value2), v.value1.value2), v1);
           };
