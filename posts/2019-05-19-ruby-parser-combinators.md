@@ -100,29 +100,31 @@ When we write two sequential statements in a Ruby method, they will be executed 
 usual imperative order.
 
 ```ruby
-def do_a
+def a
   puts "a"
 end
 
-def do_b
+def b
   puts "b"
 end
 
 def foo
-  do_a
-  do_b
+  a
+  b
 end
 
-> foo()
+> foo
 a
 b
 => nil
 ```
 
-`do_a` has no way to control whether `do_b` is executed after it. However if `do_a` raises
+`a` has no way to control whether `b` is executed after it. However if `a` raises
 an exception then this changes: control will jump out of the method and any enclosing
 methods until we reach a matching `rescue` statement. We can abuse this feature to control
-how our parsers behave.
+how our parsers behave. Specifically, if a parser is made of several smaller parsers
+combined together, and one of the smaller parsers fail, we want the entire parser to fail.
+We want to be able to override this when necessary, but this should be the default.
 
 ## The Core
 
@@ -162,7 +164,11 @@ parsers.
 To provide this behaviour we define a method `backtrack`, which takes a block. If that
 block fails to parse, `backtrack` will reset the index after it. How do we know if a parse
 has failed? We'll use an exception. This has the nice property that if the parser consists
-of multiple parts and the first part fails, the subsequent parts will be skipped.
+of multiple parts and the first part fails, the subsequent parts will be skipped. Each
+parser doesn't need to check if the previous parser succeeded, because if it had failed it
+would have raised an exception and we would never reach the second parser. This is what
+allows us to write parsers cleanly (as you'll see in a minute) without any plumbing of
+checking return values between one and the next.
 
 ```ruby
 def backtrack
