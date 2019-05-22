@@ -7,16 +7,23 @@ Parser Combinators in Ruby
 ==========================
 
 I'm a big fan of parser combinators as a parsing technique. They're relatively easy to use
-and produce very readable parsing code. For the most part you end up with a parser that
-looks a lot like the equivalent BNF definition.
+and produce very readable parsing code. I often find that the code you write ends up
+looking quite similar to the grammar itself. If you squint, it looks like all you've done
+is write down the syntactic definition of the language and you magically get a program
+that will parse it.
 
-Parser combinators are most often seen in functional languages, as they make heavy use of
-first class functions and monadic flow control. However we can emulate them in other
-languages, with a bit of work. I tried this recently with Ruby and the result was quite
-nice. What follows is a walkthrough of a Ruby parser combinator library in around 100 LOC.
+I won't give a full introduction to parser combinators here. If you're not familiar with
+them, I recommend throwing the term into Google for a tutorial. If you're familiar with
+Haskell or other ML-like languages, I highly recommend [Monadic Parser Combinators][mpc]
+by Graham Hutton and Erik Meijer. To summarise the technique: the idea is that you build
+your parser out of small building blocks that compose together neatly. If you've written
+parsers in the past and found yourself in a bit of a mess of regular expressions and
+string munging, then you might consider parser combinators as an alternative. In this post
+I'm going to walk through the creation of a simple parser combinator library in Ruby and
+use it to build a parser for JSON. The library and JSON parser will each be about 100 LOC.
 
-As an example of what we're aiming for, here's an example of a parser written in the
-combinator style in Haskell:
+As an example of what we're aiming for, here's a parser written in the combinator style in
+Haskell:
 
 ```haskell
 parseNumberList = brackets (sepBy comma number)
@@ -30,10 +37,10 @@ number = ...
 ```
 
 The high level parser `parseNumberList` is constructed from small building blocks,
-including several parsers which _modify other parsers_: combinators. `brackets` parses an open bracket,
-the given inner parser, and a closing bracket. Because these parsers are generic we can
-reuse them in many places. The end result tends to be a very small amount of code and a
-very clear description of the language.
+including several parsers which modify other parsers: these are called _combinators_.
+`brackets` parses an open bracket, the given inner parser, and a closing bracket. Because
+these parsers are generic we can reuse them in many places. The end result tends to be a
+very small amount of code and a very clear description of the language.
 
 To parse in the combinator style you need two things: first class functions and custom
 flow control. In Ruby we'll model these respectively using Procs and exceptions.
@@ -451,3 +458,5 @@ find out. Until then, just keep in mind that whilst these techniques do translat
 tradeoffs might be very different between languages!
 
 You can find all the code for this post [here](https://github.com/hmac/rubyparsers).
+
+[mpc]: http://eprints.nottingham.ac.uk/237/1/monparsing.pdf
