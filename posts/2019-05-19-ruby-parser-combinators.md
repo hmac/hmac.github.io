@@ -28,19 +28,38 @@ Haskell:
 ```haskell
 parseNumberList = brackets (sepBy comma number)
 
-brackets p = between "[" "]" p
-sepBy sep p = do first <- p
-                 rest <- many (sep *> p)
-                 pure (first : rest)
+brackets p = between (string "[") (string "]") p
+sepBy sep p = do
+  first <- p
+  rest <- many (sep *> p)
+  pure (first : rest)
 comma = string ","
+between open close inner = do
+  open
+  val <- inner
+  close
+  pure val
 number = ...
 ```
 
 The high level parser `parseNumberList` is constructed from small building blocks,
 including several parsers which modify other parsers: these are called _combinators_.
-`brackets` parses an open bracket, the given inner parser, and a closing bracket. Because
-these parsers are generic we can reuse them in many places. The end result tends to be a
-very small amount of code and a very clear description of the language.
+`brackets` parses an open bracket, the given inner parser, and a closing bracket.
+`between` is a generic version of `brackets` which runs the three parsers provided in the
+same order. Because these parsers are generic we can reuse them in many places. For
+example, if we wanted a parser for a two-element tuple like `(1,2)` we might write:
+
+```haskell
+tuple = parens do
+  fst <- number
+  comma
+  snd <- number
+  pure (fst, snd)
+parens p = between (string "(") (string ")") p
+```
+
+The end result tends to be a very small amount of code and a very clear description of the
+language.
 
 To parse in the combinator style you need two things: first class functions and custom
 flow control. In Ruby we'll model these respectively using Procs and exceptions.
@@ -197,7 +216,7 @@ they match. If they don't, we raise `ParseFailure` (via a convenience method `fa
 wrap all of this in `backtrack` to ensure that when we do fail, we roll back the index.
 
 Finally, we'll want a way to repeatedly parse characters matching some predicate. This is
-`take_while`:
+`take_while`[^1]:
 
 ```ruby
 def take_while(pred)
@@ -452,11 +471,19 @@ There's one final thing to address, and that is performance. Ruby isn't known fo
 speed, and for tasks like this it often delegates to an underlying C library to do the
 heavy lifting - this is the case for most JSON, YAML and XML parsers. The parser we've
 written here is, comparatively, extremely slow: parsing a 100KB JSON document on my laptop
-takes 3.5 seconds. I'm not yet sure whether this is due to slow string indexing, repeated
+takes 3.5 seconds compared to ~0.15 seconds using the Ruby standard library JSON
+parser[^2]. I'm not yet sure whether this is due to slow string indexing, repeated
 backtracking, overuse of exceptions, or something else - it would be quite interesting to
 find out. Until then, just keep in mind that whilst these techniques do translate, the
 tradeoffs might be very different between languages!
 
 You can find all the code for this post [here](https://github.com/hmac/rubyparsers).
 
+[^1]: A more idiomatic definition of `take_while` would take a block argument rather than
+  a proc, so that you can write `take_while { |c| ... }`. I've not done this here to keep
+  the usage of Procs consistent, but you could certainly do so in the real world.
+[^2]: To be specific, the [`ext`][ext] implementation, which is 2000 lines of C, rather than the
+  pure Ruby implementation.
+
 [mpc]: http://eprints.nottingham.ac.uk/237/1/monparsing.pdf
+[ext]: https://github.com/ruby/ruby/blob/trunk/ext/json/parser/parser.c
