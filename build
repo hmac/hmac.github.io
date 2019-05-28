@@ -16,7 +16,7 @@ import Control.Monad (filterM)
 
 main =
   hakyll $ do
-    match "templates/*" $ compile $ templateCompiler
+    match "templates/*" $ compile templateCompiler
     match "css/*" $ do
         route   idRoute
         compile compressCssCompiler
@@ -55,16 +55,17 @@ graphViz :: Pandoc -> Pandoc
 graphViz = walk codeBlock
 
 codeBlock :: Block -> Block
-codeBlock cb@(CodeBlock (id, classes, namevals) contents) =
-    if "tree" `elem` classes
-    then RawBlock (Format "html") $ renderTree contents
-    else if "graph" `elem` classes
-         then RawBlock (Format "html") $ renderGraph contents
-         else cb
+codeBlock cb@(CodeBlock (id, classes, namevals) contents)
+  | "tree" `elem` classes  = RawBlock (Format "html") $ renderTree contents
+  | "graph" `elem` classes = RawBlock (Format "html") $ renderGraph contents
+  | otherwise              = cb
 codeBlock x = x
 
 renderTree :: String -> String
-renderTree contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier"] contents >>= readProcess "gvpr" ["-c", "-ftree.gv"] >>= readProcess "neato" ["-n", "-Tsvg"]
+renderTree contents = unsafePerformIO $
+  readProcess "dot" ["-Nfontname=courier"] contents
+    >>= readProcess "gvpr" ["-c", "-ftree.gv"]
+    >>= readProcess "neato" ["-n", "-Tsvg"]
 
 renderGraph :: String -> String
 renderGraph contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier", "-Tsvg"] contents
