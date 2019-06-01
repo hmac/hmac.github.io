@@ -6,17 +6,17 @@ publish: false
 Parser Combinators in Ruby
 ==========================
 
-I'm a big fan of parser combinators as a parsing technique. They're relatively easy to use
-and produce very readable parsing code. I often find that the code you write ends up
-looking quite similar to the grammar itself. If you squint, it looks like all you've done
-is write down the syntactic definition of the language and you magically get a program
-that will parse it.
+Parser combinators are a technique common in FP languages for writing parsers - programs
+that convert textual input into a data structure native to the language. An ubiquitous
+example is a JSON parser, which almost every modern language has. Parser combinators are
+small building blocks that you compose together to form larger parsers. They're nice for a
+number of reasons, but one is that the parser you end up with is extremely readable -
+often it looks very close to the formal grammar of the language you're parsing. This makes
+it easy to spot bugs and extend in the future.
 
 I won't give a full introduction to parser combinators here. If you're not familiar with
-them, I recommend throwing the term into Google for a tutorial. If you're familiar with
-Haskell or other ML-like languages, I highly recommend [Monadic Parser Combinators][mpc]
-by Graham Hutton and Erik Meijer. To summarise the technique: the idea is that you build
-your parser out of small building blocks that compose together neatly. If you've written
+them, there are a lot of tutorials floating about the internet. I particularly recommend
+[Monadic Parser Combinators][mpc] by Graham Hutton and Erik Meijer. If you've written
 parsers in the past and found yourself in a bit of a mess of regular expressions and
 string munging, then you might consider parser combinators as an alternative. In this post
 I'm going to walk through the creation of a simple parser combinator library in Ruby and
@@ -63,6 +63,9 @@ language.
 
 To parse in the combinator style you need two things: first class functions and custom
 flow control. In Ruby we'll model these respectively using Procs and exceptions.
+
+I'll briefly describe Procs and exceptions - feel free to skip this part if you're
+comfortable with them.
 
 ## Procs
 
@@ -197,7 +200,18 @@ end
 ```
 
 We first fetch `len` characters, raising `ParseFailure` if we don't get enough characters.
-We then `consume` the characters we've just fetched, and return them.
+We then `consume` the characters we've just fetched, and return them. This is how it
+behaves:
+
+```
+> p = Parser.new("what a great example")
+> p.take(100)
+=> Parser::ParseFailure: expected 100 characters, but saw 20
+> p.take(4)
+=> "what"
+> p.take(2)
+=> " a"
+```
 
 Next up: string literals.
 
@@ -205,7 +219,7 @@ Next up: string literals.
 def string(pat)
   backtrack do
     s = take(pat.length)
-    fail(s, pat) unless s == pat
+    fail(pat, s) unless s == pat
 
     s
   end
@@ -246,7 +260,7 @@ end
 ## Combinators
 
 To complete our parser, we need ways to compose these primitives together. This is where
-we'll meet our first combinators. The first is `either`:
+we'll meet our combinators. The first is `either`:
 
 ```ruby
 def either(parser1, parser2)
@@ -257,13 +271,28 @@ end
 ```
 
 `either` takes two parsers as arguments. It tries the first, and if that fails it
-backtracks and tries the second. Next we have `zero_or_more`:
+backtracks and tries the second.
+
+```
+> run = proc do |input|
+>   p = Parser.new(input)
+>   p.either(proc { p.string("foo") }, proc { p.string("bar") })
+> end
+
+> run.("foo")
+=> "foo"
+> run.("bar")
+=> "bar"
+> run.("cat")
+Parser::ParseFailure: expected "bar" but saw "cat" (3)
+```
+
+Next we have `zero_or_more`:
 
 ```ruby
 def zero_or_more(parser)
   matches = []
   loop { matches << backtrack { parser.call } }
-  matches
 rescue ParseFailure
   matches
 end
@@ -271,8 +300,23 @@ end
 
 `zero_or_more` takes a parser and tries to apply it as many times as possible, returning
 an array of results. It always succeeds, as the parser can match zero times. This is
-analogous to the `*` regex operator. If we want the behaviour of regex `+`, we can use
-`at_least_one`:
+analogous to the `*` regex operator.
+
+```
+> run = proc do |input|
+>   p = Parser.new(input)
+>   p.zero_or_more(proc { p.string("a") })
+> end
+
+> run.("a")
+=> ["a"]
+> run.("aaaabb")
+=> ["a", "a", "a", "a"]
+> run.("baaa")
+=> []
+```
+
+If we want the behaviour of regex `+`, we can use `at_least_one`:
 
 ```ruby
 def at_least_one(parser)
@@ -306,6 +350,20 @@ def sep_by(separator, parser)
 end
 ```
 
+```
+> run = proc do |input|
+>   p = Parser.new(input)
+>   p.sep_by(proc { p.string(",") }, proc { p.take(1) })
+> end
+
+> run.("")
+=> []
+> run.("1,2,3")
+=> ["1", "2", "3"]
+> run.("1,2,3,45")
+=> ["1", "2", "3", "4"]
+```
+
 That's basically it! There are a couple more combinators we could define, like `optional`,
 `one_of` and `between`, but they are straightforward. Let's look instead at writing a real
 world parser with this tooling.
@@ -316,7 +374,7 @@ We're going to write a mostly-compliant JSON parser. It won't handle unicode and
 floating point behaviour will be a bit broken, but it will otherwise work correctly. I've
 tested it against the fixtures in the [JSON Parsing Test Suite](https://github.com/nst/JSONTestSuite/)
 and it passes 109 of the 141 `y_` tests (samples that must be accepted by the parser). In
-total, the whole parser is 109 lines long.
+total, the whole parser is 119 lines long.
 
 To start, we define our class and entrypoint
 
@@ -331,7 +389,6 @@ class JsonParser < Parser
 
 ```ruby
 def json_value
-  skip_spaces
   one_of [
     method(:object),
     method(:array),
@@ -343,89 +400,87 @@ def json_value
 end
 ```
 
-There's a couple of things to unpick here. Firstly, `skip_spaces` is a parser that will
-skip any leading whitespace (spaces or newlines) from the input. It is defined as follows:
+`one_of` is a combinator that acts like a variadic `either`: it will try each parser in
+turn until one succeeds. Each of the parsers given to it is a method on our class, so we
+convert them to first class objects using
+[`Object#method`](https://ruby-doc.org/core-2.6/Object.html#method-i-method).  This will
+allow us to `#call` them just like Procs. We'll walk through each of these methods in
+turn.
 
 ```ruby
+def object
+  inner = proc do
+    kvs = sep_by method(:comma), method(:key_value_pair)
+    Hash[kvs]
+  end
+  between proc { token "{" },
+          proc { token "}" },
+          inner
+end
+
+def token(str)
+  string(str).tap { skip_spaces }
+end
+
 def skip_spaces
   take_while(proc { |c| [" ", "\n"].include?(c) })
 end
 ```
 
-Secondly, `one_of` is a combinator that acts like a variadic `either`: it will try each
-parser in turn until one succeeds. Each of the parsers given to it is a method on our
-class, so we convert them to first class objects using [`Object#method`](https://ruby-doc.org/core-2.6/Object.html#method-i-method).
-This will allow us to `#call` them just like Procs. We'll walk through each of these
-methods in turn.
-
-```ruby
-def object
-  inner = proc do
-    skip_spaces
-    kvs = sep_by method(:comma), method(:key_value_pair)
-    skip_spaces
-    Hash[kvs]
-  end
-  between proc { string "{" },
-          proc { string "}" },
-          inner
-end
-```
-
-`object` uses `between` to parse opening and closing brackets. Inside the brackets we
-parse a series of key-value pairs, separated by optional whitespace. We use `sep_by` with
-a separator of `comma` (which does what you'd expect), and an inner parser of
-`key_value_pair`. This gives us a nested array which we convert to a Hash before
-returning.
+`object` uses `between` to parse the opening and closing brackets. Inside the brackets we
+parse a series of key-value pairs. We use `sep_by` with a separator of `comma` (which does
+what you'd expect), and an inner parser of `key_value_pair`. This gives us a nested array
+which we convert to a Hash before returning. To parse the brackets we use `token`, which
+is a wrapper around `string` which consumes any trailing whitespace. We'll use throughout
+the parser - it allows us to largely ignore whitespace and keep things concise.
 
 ```ruby
 def key_value_pair
   key = quoted_string
-  string ":"
-  skip_spaces
+  token ":"
   value = json_value
   [key, value]
 end
 
 def quoted_string
-  between proc { string "\"" },
-          proc { string "\"" },
-          proc { take_while(proc { |c| c != "\"" }) }
+  str = between proc { string "\"" },
+                proc { token "\"" },
+                proc { take_while(proc { |c| c != "\"" }) }
+  str
 end
 ```
 
 `key_value_pair` is a string enclosed in quotes followed by a semicolon, followed by any
 JSON value. We naïvely assume that a string is any sequence of characters excluding the
 double quote character. This obviously doesn't cater for escape characters, but we'll
-conveniently ignore that.
+conveniently ignore that. Note that we can't use `token` for the opening quote in
+`quoted_string` because any trailing whitespace after that character forms part of the
+string we're trying to parse.
 
 That's JSON objects, then. Next up, arrays:
 
 ```ruby
 def array
-  res = between proc { string "["; skip_spaces },
-                proc { skip_spaces; string "]" },
+  res = between proc { token "[" },
+                proc { token "]" },
                 proc { sep_by method(:comma), method(:json_value) }
-  skip_spaces
   res
 end
 ```
 
-We again use `between` to handle the enclosing brackets, and `skip_spaces` for whitespace.
-I've put the calls to `skip_spaces` inside the bracket parsers this time but there's no
-particular reason for that except to keep the inner parser short enough to inline. Inside
-the brackets, we just parse a series of JSON values separated by commas.
+We again use `between` to handle the enclosing brackets, and inside them we just parse a
+series of JSON values separated by commas.
 
 Booleans and `null`s are very simple:
 
 ```ruby
 def boolean
-  bool = either proc { string "true" }, proc { string "false" }
+  bool = either proc { token "true" }, proc { token "false" }
   bool == "true"
 end
 
 def null
-  string "null"
+  token "null"
   nil
 end
 ```
@@ -438,14 +493,24 @@ out what we're doing here - hopefully it's not too hard!
 
 ```ruby
 def number
+  sign = optional method(:sign)
   result = integer
   decimals = optional(proc { string "."; integer })
-  exponent = optional(proc { either(proc { string "e" }, proc { string "E" }); integer })
+  exponent = optional(proc do
+    either(proc { string "e" }, proc { string "E" })
+    signed_integer
+  end)
 
   result = result.to_f if decimals || exponent
   result += (decimals.to_f / (10**decimals.to_s.length)) if decimals
   result *= 10**exponent.to_f if exponent
-  result
+  sign == "-" ? 0 - result : result
+end
+
+def signed_integer
+  sign = optional method(:sign)
+  n = integer
+  sign == "-" ? 0 - n : n
 end
 
 INTEGERS = (0..9).map(&:to_s)
@@ -457,16 +522,42 @@ def integer
     char
   end
 
-  sign = optional method(:sign)
   numstr = at_least_one int
-  n = numstr.join("").to_i
-  sign == "-" ? 0 - n : n
+  skip_spaces
+  numstr.join.to_i
 end
 
 def sign
-  either proc { string "-" },
-         proc { string "+" }
+  either proc { token "-" },
+         proc { token "+" }
 end
+```
+
+That's the whole thing. Let's try it out on some JSON.
+
+```
+> JsonParser.new("{}").run
+=> {}
+
+> JsonParser.new("[]").run
+=> []
+
+> JsonParser.new("4").run
+=> 4
+
+> JsonParser.new('{"a":   "sample", "json"  : "object"}').run
+=> {"a"=>"sample", "json"=>"object"}
+
+> JsonParser.new('{"a": "sample", "json": "object", "with": ["an", "array", -1.23e3, {"two": "three"}]}').run
+=> {"a"=>"sample",
+ "json"=>"object",
+ "with"=>["an", "array", -1230.0, {"two"=>"three"}]}
+
+> JsonParser.new("bad input").run
+Parser::ParseFailure: expected one of: [#<Method: JsonParser#object>, #<Method: JsonP
+arser#array>, #<Method: JsonParser#quoted_string>, #<Method: JsonParser#boolean>, #<M
+ethod: JsonParser#null>, #<Method: JsonParser#number>]
+from /Users/harry/src/rubyparsers/lib/parser.rb:60:in `one_of'
 ```
 
 And that's it! A (mostly) complete JSON parser in around 100 LOC. Hopefully that gives you
