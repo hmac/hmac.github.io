@@ -1,6 +1,6 @@
 ---
 title: "Parser Combinators in Ruby"
-publish: false
+publish: true
 ---
 
 Parser Combinators in Ruby
