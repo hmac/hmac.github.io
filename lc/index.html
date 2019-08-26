@@ -109,5 +109,29 @@ mult = \n : (N -> N) -> N -> N. \m : (N -> N) -> N -> N. \f : N -> N. \x : N. n 
 plus = \m : Nat. \n : Nat. Rec (\x : Nat. \k : Nat. Succ k) m n
 mult = \m : Nat. \n : Nat. Rec (\x : Nat. \k : Nat. plus k m) 0 n
     </pre>
+    <p>λP Prelude</p>
+    <pre>
+plus : forall (n : Nat). forall (m : Nat). Nat
+plus = (\n. \m. natElim (\_. Nat) n (\k. \rec. S rec) m)
+
+mult : forall (n : Nat). forall (m : Nat). Nat
+mult = (\n. \m. natElim (\_. Nat) Z (\k. \recn. plus recn n) m)
+
+dec : forall (n : Nat). Nat
+dec = \n. natElim (\_. Nat) Z (\k. \rec. k) n
+
+sub : forall (n : Nat). forall (m : Nat). Nat
+sub = \n. \m. natElim (\_. Nat) n (\k. \rec. dec rec) m
+
+isZero : forall (n : Nat). Bool
+isZero = \n. natElim (\_. Bool) True (\_. \_. False) n
+
+natEq : forall (n : Nat). forall (m : Nat). Bool
+natEq = \m. \n. natElim (\_. forall (_ : Nat). Bool) (\k. natElim  (\_. Bool) True (\_. \_. False) k) (\j. \rec. \n. natElim (\_. Bool) False (\k. \_. rec k) n) m n
+
+-- N.B. this doesn't quite work yet
+append : forall (a : Type). forall (k1 : Nat). forall (v1 : Vec a k1). forall (k2 : Nat). forall (v2: Vec a k2). Vec a (plus k1 k2) 
+append = (\a. \k1. \v1. \k2. \v2. vecElim a (\m. \_. Vec a (plus k1 m)) v1 (\m. \v. \vs. \rec. VCons a (S m) v rec) k2 v2)
+    </pre>
   </body>
 </html>
