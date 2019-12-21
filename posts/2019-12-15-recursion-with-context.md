@@ -32,7 +32,7 @@ need to deal with: function types (e.g. `a -> b`) and type applications (e.g.
 `f a`). Type applications are directly represented by the `:@:` constructor,
 so `f a` is `TyVar "f" :@: TyVar "a"`. There's no dedicated constructor for
 function types - instead they're represented as an application of the type
-`(->)` to two other types. `a -> b` is:
+`TyArr` to two other types. `a -> b` is:
 ```haskell
 ( TyArr :@: TyVar ( Name "a" ) ) :@: TyVar ( Name "b" )
 ```
