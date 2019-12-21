@@ -24,7 +24,7 @@ main =
     match "posts/*" $ do
       route $ setExtension ".html"
       compile $ pandocGraphvizCompiler
-        >>= loadAndApplyTemplate "templates/default.html" postContext
+        >>= loadAndApplyTemplate "templates/post.html" postContext
         >>= relativizeUrls
     match "index.html" $ do
         route idRoute
@@ -36,7 +36,7 @@ main =
 
           getResourceBody
               >>= applyAsTemplate indexContext
-              >>= loadAndApplyTemplate "templates/default.html" indexContext
+              >>= loadAndApplyTemplate "templates/index.html" indexContext
               >>= relativizeUrls
 
 published :: MonadMetadata m => Item String -> m Bool
@@ -68,4 +68,5 @@ renderTree contents = unsafePerformIO $
     >>= readProcess "neato" ["-n", "-Tsvg"]
 
 renderGraph :: String -> String
-renderGraph contents = unsafePerformIO $ readProcess "dot" ["-Nfontname=courier", "-Tsvg"] contents
+renderGraph contents = unsafePerformIO $
+  readProcess "dot" ["-Nfontname=courier", "-Tsvg"] contents
