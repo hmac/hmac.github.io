@@ -1,53 +1,61 @@
 <!doctype html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="../css/syntax.css" />
-  </head>
+  <title>Implementing A Functional Language | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    body {
+      max-width: 700px;
+      font-family: Palatino,Times New Roman,serif;
+      margin: 0px auto 0px auto;
+      font-size: 16px;
+      line-height: 1.25;
+      background-color: #f2f2f2;
+    }
+    pre {
+      font-size: 14px;
+    }
+    ol#post-list {
+      list-style-type: none
+    }
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+    }
+    #header #site {
+      font-family: monospace;
+      text-align: right
+    }
+    #header #name {
+      float: left
+    }
+    #header a {
+      text-decoration: none;
+      color: black;
+    }
+    #header a:visited {
+      color: black;
+    }
+    #header a:hover {
+      color: black;
+    }
+    a {
+      color: #233248;
+    }
+    #date {
+      font-size: 12px;
+    }
+  </style>
+</head>
+
   <body>
-    <style>
-      body {
-        max-width: 700px;
-        font-family: Palatino,Times New Roman,serif;
-        margin: 0px auto 0px auto;
-        font-size: 16px;
-        line-height: 1.25;
-      }
-      pre {
-        font-size: 14px;
-      }
-      ol#post-list {
-        list-style-type: none
-      }
-      #header {
-        border-bottom: 1px solid black;
-        padding: 10px 0px 10px 0px;
-      }
-      #header #site {
-        font-family: monospace;
-        text-align: right
-      }
-      #header #name {
-        float: left
-      }
-      #header a {
-        text-decoration: none;
-        color: black;
-      }
-      #header a:visited {
-        color: black;
-      }
-      #header a:hover {
-        color: black;
-      }
-      a {
-        color: #233248;
-      }
-    </style>
     <div id="header">
-      <h2 id="name">Harry Maclean</h2>
       <h2 id="site"><a href="../">hmac.dev</a></h2>
+    </div>
+    <div id="date">
+      March  2, 2019
     </div>
     <h1 id="implementing-a-functional-language">Implementing A Functional Language</h1>
 <p>This is the first in a series of posts on implementing a simple functional language. A typical functional language compiler goes through the following steps to turn the code you write into a binary you run:</p>
