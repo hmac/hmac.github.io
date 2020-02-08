@@ -564,6 +564,8 @@ And that's it! A (mostly) complete JSON parser in around 100 LOC. Hopefully that
 an idea of how you can take these parsing techniques and apply them outside of functional
 programming languages.
 
+## Performance
+
 There's one final thing to address, and that is performance. Ruby isn't known for its
 speed, and for tasks like this it often delegates to an underlying C library to do the
 heavy lifting - this is the case for most JSON, YAML and XML parsers. The parser we've
