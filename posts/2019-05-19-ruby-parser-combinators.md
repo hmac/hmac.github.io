@@ -179,7 +179,9 @@ def backtrack
   yield
 rescue ParseFailure
   @loc = loc_before
-  raise             # re-raise the exception, as we want to propagate the failure
+  # re-raise the exception
+  # to propagate the failure
+  raise
 end
 ```
 
@@ -203,13 +205,14 @@ We first fetch `len` characters, raising `ParseFailure` if we don't get enough c
 We then `consume` the characters we've just fetched, and return them. This is how it
 behaves:
 
-```
-> p = Parser.new("what a great example")
-> p.take(100)
-=> Parser::ParseFailure: expected 100 characters, but saw 20
-> p.take(4)
+```ruby
+p = Parser.new("what a great example")
+p.take(100)
+=> Parser::ParseFailure:
+   expected 100 characters, but saw 20
+p.take(4)
 => "what"
-> p.take(2)
+p.take(2)
 => " a"
 ```
 
@@ -273,18 +276,22 @@ end
 `either` takes two parsers as arguments. It tries the first, and if that fails it
 backtracks and tries the second.
 
-```
-> run = proc do |input|
->   p = Parser.new(input)
->   p.either(proc { p.string("foo") }, proc { p.string("bar") })
-> end
+```ruby
+run = proc do |input|
+  p = Parser.new(input)
+  p.either(
+    proc { p.string("foo") },
+    proc { p.string("bar") },
+  )
+end
 
-> run.("foo")
+run.("foo")
 => "foo"
-> run.("bar")
+run.("bar")
 => "bar"
-> run.("cat")
-Parser::ParseFailure: expected "bar" but saw "cat" (3)
+run.("cat")
+Parser::ParseFailure:
+  expected "bar" but saw "cat" (3)
 ```
 
 Next we have `zero_or_more`:
@@ -302,17 +309,17 @@ end
 an array of results. It always succeeds, as the parser can match zero times. This is
 analogous to the `*` regex operator.
 
-```
-> run = proc do |input|
->   p = Parser.new(input)
->   p.zero_or_more(proc { p.string("a") })
-> end
+```ruby
+run = proc do |input|
+  p = Parser.new(input)
+  p.zero_or_more(proc { p.string("a") })
+end
 
-> run.("a")
+run.("a")
 => ["a"]
-> run.("aaaabb")
+run.("aaaabb")
 => ["a", "a", "a", "a"]
-> run.("baaa")
+run.("baaa")
 => []
 ```
 
@@ -350,17 +357,20 @@ def sep_by(separator, parser)
 end
 ```
 
-```
-> run = proc do |input|
->   p = Parser.new(input)
->   p.sep_by(proc { p.string(",") }, proc { p.take(1) })
-> end
+```ruby
+run = proc do |input|
+  p = Parser.new(input)
+  p.sep_by(
+    proc { p.string(",") },
+    proc { p.take(1) },
+  )
+end
 
-> run.("")
+run.("")
 => []
-> run.("1,2,3")
+run.("1,2,3")
 => ["1", "2", "3"]
-> run.("1,2,3,45")
+run.("1,2,3,45")
 => ["1", "2", "3", "4"]
 ```
 
@@ -431,8 +441,9 @@ end
 parse a series of key-value pairs. We use `sep_by` with a separator of `comma` (which does
 what you'd expect), and an inner parser of `key_value_pair`. This gives us a nested array
 which we convert to a Hash before returning. To parse the brackets we use `token`, which
-is a wrapper around `string` which consumes any trailing whitespace. We'll use throughout
-the parser - it allows us to largely ignore whitespace and keep things concise.
+is a wrapper around `string` which consumes any trailing whitespace. We'll use
+it throughout the parser - it allows us to largely ignore whitespace and keep
+things concise.
 
 ```ruby
 def key_value_pair
@@ -535,29 +546,57 @@ end
 
 That's the whole thing. Let's try it out on some JSON.
 
-```
-> JsonParser.new("{}").run
+```ruby
+JsonParser.new("{}").run
 => {}
 
-> JsonParser.new("[]").run
+JsonParser.new("[]").run
 => []
 
-> JsonParser.new("4").run
+JsonParser.new("4").run
 => 4
 
-> JsonParser.new('{"a":   "sample", "json"  : "object"}').run
+JsonParser.new(<<EOF).run
+{
+  "a":   "sample",
+  "json"  : "object"
+}
+EOF
 => {"a"=>"sample", "json"=>"object"}
 
-> JsonParser.new('{"a": "sample", "json": "object", "with": ["an", "array", -1.23e3, {"two": "three"}]}').run
-=> {"a"=>"sample",
- "json"=>"object",
- "with"=>["an", "array", -1230.0, {"two"=>"three"}]}
+JsonParser.new(<<EOF).run
+{
+  "a": "sample",
+  "json": "object",
+  "with": [
+    "an",
+    "array",
+    -1.23e3,
+    { "two": "three" }
+  ]
+}
+EOF
+=> {
+     "a" => "sample",
+     "json" => "object",
+     "with" => [
+       "an",
+       "array",
+       -1230.0,
+       { "two" => "three" }
+      ]
+   }
 
-> JsonParser.new("bad input").run
-Parser::ParseFailure: expected one of: [#<Method: JsonParser#object>, #<Method: JsonP
-arser#array>, #<Method: JsonParser#quoted_string>, #<Method: JsonParser#boolean>, #<M
-ethod: JsonParser#null>, #<Method: JsonParser#number>]
-from /Users/harry/src/rubyparsers/lib/parser.rb:60:in `one_of'
+JsonParser.new("bad input").run
+=> Parser::ParseFailure: expected one of: [
+  #<Method: JsonParser#object>,
+  #<Method: JsonParser#array>,
+  #<Method: JsonParser#quoted_string>,
+  #<Method: JsonParser#boolean>,
+  #<Method: JsonParser#null>,
+  #<Method: JsonParser#number>
+]
+from lib/parser.rb:60:in `one_of'
 ```
 
 And that's it! A (mostly) complete JSON parser in around 100 LOC. Hopefully that gives you
