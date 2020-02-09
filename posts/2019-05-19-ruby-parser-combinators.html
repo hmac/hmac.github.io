@@ -52,6 +52,9 @@
         max-width: 700px;
         margin: 0px 8px 0px 8px;
       }
+      .sourceCode {
+        font-size: 13px;
+      }
     }
     h1, h2, h3 {
       font-family: Helvetica,Arial,sans-serif;
@@ -220,8 +223,10 @@
 <a class="sourceLine" id="cb8-3" data-line-number="3">  <span class="kw">yield</span></a>
 <a class="sourceLine" id="cb8-4" data-line-number="4"><span class="kw">rescue</span> <span class="dt">ParseFailure</span></a>
 <a class="sourceLine" id="cb8-5" data-line-number="5">  <span class="ot">@loc</span> = loc_before</a>
-<a class="sourceLine" id="cb8-6" data-line-number="6">  raise             <span class="co"># re-raise the exception, as we want to propagate the failure</span></a>
-<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="kw">end</span></a></code></pre></div>
+<a class="sourceLine" id="cb8-6" data-line-number="6">  <span class="co"># re-raise the exception</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7">  <span class="co"># to propagate the failure</span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8">  raise</a>
+<a class="sourceLine" id="cb8-9" data-line-number="9"><span class="kw">end</span></a></code></pre></div>
 <p>These three methods form the core of our parser: everything else can be constructed using them. First up, let’s define the most permissive parser: <code>take</code>. <code>take(n)</code> will parse <code>n</code> characters from the input. It will only fail if there are fewer than <code>n</code> characters left.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">def</span> take(len)</a>
 <a class="sourceLine" id="cb9-2" data-line-number="2">  match = input.byteslice(<span class="dv">0</span>, len)</a>
@@ -233,13 +238,14 @@
 <a class="sourceLine" id="cb9-8" data-line-number="8">  match</a>
 <a class="sourceLine" id="cb9-9" data-line-number="9"><span class="kw">end</span></a></code></pre></div>
 <p>We first fetch <code>len</code> characters, raising <code>ParseFailure</code> if we don’t get enough characters. We then <code>consume</code> the characters we’ve just fetched, and return them. This is how it behaves:</p>
-<pre><code>&gt; p = Parser.new(&quot;what a great example&quot;)
-&gt; p.take(100)
-=&gt; Parser::ParseFailure: expected 100 characters, but saw 20
-&gt; p.take(4)
-=&gt; &quot;what&quot;
-&gt; p.take(2)
-=&gt; &quot; a&quot;</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb10-1" data-line-number="1">p = <span class="dt">Parser</span>.new(<span class="st">&quot;what a great example&quot;</span>)</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">p.take(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb10-3" data-line-number="3">=&gt; <span class="dt">Parser</span>::<span class="dt">ParseFailure</span>:</a>
+<a class="sourceLine" id="cb10-4" data-line-number="4">   expected <span class="dv">100</span> characters, but saw <span class="dv">20</span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5">p.take(<span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb10-6" data-line-number="6">=&gt; <span class="st">&quot;what&quot;</span></a>
+<a class="sourceLine" id="cb10-7" data-line-number="7">p.take(<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb10-8" data-line-number="8">=&gt; <span class="st">&quot; a&quot;</span></a></code></pre></div>
 <p>Next up: string literals.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">def</span> string(pat)</a>
 <a class="sourceLine" id="cb11-2" data-line-number="2">  backtrack <span class="kw">do</span></a>
@@ -276,17 +282,21 @@
 <a class="sourceLine" id="cb14-4" data-line-number="4">  parser2.call</a>
 <a class="sourceLine" id="cb14-5" data-line-number="5"><span class="kw">end</span></a></code></pre></div>
 <p><code>either</code> takes two parsers as arguments. It tries the first, and if that fails it backtracks and tries the second.</p>
-<pre><code>&gt; run = proc do |input|
-&gt;   p = Parser.new(input)
-&gt;   p.either(proc { p.string(&quot;foo&quot;) }, proc { p.string(&quot;bar&quot;) })
-&gt; end
-
-&gt; run.(&quot;foo&quot;)
-=&gt; &quot;foo&quot;
-&gt; run.(&quot;bar&quot;)
-=&gt; &quot;bar&quot;
-&gt; run.(&quot;cat&quot;)
-Parser::ParseFailure: expected &quot;bar&quot; but saw &quot;cat&quot; (3)</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb15-1" data-line-number="1">run = proc <span class="kw">do</span> |input|</a>
+<a class="sourceLine" id="cb15-2" data-line-number="2">  p = <span class="dt">Parser</span>.new(input)</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">  p.either(</a>
+<a class="sourceLine" id="cb15-4" data-line-number="4">    proc { p.string(<span class="st">&quot;foo&quot;</span>) },</a>
+<a class="sourceLine" id="cb15-5" data-line-number="5">    proc { p.string(<span class="st">&quot;bar&quot;</span>) },</a>
+<a class="sourceLine" id="cb15-6" data-line-number="6">  )</a>
+<a class="sourceLine" id="cb15-7" data-line-number="7"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb15-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb15-9" data-line-number="9">run.(<span class="st">&quot;foo&quot;</span>)</a>
+<a class="sourceLine" id="cb15-10" data-line-number="10">=&gt; <span class="st">&quot;foo&quot;</span></a>
+<a class="sourceLine" id="cb15-11" data-line-number="11">run.(<span class="st">&quot;bar&quot;</span>)</a>
+<a class="sourceLine" id="cb15-12" data-line-number="12">=&gt; <span class="st">&quot;bar&quot;</span></a>
+<a class="sourceLine" id="cb15-13" data-line-number="13">run.(<span class="st">&quot;cat&quot;</span>)</a>
+<a class="sourceLine" id="cb15-14" data-line-number="14"><span class="dt">Parser</span>::<span class="dt">ParseFailure</span>:</a>
+<a class="sourceLine" id="cb15-15" data-line-number="15">  expected <span class="st">&quot;bar&quot;</span> but saw <span class="st">&quot;cat&quot;</span> (<span class="dv">3</span>)</a></code></pre></div>
 <p>Next we have <code>zero_or_more</code>:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="kw">def</span> zero_or_more(parser)</a>
 <a class="sourceLine" id="cb16-2" data-line-number="2">  matches = []</a>
@@ -295,17 +305,17 @@ Parser::ParseFailure: expected &quot;bar&quot; but saw &quot;cat&quot; (3)</code
 <a class="sourceLine" id="cb16-5" data-line-number="5">  matches</a>
 <a class="sourceLine" id="cb16-6" data-line-number="6"><span class="kw">end</span></a></code></pre></div>
 <p><code>zero_or_more</code> takes a parser and tries to apply it as many times as possible, returning an array of results. It always succeeds, as the parser can match zero times. This is analogous to the <code>*</code> regex operator.</p>
-<pre><code>&gt; run = proc do |input|
-&gt;   p = Parser.new(input)
-&gt;   p.zero_or_more(proc { p.string(&quot;a&quot;) })
-&gt; end
-
-&gt; run.(&quot;a&quot;)
-=&gt; [&quot;a&quot;]
-&gt; run.(&quot;aaaabb&quot;)
-=&gt; [&quot;a&quot;, &quot;a&quot;, &quot;a&quot;, &quot;a&quot;]
-&gt; run.(&quot;baaa&quot;)
-=&gt; []</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb17-1" data-line-number="1">run = proc <span class="kw">do</span> |input|</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2">  p = <span class="dt">Parser</span>.new(input)</a>
+<a class="sourceLine" id="cb17-3" data-line-number="3">  p.zero_or_more(proc { p.string(<span class="st">&quot;a&quot;</span>) })</a>
+<a class="sourceLine" id="cb17-4" data-line-number="4"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb17-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb17-6" data-line-number="6">run.(<span class="st">&quot;a&quot;</span>)</a>
+<a class="sourceLine" id="cb17-7" data-line-number="7">=&gt; [<span class="st">&quot;a&quot;</span>]</a>
+<a class="sourceLine" id="cb17-8" data-line-number="8">run.(<span class="st">&quot;aaaabb&quot;</span>)</a>
+<a class="sourceLine" id="cb17-9" data-line-number="9">=&gt; [<span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>]</a>
+<a class="sourceLine" id="cb17-10" data-line-number="10">run.(<span class="st">&quot;baaa&quot;</span>)</a>
+<a class="sourceLine" id="cb17-11" data-line-number="11">=&gt; []</a></code></pre></div>
 <p>If we want the behaviour of regex <code>+</code>, we can use <code>at_least_one</code>:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="kw">def</span> at_least_one(parser)</a>
 <a class="sourceLine" id="cb18-2" data-line-number="2">  first = parser.call</a>
@@ -328,17 +338,20 @@ Parser::ParseFailure: expected &quot;bar&quot; but saw &quot;cat&quot; (3)</code
 <a class="sourceLine" id="cb19-12" data-line-number="12">  rest = zero_or_more combined</a>
 <a class="sourceLine" id="cb19-13" data-line-number="13">  [first, *rest]</a>
 <a class="sourceLine" id="cb19-14" data-line-number="14"><span class="kw">end</span></a></code></pre></div>
-<pre><code>&gt; run = proc do |input|
-&gt;   p = Parser.new(input)
-&gt;   p.sep_by(proc { p.string(&quot;,&quot;) }, proc { p.take(1) })
-&gt; end
-
-&gt; run.(&quot;&quot;)
-=&gt; []
-&gt; run.(&quot;1,2,3&quot;)
-=&gt; [&quot;1&quot;, &quot;2&quot;, &quot;3&quot;]
-&gt; run.(&quot;1,2,3,45&quot;)
-=&gt; [&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;]</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb20-1" data-line-number="1">run = proc <span class="kw">do</span> |input|</a>
+<a class="sourceLine" id="cb20-2" data-line-number="2">  p = <span class="dt">Parser</span>.new(input)</a>
+<a class="sourceLine" id="cb20-3" data-line-number="3">  p.sep_by(</a>
+<a class="sourceLine" id="cb20-4" data-line-number="4">    proc { p.string(<span class="st">&quot;,&quot;</span>) },</a>
+<a class="sourceLine" id="cb20-5" data-line-number="5">    proc { p.take(<span class="dv">1</span>) },</a>
+<a class="sourceLine" id="cb20-6" data-line-number="6">  )</a>
+<a class="sourceLine" id="cb20-7" data-line-number="7"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb20-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb20-9" data-line-number="9">run.(<span class="st">&quot;&quot;</span>)</a>
+<a class="sourceLine" id="cb20-10" data-line-number="10">=&gt; []</a>
+<a class="sourceLine" id="cb20-11" data-line-number="11">run.(<span class="st">&quot;1,2,3&quot;</span>)</a>
+<a class="sourceLine" id="cb20-12" data-line-number="12">=&gt; [<span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span>]</a>
+<a class="sourceLine" id="cb20-13" data-line-number="13">run.(<span class="st">&quot;1,2,3,45&quot;</span>)</a>
+<a class="sourceLine" id="cb20-14" data-line-number="14">=&gt; [<span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span>, <span class="st">&quot;4&quot;</span>]</a></code></pre></div>
 <p>That’s basically it! There are a couple more combinators we could define, like <code>optional</code>, <code>one_of</code> and <code>between</code>, but they are straightforward. Let’s look instead at writing a real world parser with this tooling.</p>
 <h2 id="parsing-json">Parsing JSON</h2>
 <p>We’re going to write a mostly-compliant JSON parser. It won’t handle unicode and its floating point behaviour will be a bit broken, but it will otherwise work correctly. I’ve tested it against the fixtures in the <a href="https://github.com/nst/JSONTestSuite/">JSON Parsing Test Suite</a> and it passes 109 of the 141 <code>y_</code> tests (samples that must be accepted by the parser). In total, the whole parser is 119 lines long.</p>
@@ -376,7 +389,7 @@ Parser::ParseFailure: expected &quot;bar&quot; but saw &quot;cat&quot; (3)</code
 <a class="sourceLine" id="cb23-15" data-line-number="15"><span class="kw">def</span> skip_spaces</a>
 <a class="sourceLine" id="cb23-16" data-line-number="16">  take_while(proc { |c| [<span class="st">&quot; &quot;</span>, <span class="st">&quot;\n&quot;</span>].include?(c) })</a>
 <a class="sourceLine" id="cb23-17" data-line-number="17"><span class="kw">end</span></a></code></pre></div>
-<p><code>object</code> uses <code>between</code> to parse the opening and closing brackets. Inside the brackets we parse a series of key-value pairs. We use <code>sep_by</code> with a separator of <code>comma</code> (which does what you’d expect), and an inner parser of <code>key_value_pair</code>. This gives us a nested array which we convert to a Hash before returning. To parse the brackets we use <code>token</code>, which is a wrapper around <code>string</code> which consumes any trailing whitespace. We’ll use throughout the parser - it allows us to largely ignore whitespace and keep things concise.</p>
+<p><code>object</code> uses <code>between</code> to parse the opening and closing brackets. Inside the brackets we parse a series of key-value pairs. We use <code>sep_by</code> with a separator of <code>comma</code> (which does what you’d expect), and an inner parser of <code>key_value_pair</code>. This gives us a nested array which we convert to a Hash before returning. To parse the brackets we use <code>token</code>, which is a wrapper around <code>string</code> which consumes any trailing whitespace. We’ll use it throughout the parser - it allows us to largely ignore whitespace and keep things concise.</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb24-1" data-line-number="1"><span class="kw">def</span> key_value_pair</a>
 <a class="sourceLine" id="cb24-2" data-line-number="2">  key = quoted_string</a>
 <a class="sourceLine" id="cb24-3" data-line-number="3">  token <span class="st">&quot;:&quot;</span></a>
@@ -450,28 +463,56 @@ Parser::ParseFailure: expected &quot;bar&quot; but saw &quot;cat&quot; (3)</code
 <a class="sourceLine" id="cb27-38" data-line-number="38">         proc { token <span class="st">&quot;+&quot;</span> }</a>
 <a class="sourceLine" id="cb27-39" data-line-number="39"><span class="kw">end</span></a></code></pre></div>
 <p>That’s the whole thing. Let’s try it out on some JSON.</p>
-<pre><code>&gt; JsonParser.new(&quot;{}&quot;).run
-=&gt; {}
-
-&gt; JsonParser.new(&quot;[]&quot;).run
-=&gt; []
-
-&gt; JsonParser.new(&quot;4&quot;).run
-=&gt; 4
-
-&gt; JsonParser.new('{&quot;a&quot;:   &quot;sample&quot;, &quot;json&quot;  : &quot;object&quot;}').run
-=&gt; {&quot;a&quot;=&gt;&quot;sample&quot;, &quot;json&quot;=&gt;&quot;object&quot;}
-
-&gt; JsonParser.new('{&quot;a&quot;: &quot;sample&quot;, &quot;json&quot;: &quot;object&quot;, &quot;with&quot;: [&quot;an&quot;, &quot;array&quot;, -1.23e3, {&quot;two&quot;: &quot;three&quot;}]}').run
-=&gt; {&quot;a&quot;=&gt;&quot;sample&quot;,
- &quot;json&quot;=&gt;&quot;object&quot;,
- &quot;with&quot;=&gt;[&quot;an&quot;, &quot;array&quot;, -1230.0, {&quot;two&quot;=&gt;&quot;three&quot;}]}
-
-&gt; JsonParser.new(&quot;bad input&quot;).run
-Parser::ParseFailure: expected one of: [#&lt;Method: JsonParser#object&gt;, #&lt;Method: JsonP
-arser#array&gt;, #&lt;Method: JsonParser#quoted_string&gt;, #&lt;Method: JsonParser#boolean&gt;, #&lt;M
-ethod: JsonParser#null&gt;, #&lt;Method: JsonParser#number&gt;]
-from /Users/harry/src/rubyparsers/lib/parser.rb:60:in `one_of'</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="dt">JsonParser</span>.new(<span class="st">&quot;{}&quot;</span>).run</a>
+<a class="sourceLine" id="cb28-2" data-line-number="2">=&gt; {}</a>
+<a class="sourceLine" id="cb28-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb28-4" data-line-number="4"><span class="dt">JsonParser</span>.new(<span class="st">&quot;[]&quot;</span>).run</a>
+<a class="sourceLine" id="cb28-5" data-line-number="5">=&gt; []</a>
+<a class="sourceLine" id="cb28-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb28-7" data-line-number="7"><span class="dt">JsonParser</span>.new(<span class="st">&quot;4&quot;</span>).run</a>
+<a class="sourceLine" id="cb28-8" data-line-number="8">=&gt; <span class="dv">4</span></a>
+<a class="sourceLine" id="cb28-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb28-10" data-line-number="10"><span class="dt">JsonParser</span>.new(&lt;&lt;<span class="kw">EOF</span><span class="ot">).run</span></a>
+<a class="sourceLine" id="cb28-11" data-line-number="11"><span class="ot">{</span></a>
+<a class="sourceLine" id="cb28-12" data-line-number="12"><span class="ot">  &quot;a&quot;:   &quot;sample&quot;,</span></a>
+<a class="sourceLine" id="cb28-13" data-line-number="13"><span class="ot">  &quot;json&quot;  : &quot;object&quot;</span></a>
+<a class="sourceLine" id="cb28-14" data-line-number="14"><span class="ot">}</span></a>
+<a class="sourceLine" id="cb28-15" data-line-number="15"><span class="kw">EOF</span></a>
+<a class="sourceLine" id="cb28-16" data-line-number="16">=&gt; {<span class="st">&quot;a&quot;</span>=&gt;<span class="st">&quot;sample&quot;</span>, <span class="st">&quot;json&quot;</span>=&gt;<span class="st">&quot;object&quot;</span>}</a>
+<a class="sourceLine" id="cb28-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb28-18" data-line-number="18"><span class="dt">JsonParser</span>.new(&lt;&lt;<span class="kw">EOF</span><span class="ot">).run</span></a>
+<a class="sourceLine" id="cb28-19" data-line-number="19"><span class="ot">{</span></a>
+<a class="sourceLine" id="cb28-20" data-line-number="20"><span class="ot">  &quot;a&quot;: &quot;sample&quot;,</span></a>
+<a class="sourceLine" id="cb28-21" data-line-number="21"><span class="ot">  &quot;json&quot;: &quot;object&quot;,</span></a>
+<a class="sourceLine" id="cb28-22" data-line-number="22"><span class="ot">  &quot;with&quot;: [</span></a>
+<a class="sourceLine" id="cb28-23" data-line-number="23"><span class="ot">    &quot;an&quot;,</span></a>
+<a class="sourceLine" id="cb28-24" data-line-number="24"><span class="ot">    &quot;array&quot;,</span></a>
+<a class="sourceLine" id="cb28-25" data-line-number="25"><span class="ot">    -1.23e3,</span></a>
+<a class="sourceLine" id="cb28-26" data-line-number="26"><span class="ot">    { &quot;two&quot;: &quot;three&quot; }</span></a>
+<a class="sourceLine" id="cb28-27" data-line-number="27"><span class="ot">  ]</span></a>
+<a class="sourceLine" id="cb28-28" data-line-number="28"><span class="ot">}</span></a>
+<a class="sourceLine" id="cb28-29" data-line-number="29"><span class="kw">EOF</span></a>
+<a class="sourceLine" id="cb28-30" data-line-number="30">=&gt; {</a>
+<a class="sourceLine" id="cb28-31" data-line-number="31">     <span class="st">&quot;a&quot;</span> =&gt; <span class="st">&quot;sample&quot;</span>,</a>
+<a class="sourceLine" id="cb28-32" data-line-number="32">     <span class="st">&quot;json&quot;</span> =&gt; <span class="st">&quot;object&quot;</span>,</a>
+<a class="sourceLine" id="cb28-33" data-line-number="33">     <span class="st">&quot;with&quot;</span> =&gt; [</a>
+<a class="sourceLine" id="cb28-34" data-line-number="34">       <span class="st">&quot;an&quot;</span>,</a>
+<a class="sourceLine" id="cb28-35" data-line-number="35">       <span class="st">&quot;array&quot;</span>,</a>
+<a class="sourceLine" id="cb28-36" data-line-number="36">       <span class="dv">-1230</span>.<span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb28-37" data-line-number="37">       { <span class="st">&quot;two&quot;</span> =&gt; <span class="st">&quot;three&quot;</span> }</a>
+<a class="sourceLine" id="cb28-38" data-line-number="38">      ]</a>
+<a class="sourceLine" id="cb28-39" data-line-number="39">   }</a>
+<a class="sourceLine" id="cb28-40" data-line-number="40"></a>
+<a class="sourceLine" id="cb28-41" data-line-number="41"><span class="dt">JsonParser</span>.new(<span class="st">&quot;bad input&quot;</span>).run</a>
+<a class="sourceLine" id="cb28-42" data-line-number="42">=&gt; <span class="dt">Parser</span>::<span class="dt">ParseFailure</span>: expected one <span class="st">of: </span>[</a>
+<a class="sourceLine" id="cb28-43" data-line-number="43">  <span class="co">#&lt;Method: JsonParser#object&gt;,</span></a>
+<a class="sourceLine" id="cb28-44" data-line-number="44">  <span class="co">#&lt;Method: JsonParser#array&gt;,</span></a>
+<a class="sourceLine" id="cb28-45" data-line-number="45">  <span class="co">#&lt;Method: JsonParser#quoted_string&gt;,</span></a>
+<a class="sourceLine" id="cb28-46" data-line-number="46">  <span class="co">#&lt;Method: JsonParser#boolean&gt;,</span></a>
+<a class="sourceLine" id="cb28-47" data-line-number="47">  <span class="co">#&lt;Method: JsonParser#null&gt;,</span></a>
+<a class="sourceLine" id="cb28-48" data-line-number="48">  <span class="co">#&lt;Method: JsonParser#number&gt;</span></a>
+<a class="sourceLine" id="cb28-49" data-line-number="49">]</a>
+<a class="sourceLine" id="cb28-50" data-line-number="50">from lib/parser.rb:<span class="dv">60</span><span class="st">:in</span> <span class="st">`one_of'</span></a></code></pre></div>
 <p>And that’s it! A (mostly) complete JSON parser in around 100 LOC. Hopefully that gives you an idea of how you can take these parsing techniques and apply them outside of functional programming languages.</p>
 <h2 id="performance">Performance</h2>
 <p>There’s one final thing to address, and that is performance. Ruby isn’t known for its speed, and for tasks like this it often delegates to an underlying C library to do the heavy lifting - this is the case for most JSON, YAML and XML parsers. The parser we’ve written here is, comparatively, extremely slow: parsing a 100KB JSON document on my laptop takes 3.5 seconds compared to ~0.15 seconds using the Ruby standard library JSON parser<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. I’m not yet sure whether this is due to slow string indexing, repeated backtracking, overuse of exceptions, or something else - it would be quite interesting to find out. Until then, just keep in mind that whilst these techniques do translate, the tradeoffs might be very different between languages!</p>
