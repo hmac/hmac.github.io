@@ -102,13 +102,13 @@ print' ctx ty = case (ctx, ty) of
 We start by matching the case of a function arrow. We print either side,
 separated by an arrow.
 ```haskell
-  (Root, (TyArr :@: a) :@: b) -> print' ArrL a <+> "->" <+> print' ArrR b
+(Root, (TyArr :@: a) :@: b) -> print' ArrL a <+> "->" <+> print' ArrR b
 ```
 The left hand side (`a`) gets the context `ArrL` and the RHS gets `ArrR`.
 
 We do a similar thing with applications.
 ```haskell
-  (Root, a :@: b) -> print' AppL a <+> print' AppR b
+(Root, a :@: b) -> print' AppL a <+> print' AppR b
 ```
 
 That's all we need to do to ensure that the correct context is propagated
@@ -118,7 +118,7 @@ parentheses.
 
 Arrows on the left of arrows get parenthesised:
 ```haskell
-  (ArrL, (TyArr :@: a) :@: b) -> parens $ print' Root (a `fn` b)
+(ArrL, (TyArr :@: a) :@: b) -> parens $ print' Root (a `fn` b)
 ```
 
 Notice that in the recursive call we reset the context to `Root`, because we've
@@ -127,36 +127,36 @@ as `((a -> b)) -> a -> b`.
 
 Arrows on the right of arrows don't get parenthesised:
 ```haskell
-  (ArrR, (TyArr :@: a) :@: b) -> print' Root (a `fn` b)
+(ArrR, (TyArr :@: a) :@: b) -> print' Root (a `fn` b)
 ```
 
 Arrows on either side of applications get parenthesised:
 ```haskell
-  (AppR, (TyArr :@: a) :@: b) -> parens $ print' Root (a `fn` b)
-  (AppL, (TyArr :@: a) :@: b) -> parens $ print' Root (a `fn` b)
+(AppR, (TyArr :@: a) :@: b) -> parens $ print' Root (a `fn` b)
+(AppL, (TyArr :@: a) :@: b) -> parens $ print' Root (a `fn` b)
 ```
 
 Applications on the left of applications don't get parenthesised:
 ```haskell
-  (AppL, a :@: b) -> print' Root (a :@: b)
+(AppL, a :@: b) -> print' Root (a :@: b)
 ```
 
 Applications on the right of applications get parenthesised:
 ```haskell
-  (AppR, a :@: b) -> parens $ print' Root (a :@: b)
+(AppR, a :@: b) -> parens $ print' Root (a :@: b)
 ```
 
 Applications on either side of arrows don't
 ```haskell
-  (ArrL, a :@: b) -> print' Root (a :@: b)
-  (ArrR, a :@: b) -> print' Root (a :@: b)
+(ArrL, a :@: b) -> print' Root (a :@: b)
+(ArrR, a :@: b) -> print' Root (a :@: b)
 ```
 
 Finally we have the basic case: type variables. We don't care about the context
 when printing these.
 
 ```haskell
-  (_, TyVar n) -> n
+(_, TyVar n) -> n
 ```
 
 And that's it. Quite straightforward and (compared to my earlier attempts) very
