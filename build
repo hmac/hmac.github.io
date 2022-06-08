@@ -1,5 +1,5 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i runghc -p "haskellPackages.ghcWithPackages (ps: [ps.hakyll ps.pandoc])" -p ./graphviz
+#! nix-shell -i runghc -p "haskellPackages.ghcWithPackages (ps: [ps.hakyll ps.pandoc])" -p graphviz
 {-# LANGUAGE OverloadedStrings  #-}
 -- vim: ft=haskell
 
