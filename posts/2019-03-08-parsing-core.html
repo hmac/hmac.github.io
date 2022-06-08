@@ -11,24 +11,27 @@
     }
     body { 
       height: 100%;
-      background-color: #f7f2e9;
+      background-color: #fff;
       margin: 0px 0px 0px 0px;
     }
     .main {
       min-height: 100%;
-      max-width: 700px;
-      font-family: Georgia,Times New Roman,serif;
+      max-width: 900px;
+      font-family: Helvetica Neue;
       font-size: 16px;
-      line-height: 1.5em;
-      background-color: #fff9ef;
+      line-height: 1.7em;
     }
     .content {
       margin: 0px auto 0px auto;
       padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
       color: #333;
-    }
-    .content p {
       font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
     }
     div.sourceCode {
       padding: 5px;
@@ -36,9 +39,6 @@
     @media (min-width: 701px) {
       .main {
         margin: 0px auto 0px auto;
-      }
-      .content {
-        max-width: 600px;
       }
     }
     @media (max-width: 700px) {
@@ -66,48 +66,25 @@
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
       font-weight: normal;
     }
-    pre {
-      font-size: 14px;
-    }
     ol#post-list {
       list-style-type: none
     }
     #header {
       border-bottom: 1px solid black;
       padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
     }
     #header a {
       text-decoration: none;
     }
-    #header #site {
-      font-family: monospace;
-      text-align: right;
-      margin-right: 25px;
-      color: black;
-      float: right;
+    #header #back {
+      position: absolute;
+      left: 0;
     }
-    #header #site a {
-      color: black;
-    }
-    #header #site a:hover {
-      color: black;
-    }
-    #header #site a:visited {
-      color: black;
-    }
-    #header #name {
-      padding-left: 25px;
-      background-color: #ffb3005e;
-    }
-    #header #name a {
-      color: #292a31;
-      font-family: Monaco,monospace;
-    }
-    #header #name a:visited {
-      color: #292a31;
-    }
-    #header #name a:hover {
-      color: #292a31;
+    #header #date {
+      position: absolute;
+      right: 0;
     }
 
     a {
@@ -122,136 +99,153 @@
       text-decoration: none;
       color: #233248;
     }
-
-    #date {
-      font-size: 12px;
-    }
   </style>
 </head>
 
   <body>
     <div class="main">
       <div id="header">
-        <h1 id="name"><a href="../">Harry Maclean</a></h1>
+        <a id="back" href="../">↩</a>
+        <div id="date">March  8, 2019</div>
       </div>
       <div class="content">
-        <div id="date">
-          March  8, 2019
-        </div>
         <h1 id="implementing-a-functional-language-parsing-core">Implementing a Functional Language: Parsing Core</h1>
-<p>This is an appendix to a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-08-parsing-core.lhs">here</a>. To load it into GHCi and play around, you can use the following command (you’ll need the <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">source</a> for the <code>Core.Language</code> module as well):</p>
+<p>This is an appendix to a series in implementing a functional language. The introduction is
+<a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source
+<a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-08-parsing-core.lhs">here</a>. To load it into GHCi and play around, you can use the following command
+(you’ll need the <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">source</a> for the <code>Core.Language</code> module as well):</p>
 <pre><code>stack --resolver lts-12.2         \
       ghci --package megaparsec   \
            --package text         \
       2019-03-03-parsing-core.lhs \
       2019-03-03-the-core-language.lhs</code></pre>
 <hr />
-<p>This module exports the parser for our language (<code>parser</code>). It can be passed to functions like <code>Text.Megaparsec.parse</code> to parse input into a <code>Core.CoreProgram</code>. We also re-export <code>Text.Megaparsec.parse</code> for convenience.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a><span class="kw">module</span> <span class="dt">Core.Parse</span> (parser, parse) <span class="kw">where</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Core.Language</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Data.Text</span> (<span class="dt">Text</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span> <span class="kw">as</span> <span class="dt">T</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Data.Void</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Data.Proxy</span></span></code></pre></div>
-<p>Our parser is formed by combining together smaller parsers, in typical parser combinator style. In the interest of brevity, we put little effort into useful error messages. Here we define a type for all our parsers, which specifies a basic error type and an input type of <code>Text</code>. See the Megaparsec <a href="https://www.stackage.org/haddock/lts-12.2/megaparsec-6.5.0/Text-Megaparsec.html">documentation</a> for a description of the <code>Parsec</code> and <code>ErrorFancy</code> types.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> (<span class="dt">ErrorFancy</span> <span class="dt">Void</span>) <span class="dt">Text</span></span></code></pre></div>
+<p>This module exports the parser for our language (<code>parser</code>). It can be passed to functions
+like <code>Text.Megaparsec.parse</code> to parse input into a <code>Core.CoreProgram</code>. We also re-export
+<code>Text.Megaparsec.parse</code> for convenience.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Core.Parse</span> (parser, parse) <span class="kw">where</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Core.Language</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Text.Megaparsec.Char.Lexer</span> <span class="kw">as</span> <span class="dt">L</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Megaparsec.Char</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Text</span> (<span class="dt">Text</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span> <span class="kw">as</span> <span class="dt">T</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Void</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Proxy</span></span></code></pre></div>
+<p>Our parser is formed by combining together smaller parsers, in typical parser combinator
+style. In the interest of brevity, we put little effort into useful error messages. Here
+we define a type for all our parsers, which specifies a basic error type and an input type
+of <code>Text</code>. See the Megaparsec
+<a href="https://www.stackage.org/haddock/lts-12.2/megaparsec-6.5.0/Text-Megaparsec.html">documentation</a>
+for a description of the <code>Parsec</code> and <code>ErrorFancy</code> types.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Parser</span> <span class="ot">=</span> <span class="dt">Parsec</span> (<span class="dt">ErrorFancy</span> <span class="dt">Void</span>) <span class="dt">Text</span></span></code></pre></div>
 <h2 id="lexing">Lexing</h2>
-<p>Lexing is the process of converting a stream of characters to a stream of tokens. It’s typically used to strip out whitespace, comments, and other parts of the input that have no bearing on the parse result. To avoid having to process the input twice, we intersperse lexing with parsing by wrapping all primitive parsers in a <em>space consumer</em> which is responsible for stripping any trailing “space”. Our space consumer will strip whitespace and any lines beginning with <code>--</code>.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="ot">spaceConsumer ::</span> <span class="dt">Parser</span> ()</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>spaceConsumer <span class="ot">=</span> L.space space1 (L.skipLineComment <span class="st">&quot;--&quot;</span>) empty</span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a>lexeme <span class="ot">=</span> L.lexeme spaceConsumer </span></code></pre></div>
+<p>Lexing is the process of converting a stream of characters to a stream of tokens. It’s
+typically used to strip out whitespace, comments, and other parts of the input that have
+no bearing on the parse result. To avoid having to process the input twice, we intersperse
+lexing with parsing by wrapping all primitive parsers in a <em>space consumer</em> which is
+responsible for stripping any trailing “space”. Our space consumer will strip whitespace
+and any lines beginning with <code>--</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">spaceConsumer ::</span> <span class="dt">Parser</span> ()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>spaceConsumer <span class="ot">=</span> L.space space1 (L.skipLineComment <span class="st">&quot;--&quot;</span>) empty</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>lexeme <span class="ot">=</span> L.lexeme spaceConsumer </span></code></pre></div>
 <h2 id="parsing-primitives">Parsing Primitives</h2>
-<p><code>symbol</code> and <code>num</code> are our two primitive parsers - we’ll build everything else out of them. <code>symbol</code> parses a specific string, and <code>num</code> parses a number.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="ot">symbol ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> <span class="dt">Text</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a>symbol <span class="ot">=</span> L.symbol spaceConsumer</span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="ot">num ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>num <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
-<p>We define some helpers that we’ll rely on later on. <code>between</code> is a parser combinator which wraps a parser in a “left” and “right” parser which will parse either side of the input.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="ot">semicolon ::</span> <span class="dt">Parser</span> <span class="dt">Text</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>semicolon <span class="ot">=</span> symbol <span class="st">&quot;;&quot;</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="ot">parens ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>parens <span class="ot">=</span> between (symbol <span class="st">&quot;(&quot;</span>) (symbol <span class="st">&quot;)&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="ot">angles ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a>angles <span class="ot">=</span> between (symbol <span class="st">&quot;&lt;&quot;</span>) (symbol <span class="st">&quot;&gt;&quot;</span>)</span></code></pre></div>
-<p>A Core identifier (i.e. a variable name, supercombinator name or let binding name) consists of alphanumeric characters. The first character can’t be a number.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="ot">identifier ::</span> <span class="dt">Parser</span> <span class="dt">Text</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>identifier <span class="ot">=</span> lexeme <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a>  first <span class="ot">&lt;-</span> letterChar</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a>  rest <span class="ot">&lt;-</span> many alphaNumChar</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a>  <span class="fu">pure</span> <span class="op">$</span> tokensToChunk (<span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> <span class="dt">Text</span>) (first <span class="op">:</span> rest)</span></code></pre></div>
+<p><code>symbol</code> and <code>num</code> are our two primitive parsers - we’ll build everything else out of
+them. <code>symbol</code> parses a specific string, and <code>num</code> parses a number.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">symbol ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> <span class="dt">Text</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>symbol <span class="ot">=</span> L.symbol spaceConsumer</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">num ::</span> <span class="dt">Parser</span> <span class="dt">Int</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>num <span class="ot">=</span> lexeme L.decimal</span></code></pre></div>
+<p>We define some helpers that we’ll rely on later on. <code>between</code> is a parser combinator which
+wraps a parser in a “left” and “right” parser which will parse either side of the input.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">semicolon ::</span> <span class="dt">Parser</span> <span class="dt">Text</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>semicolon <span class="ot">=</span> symbol <span class="st">&quot;;&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parens ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>parens <span class="ot">=</span> between (symbol <span class="st">&quot;(&quot;</span>) (symbol <span class="st">&quot;)&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">angles ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>angles <span class="ot">=</span> between (symbol <span class="st">&quot;&lt;&quot;</span>) (symbol <span class="st">&quot;&gt;&quot;</span>)</span></code></pre></div>
+<p>A Core identifier (i.e. a variable name, supercombinator name or let binding name)
+consists of alphanumeric characters. The first character can’t be a number.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">identifier ::</span> <span class="dt">Parser</span> <span class="dt">Text</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>identifier <span class="ot">=</span> lexeme <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  first <span class="ot">&lt;-</span> letterChar</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  rest <span class="ot">&lt;-</span> many alphaNumChar</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pure</span> <span class="op">$</span> tokensToChunk (<span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> <span class="dt">Text</span>) (first <span class="op">:</span> rest)</span></code></pre></div>
 <p>A Core program is a collection of supercombinator definitions.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="ot">parser ::</span> <span class="dt">Parser</span> <span class="dt">CoreProgram</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a>parser <span class="ot">=</span> supercombinator <span class="ot">`sepBy1`</span> semicolon</span></code></pre></div>
-<p>A supercombinator is a name, an optional list of arguments, and a expression representing the function body.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="ot">supercombinator ::</span> <span class="dt">Parser</span> <span class="dt">CoreScDefn</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a>supercombinator <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a>  name <span class="ot">&lt;-</span> var</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a>  args <span class="ot">&lt;-</span> many var</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true"></a>  symbol <span class="st">&quot;=&quot;</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true"></a>  body <span class="ot">&lt;-</span> expr</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true"></a>  <span class="fu">pure</span> (name, args, body)</span></code></pre></div>
-<p>A variable name is either an <code>identifier</code> or one of the built-in operators. It can’t be a reserved keyword.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="ot">var ::</span> <span class="dt">Parser</span> <span class="dt">Name</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a>var <span class="ot">=</span> choice <span class="op">$</span> operators <span class="op">++</span> [try alphaVar]</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a>      <span class="kw">where</span> alphaVar <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a>              v <span class="ot">&lt;-</span> identifier</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true"></a>              <span class="kw">if</span> v <span class="ot">`elem`</span> keywords</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true"></a>              <span class="kw">then</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true"></a>                <span class="fu">fail</span> <span class="op">.</span> T.unpack <span class="op">$</span> <span class="st">&quot;cannot use keyword &quot;</span> <span class="op">&lt;&gt;</span> v <span class="op">&lt;&gt;</span> <span class="st">&quot; as variable&quot;</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true"></a>              <span class="kw">else</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true"></a>                <span class="fu">pure</span> v</span></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="ot">operators ::</span> [<span class="dt">Parser</span> <span class="dt">Text</span>]</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a>operators <span class="ot">=</span> <span class="fu">map</span> symbol [<span class="st">&quot;==&quot;</span>, <span class="st">&quot;!=&quot;</span>, <span class="st">&quot;&gt;=&quot;</span>, <span class="st">&quot;&lt;=&quot;</span>, <span class="st">&quot;+&quot;</span>, <span class="st">&quot;-&quot;</span>, <span class="st">&quot;*&quot;</span>, <span class="st">&quot;/&quot;</span>, <span class="st">&quot;&gt;&quot;</span>, <span class="st">&quot;&lt;&quot;</span>]</span></code></pre></div>
-<div class="sourceCode" id="cb16"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="ot">keywords ::</span> [<span class="dt">Text</span>]</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a>keywords <span class="ot">=</span> [<span class="st">&quot;let&quot;</span>, <span class="st">&quot;letrec&quot;</span>, <span class="st">&quot;case&quot;</span>, <span class="st">&quot;in&quot;</span>, <span class="st">&quot;of&quot;</span>, <span class="st">&quot;Pack&quot;</span>, <span class="st">&quot;-&gt;&quot;</span>]</span></code></pre></div>
-<p>An expression is either a let(rec), a case, an application, a constructor, a numeric literal or a variable. To avoid the problem of left recursion we handle applications separately from simple expressions. If we didn’t do this, parsing <code>f x</code> would recurse infinitely on <code>f</code>.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="ot">expr ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a>expr <span class="ot">=</span> let_ <span class="op">&lt;|&gt;</span> case_ <span class="op">&lt;|&gt;</span> application <span class="op">&lt;|&gt;</span> aexpr</span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="ot">aexpr ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a>aexpr <span class="ot">=</span> parens expr <span class="op">&lt;|&gt;</span> constructor <span class="op">&lt;|&gt;</span> <span class="fu">fmap</span> <span class="dt">ENum</span> num <span class="op">&lt;|&gt;</span> <span class="fu">fmap</span> <span class="dt">EVar</span> var</span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="ot">application ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true"></a>application <span class="ot">=</span> <span class="fu">foldl1</span> <span class="dt">EAp</span> <span class="op">&lt;$&gt;</span> some aexpr</span></code></pre></div>
-<div class="sourceCode" id="cb20"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="ot">let_ ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a>let_ <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a>  isRec <span class="ot">&lt;-</span> letrec</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a>  defns <span class="ot">&lt;-</span> letDefn <span class="ot">`sepBy1`</span> semicolon</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true"></a>  symbol <span class="st">&quot;in&quot;</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true"></a>  e <span class="ot">&lt;-</span> expr</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true"></a>  <span class="fu">pure</span> <span class="op">$</span> <span class="dt">ELet</span> isRec defns e</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true"></a>    <span class="kw">where</span> letrec <span class="ot">=</span> (symbol <span class="st">&quot;letrec&quot;</span> <span class="op">&gt;&gt;</span> <span class="fu">pure</span> <span class="dt">Recursive</span>) <span class="op">&lt;|&gt;</span> (symbol <span class="st">&quot;let&quot;</span> <span class="op">&gt;&gt;</span> <span class="fu">pure</span> <span class="dt">NonRecursive</span>)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true"></a>          letDefn <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true"></a>            v <span class="ot">&lt;-</span> var</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true"></a>            symbol <span class="st">&quot;=&quot;</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true"></a>            e <span class="ot">&lt;-</span> expr</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true"></a>            <span class="fu">pure</span> (v, e)</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true"></a>  </span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true"></a><span class="ot">case_ ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true"></a>case_ <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true"></a>  symbol <span class="st">&quot;case&quot;</span></span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true"></a>  scrutinee <span class="ot">&lt;-</span> expr</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true"></a>  symbol <span class="st">&quot;of&quot;</span></span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true"></a>  alts <span class="ot">&lt;-</span> caseAlternatives</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true"></a>  <span class="fu">pure</span> <span class="op">$</span> <span class="dt">ECase</span> scrutinee alts</span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true"></a><span class="ot">caseAlternatives ::</span> <span class="dt">Parser</span> [<span class="dt">Alter</span> <span class="dt">Name</span>]</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true"></a>caseAlternatives <span class="ot">=</span> alt <span class="ot">`sepBy1`</span> semicolon</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true"></a>  <span class="kw">where</span> alt <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true"></a>          tag <span class="ot">&lt;-</span> angles num</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true"></a>          args <span class="ot">&lt;-</span> many var</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true"></a>          symbol <span class="st">&quot;-&gt;&quot;</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true"></a>          e <span class="ot">&lt;-</span> expr</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true"></a>          <span class="fu">pure</span> (tag, args, e)</span></code></pre></div>
-<div class="sourceCode" id="cb22"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true"></a><span class="ot">constructor ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true"></a>constructor <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true"></a>  symbol <span class="st">&quot;Pack{&quot;</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true"></a>  tag <span class="ot">&lt;-</span> num</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true"></a>  symbol <span class="st">&quot;,&quot;</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true"></a>  arity <span class="ot">&lt;-</span> num</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true"></a>  <span class="fu">pure</span> <span class="op">$</span> <span class="dt">EConstr</span> tag arity</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parser ::</span> <span class="dt">Parser</span> <span class="dt">CoreProgram</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>parser <span class="ot">=</span> supercombinator <span class="ot">`sepBy1`</span> semicolon</span></code></pre></div>
+<p>A supercombinator is a name, an optional list of arguments, and a expression representing
+the function body.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">supercombinator ::</span> <span class="dt">Parser</span> <span class="dt">CoreScDefn</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>supercombinator <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  name <span class="ot">&lt;-</span> var</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  args <span class="ot">&lt;-</span> many var</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  symbol <span class="st">&quot;=&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  body <span class="ot">&lt;-</span> expr</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pure</span> (name, args, body)</span></code></pre></div>
+<p>A variable name is either an <code>identifier</code> or one of the built-in operators. It can’t be a
+reserved keyword.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">var ::</span> <span class="dt">Parser</span> <span class="dt">Name</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>var <span class="ot">=</span> choice <span class="op">$</span> operators <span class="op">++</span> [try alphaVar]</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span> alphaVar <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>              v <span class="ot">&lt;-</span> identifier</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>              <span class="kw">if</span> v <span class="ot">`elem`</span> keywords</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>              <span class="kw">then</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                <span class="fu">fail</span> <span class="op">.</span> T.unpack <span class="op">$</span> <span class="st">&quot;cannot use keyword &quot;</span> <span class="op">&lt;&gt;</span> v <span class="op">&lt;&gt;</span> <span class="st">&quot; as variable&quot;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>              <span class="kw">else</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                <span class="fu">pure</span> v</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ot">operators ::</span> [<span class="dt">Parser</span> <span class="dt">Text</span>]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>operators <span class="ot">=</span> <span class="fu">map</span> symbol [<span class="st">&quot;==&quot;</span>, <span class="st">&quot;!=&quot;</span>, <span class="st">&quot;&gt;=&quot;</span>, <span class="st">&quot;&lt;=&quot;</span>, <span class="st">&quot;+&quot;</span>, <span class="st">&quot;-&quot;</span>, <span class="st">&quot;*&quot;</span>, <span class="st">&quot;/&quot;</span>, <span class="st">&quot;&gt;&quot;</span>, <span class="st">&quot;&lt;&quot;</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ot">keywords ::</span> [<span class="dt">Text</span>]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>keywords <span class="ot">=</span> [<span class="st">&quot;let&quot;</span>, <span class="st">&quot;letrec&quot;</span>, <span class="st">&quot;case&quot;</span>, <span class="st">&quot;in&quot;</span>, <span class="st">&quot;of&quot;</span>, <span class="st">&quot;Pack&quot;</span>, <span class="st">&quot;-&gt;&quot;</span>]</span></code></pre></div>
+<p>An expression is either a let(rec), a case, an application, a constructor, a numeric
+literal or a variable. To avoid the problem of left recursion we handle applications
+separately from simple expressions. If we didn’t do this, parsing <code>f x</code> would recurse
+infinitely on <code>f</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ot">expr ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>expr <span class="ot">=</span> let_ <span class="op">&lt;|&gt;</span> case_ <span class="op">&lt;|&gt;</span> application <span class="op">&lt;|&gt;</span> aexpr</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">aexpr ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>aexpr <span class="ot">=</span> parens expr <span class="op">&lt;|&gt;</span> constructor <span class="op">&lt;|&gt;</span> <span class="fu">fmap</span> <span class="dt">ENum</span> num <span class="op">&lt;|&gt;</span> <span class="fu">fmap</span> <span class="dt">EVar</span> var</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">application ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>application <span class="ot">=</span> <span class="fu">foldl1</span> <span class="dt">EAp</span> <span class="op">&lt;$&gt;</span> some aexpr</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">let_ ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>let_ <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  isRec <span class="ot">&lt;-</span> letrec</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  defns <span class="ot">&lt;-</span> letDefn <span class="ot">`sepBy1`</span> semicolon</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  symbol <span class="st">&quot;in&quot;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  e <span class="ot">&lt;-</span> expr</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pure</span> <span class="op">$</span> <span class="dt">ELet</span> isRec defns e</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> letrec <span class="ot">=</span> (symbol <span class="st">&quot;letrec&quot;</span> <span class="op">&gt;&gt;</span> <span class="fu">pure</span> <span class="dt">Recursive</span>) <span class="op">&lt;|&gt;</span> (symbol <span class="st">&quot;let&quot;</span> <span class="op">&gt;&gt;</span> <span class="fu">pure</span> <span class="dt">NonRecursive</span>)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>          letDefn <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>            v <span class="ot">&lt;-</span> var</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>            symbol <span class="st">&quot;=&quot;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>            e <span class="ot">&lt;-</span> expr</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>            <span class="fu">pure</span> (v, e)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="ot">case_ ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>case_ <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  symbol <span class="st">&quot;case&quot;</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>  scrutinee <span class="ot">&lt;-</span> expr</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>  symbol <span class="st">&quot;of&quot;</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  alts <span class="ot">&lt;-</span> caseAlternatives</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pure</span> <span class="op">$</span> <span class="dt">ECase</span> scrutinee alts</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ot">caseAlternatives ::</span> <span class="dt">Parser</span> [<span class="dt">Alter</span> <span class="dt">Name</span>]</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>caseAlternatives <span class="ot">=</span> alt <span class="ot">`sepBy1`</span> semicolon</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> alt <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>          tag <span class="ot">&lt;-</span> angles num</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>          args <span class="ot">&lt;-</span> many var</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>          symbol <span class="st">&quot;-&gt;&quot;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>          e <span class="ot">&lt;-</span> expr</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>          <span class="fu">pure</span> (tag, args, e)</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ot">constructor ::</span> <span class="dt">Parser</span> <span class="dt">CoreExpr</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>constructor <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  symbol <span class="st">&quot;Pack{&quot;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  tag <span class="ot">&lt;-</span> num</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  symbol <span class="st">&quot;,&quot;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  arity <span class="ot">&lt;-</span> num</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pure</span> <span class="op">$</span> <span class="dt">EConstr</span> tag arity</span></code></pre></div>
 <p>This is all there is to the parser. Like the printer, it is short and sweet.</p>
       </div>
     </div>

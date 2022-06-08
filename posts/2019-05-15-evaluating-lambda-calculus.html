@@ -11,24 +11,27 @@
     }
     body { 
       height: 100%;
-      background-color: #f7f2e9;
+      background-color: #fff;
       margin: 0px 0px 0px 0px;
     }
     .main {
       min-height: 100%;
-      max-width: 700px;
-      font-family: Georgia,Times New Roman,serif;
+      max-width: 900px;
+      font-family: Helvetica Neue;
       font-size: 16px;
-      line-height: 1.5em;
-      background-color: #fff9ef;
+      line-height: 1.7em;
     }
     .content {
       margin: 0px auto 0px auto;
       padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
       color: #333;
-    }
-    .content p {
       font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
     }
     div.sourceCode {
       padding: 5px;
@@ -36,9 +39,6 @@
     @media (min-width: 701px) {
       .main {
         margin: 0px auto 0px auto;
-      }
-      .content {
-        max-width: 600px;
       }
     }
     @media (max-width: 700px) {
@@ -66,48 +66,25 @@
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
       font-weight: normal;
     }
-    pre {
-      font-size: 14px;
-    }
     ol#post-list {
       list-style-type: none
     }
     #header {
       border-bottom: 1px solid black;
       padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
     }
     #header a {
       text-decoration: none;
     }
-    #header #site {
-      font-family: monospace;
-      text-align: right;
-      margin-right: 25px;
-      color: black;
-      float: right;
+    #header #back {
+      position: absolute;
+      left: 0;
     }
-    #header #site a {
-      color: black;
-    }
-    #header #site a:hover {
-      color: black;
-    }
-    #header #site a:visited {
-      color: black;
-    }
-    #header #name {
-      padding-left: 25px;
-      background-color: #ffb3005e;
-    }
-    #header #name a {
-      color: #292a31;
-      font-family: Monaco,monospace;
-    }
-    #header #name a:visited {
-      color: #292a31;
-    }
-    #header #name a:hover {
-      color: #292a31;
+    #header #date {
+      position: absolute;
+      right: 0;
     }
 
     a {
@@ -122,70 +99,82 @@
       text-decoration: none;
       color: #233248;
     }
-
-    #date {
-      font-size: 12px;
-    }
   </style>
 </head>
 
   <body>
     <div class="main">
       <div id="header">
-        <h1 id="name"><a href="../">Harry Maclean</a></h1>
+        <a id="back" href="../">↩</a>
+        <div id="date">May 15, 2019</div>
       </div>
       <div class="content">
-        <div id="date">
-          May 15, 2019
-        </div>
         <h1 id="evaluating-the-untyped-lamda-calculus">Evaluating the Untyped Lamda Calculus</h1>
-<p>Recently I was working through some problems related to the Untyped Lambda Calculus and was getting tired of reducing expressions by hand. I tried writing a small evaluator to help, and was surprised how straightforward it turned out to be. The evaluator is only 40 lines or so - easily small enough to fit in a blog post. So here it is! The source for this post is <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-05-15-evaluating-lambda-calculus.lhs">here</a>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">module</span> <span class="dt">Lambda</span> <span class="kw">where</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Data.Maybe</span> (fromMaybe)</span></code></pre></div>
-<p>The first thing we need is a representation for lambda terms. The lambda calculus is very simple: we have lambda abstraction (i.e. functions), variables, and applications.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">Lam</span> <span class="dt">String</span> <span class="dt">Expr</span> <span class="co">-- \x. e</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>          <span class="op">|</span> <span class="dt">Var</span> <span class="dt">String</span>      <span class="co">-- x</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a>          <span class="op">|</span> <span class="dt">App</span> <span class="dt">Expr</span> <span class="dt">Expr</span>   <span class="co">-- f x</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a>          <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span></code></pre></div>
+<p>Recently I was working through some problems related to the Untyped Lambda Calculus and
+was getting tired of reducing expressions by hand. I tried writing a small evaluator to
+help, and was surprised how straightforward it turned out to be. The evaluator is only 40
+lines or so - easily small enough to fit in a blog post. So here it is! The source for
+this post is <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-05-15-evaluating-lambda-calculus.lhs">here</a>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Lambda</span> <span class="kw">where</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Maybe</span> (fromMaybe)</span></code></pre></div>
+<p>The first thing we need is a representation for lambda terms. The lambda calculus is very
+simple: we have lambda abstraction (i.e. functions), variables, and applications.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">Lam</span> <span class="dt">String</span> <span class="dt">Expr</span> <span class="co">-- \x. e</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> <span class="dt">Var</span> <span class="dt">String</span>      <span class="co">-- x</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> <span class="dt">App</span> <span class="dt">Expr</span> <span class="dt">Expr</span>   <span class="co">-- f x</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>          <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span></code></pre></div>
 <p>Thus the Church numeral one <code>\f. \x. f x</code> becomes:</p>
 <pre><code>Lam &quot;f&quot; (Lam &quot;x&quot; (App (Var &quot;f&quot;) (Var &quot;x&quot;)))</code></pre>
 <p>We use <code>String</code> for variable bindings, for simplicity.</p>
-<p>What we want by the end is a function <code>nf</code> which computes the normal form of a given lambda expression - that is, the result when we reduce it as much as possibe. <code>Context</code> contains the free variables in scope for a given expression. It’s simply a map from variable name to the expression bound to that variable. When evaluating a full expression we’ll typically start with a empty context (<code>mempty</code>).</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="ot">nf ::</span> <span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a>nf ctx e <span class="ot">=</span> <span class="fu">head</span> (reduceList ctx e)</span></code></pre></div>
-<p><code>reduceList</code> produces a list of consecutive reductions of the expression, with the last one at the front. To compute the normal form we just take this first element.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="kw">type</span> <span class="dt">Context</span> <span class="ot">=</span> [(<span class="dt">String</span>, <span class="dt">Expr</span>)]</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a><span class="ot">reduceList ::</span> <span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> [<span class="dt">Expr</span>]</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true"></a>reduceList ctx expr <span class="ot">=</span> go [expr]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true"></a>  <span class="kw">where</span> go (e <span class="op">:</span> es) <span class="ot">=</span> <span class="kw">let</span> e' <span class="ot">=</span> reduce ctx e</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true"></a>                       <span class="kw">in</span> <span class="kw">if</span> e' <span class="op">==</span> e</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true"></a>                          <span class="kw">then</span> (e <span class="op">:</span> es)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true"></a>                          <span class="kw">else</span> go (e' <span class="op">:</span> e <span class="op">:</span> es)</span></code></pre></div>
-<p>You can see that we build up a list of reduced expressions, stopping when reducing the expression no longer changes it. If the expression does not reduce to normal form (e.g. Ω) then this function will not terminate.</p>
+<p>What we want by the end is a function <code>nf</code> which computes the normal form of a given
+lambda expression - that is, the result when we reduce it as much as possibe. <code>Context</code>
+contains the free variables in scope for a given expression. It’s simply a map from
+variable name to the expression bound to that variable. When evaluating a full expression
+we’ll typically start with a empty context (<code>mempty</code>).</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">nf ::</span> <span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>nf ctx e <span class="ot">=</span> <span class="fu">head</span> (reduceList ctx e)</span></code></pre></div>
+<p><code>reduceList</code> produces a list of consecutive reductions of the expression, with the last
+one at the front. To compute the normal form we just take this first element.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Context</span> <span class="ot">=</span> [(<span class="dt">String</span>, <span class="dt">Expr</span>)]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ot">reduceList ::</span> <span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> [<span class="dt">Expr</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>reduceList ctx expr <span class="ot">=</span> go [expr]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> go (e <span class="op">:</span> es) <span class="ot">=</span> <span class="kw">let</span> e' <span class="ot">=</span> reduce ctx e</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                       <span class="kw">in</span> <span class="kw">if</span> e' <span class="op">==</span> e</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                          <span class="kw">then</span> (e <span class="op">:</span> es)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                          <span class="kw">else</span> go (e' <span class="op">:</span> e <span class="op">:</span> es)</span></code></pre></div>
+<p>You can see that we build up a list of reduced expressions, stopping when reducing the
+expression no longer changes it. If the expression does not reduce to normal form (e.g. Ω)
+then this function will not terminate.</p>
 <p>The actual work happens in <code>reduce</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="ot">reduce ::</span> <span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>reduce ctx (<span class="dt">Var</span> v) <span class="ot">=</span> fromMaybe (<span class="dt">Var</span> v) (<span class="fu">lookup</span> v ctx)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a>reduce ctx (<span class="dt">Lam</span> v a) <span class="ot">=</span> <span class="dt">Lam</span> v (reduce ctx a)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a>reduce ctx (<span class="dt">App</span> (<span class="dt">Lam</span> v a) b) <span class="ot">=</span> substitute v a b</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a>reduce ctx (<span class="dt">App</span> a b) <span class="ot">=</span> <span class="dt">App</span> (reduce ctx a) (reduce ctx b)</span></code></pre></div>
-<p><code>reduce</code> applies one round of beta reduction to the expression. Symbolically, beta reduction is defined as <code>(\x. e) a ↝ e[a/x]</code>. This means that when we have an application of a lambda abstraction with a variable <code>x</code> over an expression <code>e</code> to another lambda expression <code>a</code>, we can reduce it to <code>e</code> with all instances of <code>x</code> replaced by <code>a</code>. The only thing we need to be sure of is that <code>x</code> does not appear as a free variable in <code>a</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">reduce ::</span> <span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>reduce ctx (<span class="dt">Var</span> v) <span class="ot">=</span> fromMaybe (<span class="dt">Var</span> v) (<span class="fu">lookup</span> v ctx)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>reduce ctx (<span class="dt">Lam</span> v a) <span class="ot">=</span> <span class="dt">Lam</span> v (reduce ctx a)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>reduce ctx (<span class="dt">App</span> (<span class="dt">Lam</span> v a) b) <span class="ot">=</span> substitute v a b</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>reduce ctx (<span class="dt">App</span> a b) <span class="ot">=</span> <span class="dt">App</span> (reduce ctx a) (reduce ctx b)</span></code></pre></div>
+<p><code>reduce</code> applies one round of beta reduction to the expression. Symbolically, beta
+reduction is defined as <code>(\x. e) a ↝ e[a/x]</code>. This means that when we have an application
+of a lambda abstraction with a variable <code>x</code> over an expression <code>e</code> to another lambda
+expression <code>a</code>, we can reduce it to <code>e</code> with all instances of <code>x</code> replaced by <code>a</code>. The
+only thing we need to be sure of is that <code>x</code> does not appear as a free variable in <code>a</code>.</p>
 <p>So what <code>reduce</code> does depends on the type of expression:</p>
 <ul>
 <li>If it’s a variable, we look up its value in our context and replace it with the value.</li>
 <li>If its a function, we reduce the inner expression it contains.</li>
-<li>If it’s an application of a function to another expression, we substitute every occurrence of the variable bound by the function with the expression being applied.</li>
+<li>If it’s an application of a function to another expression, we substitute every
+occurrence of the variable bound by the function with the expression being applied.</li>
 <li>For any other application, we just reduce both inner expressions.</li>
 </ul>
 <p>The final piece we need is <code>substitute</code>, which performs the variable substitution.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="ot">substitute ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>substitute v a b <span class="ot">=</span> go a</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a>  <span class="kw">where</span> go (<span class="dt">Var</span> v')   <span class="op">|</span> v' <span class="op">==</span> v <span class="ot">=</span> b</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a>                      <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Var</span> v'</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a>        go (<span class="dt">Lam</span> v' e) <span class="op">|</span> v' <span class="op">==</span> v <span class="ot">=</span> <span class="dt">Lam</span> v' e</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a>                      <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Lam</span> v' (go e)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true"></a>        go (<span class="dt">App</span> x y) <span class="ot">=</span> <span class="dt">App</span> (go x) (go y)</span></code></pre></div>
-<p><code>substitute</code> replaces all instances of a variable with an expression. To avoid variable capture, it won’t recurse inside a lambda abstraction of the same variable name.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">substitute ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>substitute v a b <span class="ot">=</span> go a</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> go (<span class="dt">Var</span> v')   <span class="op">|</span> v' <span class="op">==</span> v <span class="ot">=</span> b</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                      <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Var</span> v'</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        go (<span class="dt">Lam</span> v' e) <span class="op">|</span> v' <span class="op">==</span> v <span class="ot">=</span> <span class="dt">Lam</span> v' e</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                      <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Lam</span> v' (go e)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        go (<span class="dt">App</span> x y) <span class="ot">=</span> <span class="dt">App</span> (go x) (go y)</span></code></pre></div>
+<p><code>substitute</code> replaces all instances of a variable with an expression. To avoid variable
+capture, it won’t recurse inside a lambda abstraction of the same variable name.</p>
 <p>Some examples:</p>
 <pre><code>substitute &quot;x&quot; (Var &quot;x&quot;) e == e
 substitute &quot;x&quot; (App (Var &quot;f&quot;) (Var &quot;x&quot;)) e == App (Var &quot;f&quot;) e
@@ -196,8 +185,13 @@ substitute &quot;x&quot; (App (Var &quot;x&quot;) (Lam &quot;x&quot; (Var &quot;
 Var &quot;y&quot;
 &gt; nf mempty (App (App (Lam &quot;f&quot; (Lam &quot;x&quot; (App (Var &quot;f&quot;) (Var &quot;x&quot;)))) (Lam &quot;e&quot; (Var &quot;e&quot;))) (Var &quot;t&quot;))
 Var &quot;t&quot;</code></pre>
-<p>These aren’t very nice to write by hand, but parsing untyped lambda calculus is quite straightforward. I might tackle that in a future blog post.</p>
-<p>Since writing this evaluator I’ve been experimenting with the other variants of lambda calculus, in particular the different type systems T, F etc. I’ll probably write at least another blog post on what I’ve learned but until then the experiments are <a href="https://github.com/hmac/lc">on GitHub</a>. There’s also an online version which you can use to play around with the different lambda calculi <a href="https://hmac.dev/lc/index.html">here</a>.</p>
+<p>These aren’t very nice to write by hand, but parsing untyped lambda calculus is quite
+straightforward. I might tackle that in a future blog post.</p>
+<p>Since writing this evaluator I’ve been experimenting with the other variants of lambda
+calculus, in particular the different type systems T, F etc. I’ll probably write at least
+another blog post on what I’ve learned but until then the experiments are <a href="https://github.com/hmac/lc">on
+GitHub</a>. There’s also an online version which you can use to
+play around with the different lambda calculi <a href="https://hmac.dev/lc/index.html">here</a>.</p>
       </div>
     </div>
   </body>

@@ -11,24 +11,27 @@
     }
     body { 
       height: 100%;
-      background-color: #f7f2e9;
+      background-color: #fff;
       margin: 0px 0px 0px 0px;
     }
     .main {
       min-height: 100%;
-      max-width: 700px;
-      font-family: Georgia,Times New Roman,serif;
+      max-width: 900px;
+      font-family: Helvetica Neue;
       font-size: 16px;
-      line-height: 1.5em;
-      background-color: #fff9ef;
+      line-height: 1.7em;
     }
     .content {
       margin: 0px auto 0px auto;
       padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
       color: #333;
-    }
-    .content p {
       font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
     }
     div.sourceCode {
       padding: 5px;
@@ -36,9 +39,6 @@
     @media (min-width: 701px) {
       .main {
         margin: 0px auto 0px auto;
-      }
-      .content {
-        max-width: 600px;
       }
     }
     @media (max-width: 700px) {
@@ -66,48 +66,25 @@
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
       font-weight: normal;
     }
-    pre {
-      font-size: 14px;
-    }
     ol#post-list {
       list-style-type: none
     }
     #header {
       border-bottom: 1px solid black;
       padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
     }
     #header a {
       text-decoration: none;
     }
-    #header #site {
-      font-family: monospace;
-      text-align: right;
-      margin-right: 25px;
-      color: black;
-      float: right;
+    #header #back {
+      position: absolute;
+      left: 0;
     }
-    #header #site a {
-      color: black;
-    }
-    #header #site a:hover {
-      color: black;
-    }
-    #header #site a:visited {
-      color: black;
-    }
-    #header #name {
-      padding-left: 25px;
-      background-color: #ffb3005e;
-    }
-    #header #name a {
-      color: #292a31;
-      font-family: Monaco,monospace;
-    }
-    #header #name a:visited {
-      color: #292a31;
-    }
-    #header #name a:hover {
-      color: #292a31;
+    #header #date {
+      position: absolute;
+      right: 0;
     }
 
     a {
@@ -122,10 +99,6 @@
       text-decoration: none;
       color: #233248;
     }
-
-    #date {
-      font-size: 12px;
-    }
   </style>
 </head>
 
@@ -136,6 +109,8 @@
       </div>
       <div class="content">
         <div>
+  
+    <a href="./posts/2022-06-08-the-ideal-package-manager.html"><h3 class="post-link">The Ideal Package Manager</h3></a>
   
     <a href="./posts/2019-12-15-recursion-with-context.html"><h3 class="post-link">Recursion with Context</h3></a>
   

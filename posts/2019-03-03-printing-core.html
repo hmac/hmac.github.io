@@ -11,24 +11,27 @@
     }
     body { 
       height: 100%;
-      background-color: #f7f2e9;
+      background-color: #fff;
       margin: 0px 0px 0px 0px;
     }
     .main {
       min-height: 100%;
-      max-width: 700px;
-      font-family: Georgia,Times New Roman,serif;
+      max-width: 900px;
+      font-family: Helvetica Neue;
       font-size: 16px;
-      line-height: 1.5em;
-      background-color: #fff9ef;
+      line-height: 1.7em;
     }
     .content {
       margin: 0px auto 0px auto;
       padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
       color: #333;
-    }
-    .content p {
       font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
     }
     div.sourceCode {
       padding: 5px;
@@ -36,9 +39,6 @@
     @media (min-width: 701px) {
       .main {
         margin: 0px auto 0px auto;
-      }
-      .content {
-        max-width: 600px;
       }
     }
     @media (max-width: 700px) {
@@ -66,48 +66,25 @@
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
       font-weight: normal;
     }
-    pre {
-      font-size: 14px;
-    }
     ol#post-list {
       list-style-type: none
     }
     #header {
       border-bottom: 1px solid black;
       padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
     }
     #header a {
       text-decoration: none;
     }
-    #header #site {
-      font-family: monospace;
-      text-align: right;
-      margin-right: 25px;
-      color: black;
-      float: right;
+    #header #back {
+      position: absolute;
+      left: 0;
     }
-    #header #site a {
-      color: black;
-    }
-    #header #site a:hover {
-      color: black;
-    }
-    #header #site a:visited {
-      color: black;
-    }
-    #header #name {
-      padding-left: 25px;
-      background-color: #ffb3005e;
-    }
-    #header #name a {
-      color: #292a31;
-      font-family: Monaco,monospace;
-    }
-    #header #name a:visited {
-      color: #292a31;
-    }
-    #header #name a:hover {
-      color: #292a31;
+    #header #date {
+      position: absolute;
+      right: 0;
     }
 
     a {
@@ -122,70 +99,74 @@
       text-decoration: none;
       color: #233248;
     }
-
-    #date {
-      font-size: 12px;
-    }
   </style>
 </head>
 
   <body>
     <div class="main">
       <div id="header">
-        <h1 id="name"><a href="../">Harry Maclean</a></h1>
+        <a id="back" href="../">↩</a>
+        <div id="date">March  3, 2019</div>
       </div>
       <div class="content">
-        <div id="date">
-          March  3, 2019
-        </div>
         <h1 id="implementing-a-functional-language-printing-core">Implementing a Functional Language: Printing Core</h1>
-<p>This is an appendix to a series in implementing a functional language. The introduction is <a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-printing-core.lhs">here</a>. To load it into GHCi and play around, you can use the following command (you’ll need the <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">source</a> for the <code>Core.Language</code> module as well):</p>
+<p>This is an appendix to a series in implementing a functional language. The introduction is
+<a href="2019-03-02-implementing-a-functional-language.html">here</a>. This is a literate Haskell file - you can download the source
+<a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-printing-core.lhs">here</a>. To load it into GHCi and play around, you can use the following command
+(you’ll need the <a href="https://github.com/hmac/hmac.github.io/blob/src/posts/2019-03-03-the-core-language.lhs">source</a> for the <code>Core.Language</code> module as well):</p>
 <pre><code>stack --resolver lts-12.2          \
       ghci --package prettyprinter \
            --package text          \
       2019-03-03-printing-core.lhs \
       2019-03-03-the-core-language.lhs</code></pre>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a><span class="kw">module</span> <span class="dt">Core.Print</span> (<span class="fu">print</span>) <span class="kw">where</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Core.Language</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Data.Text.Prettyprint.Doc</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a><span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">hiding</span> (print)</span></code></pre></div>
-<p>This module exports a single function: <code>print</code>. <code>print</code> pretty prints a <code>CoreProgram</code>, producing a <code>Doc a</code> which can be converted to a final output by the caller. <code>Doc</code> is a type provided by the <code>Prettyprint</code> package.</p>
-<p>We print a <code>CoreProgram</code> by printing each of its supercombinator definitions, separating each with a newline.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="fu">print</span><span class="ot"> ::</span> <span class="dt">CoreProgram</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="fu">print</span> <span class="ot">=</span> (vsep <span class="op">.</span> <span class="fu">map</span> pScDefn)</span></code></pre></div>
-<p>We print supercombinator by printing its name and binders on one line, and printing the expression body across the rest of the line and possibly further lines below. The body will be indented to preserve the off-side rule.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="ot">pScDefn ::</span> <span class="dt">CoreScDefn</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>pScDefn (name, binders, expr)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>  <span class="ot">=</span> pretty name <span class="op">&lt;+&gt;</span> sepmap binders <span class="op">&lt;+&gt;</span> equals <span class="op">&lt;+&gt;</span> align (pExpr expr)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Core.Print</span> (<span class="fu">print</span>) <span class="kw">where</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Core.Language</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Text.Prettyprint.Doc</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">hiding</span> (print)</span></code></pre></div>
+<p>This module exports a single function: <code>print</code>. <code>print</code> pretty prints a <code>CoreProgram</code>,
+producing a <code>Doc a</code> which can be converted to a final output by the caller. <code>Doc</code> is a
+type provided by the <code>Prettyprint</code> package.</p>
+<p>We print a <code>CoreProgram</code> by printing each of its supercombinator definitions, separating
+each with a newline.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span><span class="ot"> ::</span> <span class="dt">CoreProgram</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span> <span class="ot">=</span> (vsep <span class="op">.</span> <span class="fu">map</span> pScDefn)</span></code></pre></div>
+<p>We print supercombinator by printing its name and binders on one line, and printing the
+expression body across the rest of the line and possibly further lines below. The body
+will be indented to preserve the off-side rule.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">pScDefn ::</span> <span class="dt">CoreScDefn</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pScDefn (name, binders, expr)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> pretty name <span class="op">&lt;+&gt;</span> sepmap binders <span class="op">&lt;+&gt;</span> equals <span class="op">&lt;+&gt;</span> align (pExpr expr)</span></code></pre></div>
 <p>We print a Core expression by case analysis on its constructors.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="ot">pExpr ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a>pExpr (<span class="dt">EVar</span> v) <span class="ot">=</span> pretty v</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true"></a>pExpr (<span class="dt">ENum</span> n) <span class="ot">=</span> pretty n</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true"></a>pExpr (<span class="dt">EConstr</span> tag arity) <span class="ot">=</span> <span class="st">&quot;Pack{&quot;</span> <span class="op">&lt;&gt;</span> pretty tag <span class="op">&lt;&gt;</span> <span class="st">&quot;,&quot;</span> <span class="op">&lt;&gt;</span> pretty arity <span class="op">&lt;&gt;</span> <span class="st">&quot;}&quot;</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true"></a>pExpr (<span class="dt">EAp</span> e1 e2) <span class="ot">=</span> pAExpr e1 <span class="op">&lt;+&gt;</span> pAExpr e2</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true"></a>pExpr (<span class="dt">ELet</span> <span class="dt">Recursive</span> defns expr)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true"></a> <span class="ot">=</span> <span class="st">&quot;letrec&quot;</span> <span class="op">&lt;+&gt;</span> nest <span class="dv">2</span> (pDefns defns) <span class="op">&lt;+&gt;</span> <span class="st">&quot;in&quot;</span> <span class="op">&lt;+&gt;</span> pExpr expr</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true"></a>pExpr (<span class="dt">ELet</span> <span class="dt">NonRecursive</span> defns expr)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true"></a> <span class="ot">=</span> <span class="st">&quot;let&quot;</span> <span class="op">&lt;+&gt;</span> nest <span class="dv">2</span> (pDefns defns) <span class="op">&lt;+&gt;</span> <span class="st">&quot;in&quot;</span> <span class="op">&lt;+&gt;</span> pExpr expr</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true"></a>pExpr (<span class="dt">ECase</span> e alters)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true"></a>  <span class="ot">=</span> <span class="st">&quot;case&quot;</span> <span class="op">&lt;+&gt;</span> pExpr e <span class="op">&lt;+&gt;</span> <span class="st">&quot;of&quot;</span> <span class="op">&lt;+&gt;</span> hardline</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true"></a>           <span class="op">&lt;+&gt;</span> (align <span class="op">.</span> vsep <span class="op">.</span> punctuate semi) (<span class="fu">map</span> pAlter alters)</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true"></a>    <span class="kw">where</span> pAlter (tag, binders, expr)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true"></a>            <span class="ot">=</span> sep <span class="op">$</span> angles (pretty tag) <span class="op">:</span> <span class="fu">map</span> pretty binders <span class="op">++</span> [<span class="st">&quot;-&gt;&quot;</span>, pExpr expr]</span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="ot">pDefns ::</span> [(<span class="dt">Name</span>, <span class="dt">Expr</span> <span class="dt">Name</span>)] <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a>pDefns defns</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a>  <span class="ot">=</span> vsep <span class="op">$</span> punctuate semi (<span class="fu">map</span> pDefn defns)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true"></a>    <span class="kw">where</span> pDefn (name, expr) <span class="ot">=</span> pretty name <span class="op">&lt;+&gt;</span> equals <span class="op">&lt;+&gt;</span> align (pExpr expr)</span></code></pre></div>
-<p><code>pAExpr</code> is like <code>pExpr</code>, but wraps the result in parentheses unless it is a variable or number. This is naive but avoids ambiguity.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="ot">pAExpr ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>pAExpr (<span class="dt">EVar</span> v) <span class="ot">=</span> pretty v</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a>pAExpr (<span class="dt">ENum</span> n) <span class="ot">=</span> pretty n</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a>pAExpr e <span class="ot">=</span> parens (pExpr e)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">pExpr ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">EVar</span> v) <span class="ot">=</span> pretty v</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">ENum</span> n) <span class="ot">=</span> pretty n</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">EConstr</span> tag arity) <span class="ot">=</span> <span class="st">&quot;Pack{&quot;</span> <span class="op">&lt;&gt;</span> pretty tag <span class="op">&lt;&gt;</span> <span class="st">&quot;,&quot;</span> <span class="op">&lt;&gt;</span> pretty arity <span class="op">&lt;&gt;</span> <span class="st">&quot;}&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">EAp</span> e1 e2) <span class="ot">=</span> pAExpr e1 <span class="op">&lt;+&gt;</span> pAExpr e2</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">ELet</span> <span class="dt">Recursive</span> defns expr)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a> <span class="ot">=</span> <span class="st">&quot;letrec&quot;</span> <span class="op">&lt;+&gt;</span> nest <span class="dv">2</span> (pDefns defns) <span class="op">&lt;+&gt;</span> <span class="st">&quot;in&quot;</span> <span class="op">&lt;+&gt;</span> pExpr expr</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">ELet</span> <span class="dt">NonRecursive</span> defns expr)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a> <span class="ot">=</span> <span class="st">&quot;let&quot;</span> <span class="op">&lt;+&gt;</span> nest <span class="dv">2</span> (pDefns defns) <span class="op">&lt;+&gt;</span> <span class="st">&quot;in&quot;</span> <span class="op">&lt;+&gt;</span> pExpr expr</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>pExpr (<span class="dt">ECase</span> e alters)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> <span class="st">&quot;case&quot;</span> <span class="op">&lt;+&gt;</span> pExpr e <span class="op">&lt;+&gt;</span> <span class="st">&quot;of&quot;</span> <span class="op">&lt;+&gt;</span> hardline</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>           <span class="op">&lt;+&gt;</span> (align <span class="op">.</span> vsep <span class="op">.</span> punctuate semi) (<span class="fu">map</span> pAlter alters)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> pAlter (tag, binders, expr)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            <span class="ot">=</span> sep <span class="op">$</span> angles (pretty tag) <span class="op">:</span> <span class="fu">map</span> pretty binders <span class="op">++</span> [<span class="st">&quot;-&gt;&quot;</span>, pExpr expr]</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">pDefns ::</span> [(<span class="dt">Name</span>, <span class="dt">Expr</span> <span class="dt">Name</span>)] <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>pDefns defns</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> vsep <span class="op">$</span> punctuate semi (<span class="fu">map</span> pDefn defns)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> pDefn (name, expr) <span class="ot">=</span> pretty name <span class="op">&lt;+&gt;</span> equals <span class="op">&lt;+&gt;</span> align (pExpr expr)</span></code></pre></div>
+<p><code>pAExpr</code> is like <code>pExpr</code>, but wraps the result in parentheses unless it is a variable or
+number. This is naive but avoids ambiguity.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">pAExpr ::</span> <span class="dt">CoreExpr</span> <span class="ot">-&gt;</span> <span class="dt">Doc</span> a</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>pAExpr (<span class="dt">EVar</span> v) <span class="ot">=</span> pretty v</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>pAExpr (<span class="dt">ENum</span> n) <span class="ot">=</span> pretty n</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>pAExpr e <span class="ot">=</span> parens (pExpr e)</span></code></pre></div>
 <p><code>sepmap</code> is a convenience function for printing each element in a list separated by spaces.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="ot">sepmap ::</span> <span class="dt">Pretty</span> a <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Doc</span> b</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>sepmap xs <span class="ot">=</span> sep (<span class="fu">map</span> pretty xs)</span></code></pre></div>
-<p>This is the entire pretty printer. Thanks to the fantastic <code>prettyprinter</code> library, it’s short and quite readable.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">sepmap ::</span> <span class="dt">Pretty</span> a <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Doc</span> b</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>sepmap xs <span class="ot">=</span> sep (<span class="fu">map</span> pretty xs)</span></code></pre></div>
+<p>This is the entire pretty printer. Thanks to the fantastic <code>prettyprinter</code> library, it’s
+short and quite readable.</p>
       </div>
     </div>
   </body>
