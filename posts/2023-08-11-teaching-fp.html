@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+  <head>
+  <title>Teaching Functional Programming | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+    body { 
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 1.7em;
+    }
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
+    }
+    div.sourceCode {
+      padding: 5px;
+    }
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+    h1, h2, h3 {
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-weight: normal;
+    }
+    ol#post-list {
+      list-style-type: none
+    }
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+    #header a {
+      text-decoration: none;
+    }
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">August 11, 2023</div>
+      </div>
+      <div class="content">
+        <h1 id="teaching-functional-programming">Teaching Functional Programming</h1>
+<p>I once TA’ed an undergraduate functional programming course and it was the
+saddest thing. In came around sixty smart students, at least some of whom were eager to
+learn. Over the course of 10 weeks, the only thing anyone learned was that
+functional programming is a) hard, b) useless and c) not something they want to
+learn anymore.</p>
+<p>None of these are true! But the course was structured and taught to maximise
+confusion. Since then I’ve been thinking a lot about how FP could be taught
+better, so that students understand it and enjoy it.</p>
+<p>The problems come down to:</p>
+<ul>
+<li>bad tooling</li>
+<li>confusing syntax</li>
+<li>many ways to do the same thing</li>
+</ul>
+<p>Unfortunately all of these rhyme with “Haskell”, which was the language of choice.</p>
+<h2 id="getting-set-up">Getting set up</h2>
+<p>The worst way to spend your first workshop on any topic is to be wrestling with
+installers and package managers, trying to get the language set up.</p>
+<p>Haskell has improved in this regard in recent years, but there are still
+multiple ways to install it (Stack, ghcup, Haskell Platform (?), OS package
+managers, Nix) and multiple ways to create and build a project (Stack, cabal,
+Nix, plain GHC). Newcomers don’t care about any of this. They just want to start
+writing some code.</p>
+<p>A good teaching language should not even have an “install” step, or it should be
+minimal. It should be possible to write code in your browser and run it. To run
+code locally, you should just download a single executable that does everything.
+You should not need to “create a project” to get started.</p>
+<h2 id="syntax">Syntax</h2>
+<p>The main goal of syntax in a teaching language is to communicate a concept
+whilst avoiding confusion. Similar things should look similar and distinct
+things should look distinct. In Haskell there are two main ways to define a
+function:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>f <span class="ot">=</span> \x <span class="ot">-&gt;</span> …</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>f x <span class="ot">=</span> …</span></code></pre></div>
+<p>This causes so much confusion. Students usually get that the function is called
+<code>f</code>, but struggle to understand that the <code>x</code> on the left of the <code>=</code> and the
+one the right are the same thing. It gets worse when you introduce
+multi-equation definitions:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>f <span class="dv">0</span> <span class="ot">=</span> …</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>f <span class="dv">1</span> <span class="ot">=</span> …</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>f x <span class="ot">=</span> …</span></code></pre></div>
+<p>Are these different functions? What does it mean to put numbers before the equals sign?</p>
+<p>Students will often add an equation to a function in a different part of the
+file, resulting in something like</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>f <span class="dv">0</span> <span class="ot">=</span> …</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>g z <span class="ot">=</span> …</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>f x <span class="ot">=</span> …</span></code></pre></div>
+<p>And then Haskell would complain that they’ve defined <code>f</code> twice. But they just
+learned that multiple equations are not separate functions! Etc.</p>
+<p>Syntax should try to be permissive whilst remaining predictable. In other words,
+indentation sensitivity is terrible for teaching languages. I don’t think my
+students ever truly understood when to indent a line and by how much. They would
+often just hammer the spacebar until the error disappeared.</p>
+<p>Juxtaposition as application (ie applying <code>f</code> to <code>x</code> by writing <code>f x</code>) requires you to
+be careful with other syntax to avoid ambiguity. I think this style is
+beneficial enough that it’s worth making other forms more verbose. If you went
+the <code>f(x)</code> route then you could make different decisions here.</p>
+<p>The scope of an expression should be clear to read and simple to write. An
+obvious way to do this, which is familiar to many who have used JS or C or Java,
+is braces. For example:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>f <span class="ot">=</span> { x <span class="ot">-&gt;</span> … }</span></code></pre></div>
+<p>The braces visually delimit the scope of <code>x</code>.</p>
+<p>You can apply the same approach to all forms that introduce bindings:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="ot">=</span> <span class="dv">1</span> { x <span class="op">+</span> <span class="dv">5</span> }</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">case</span> x {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Some</span> y <span class="ot">-&gt;</span> …,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">None</span> <span class="ot">-&gt;</span> …</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Another advantage to this is that it is easier to parse, and so we can more
+easily leverage tools like tree-sitter to provide syntax highlighting,
+formatting etc.</p>
+<h2 id="types">Types</h2>
+<p>It’s crucial to understand types, but they are also a source of confusion.
+Students often conflate type names with constructor names (both are uppercase).
+It is particularly confusing that the list type has special syntax which is
+similar but not the same as the term-level list syntax. Students will do things
+like write <code>[Int, Int]</code> for the type of a two-element list and wonder why it
+doesn’t work.</p>
+<p>Constructors and types should be distinguishable. The Rust approach of prefixing
+constructors with their type (<code>MyType::MyConstructor</code>) is a good one, but I don’t
+think it’s the only option. Some languages <a href="http://docs.idris-lang.org/en/latest/reference/semantic-highlighting.html">use colour</a>
+to distinguish between types and terms, which is an interesting approach.</p>
+<p>Type classes are a complex feature, and still controversial amongst experienced
+programmers. For beginners, I think they are totally inappropriate. Even worse,
+in Haskell you cannot avoid running into them if you write string or numeric
+literals.</p>
+<p>I don’t believe a teaching language should have type classes. Literals should
+have a concrete type, so error messages are understandable. Ad-hoc polymorphism
+can be achieved in other ways, but may not even be necessary for a teaching
+language.</p>
+<p>The first use case for type classes that I run into with a new language is
+printing a value to a string. If the language is able to inspect values at
+runtime and print them, we can add a built in <code>to_string</code> function and avoid
+introducing type classes.</p>
+<p>Similarly, having a single arbitrary-sized integer type helps mitigate the need
+for overloaded numeric literals.</p>
+<h2 id="laziness">Laziness</h2>
+<p>Laziness is undoubtedly a useful feature, but isn’t pedagogically essential. It
+also complicates the explanation of evaluation, and can result in unintuitive
+runtime behaviour. Strict evaluation is more likely to be familiar, and allows
+us to spend more time teaching the fundamental concepts. Lazy evaluation, lazy
+algorithms and data structures etc. is a good topic for an advanced course.</p>
+<h2 id="debugging">Debugging</h2>
+<p>Pure languages like Haskell are infamously hard to debug in the traditional way.
+Even armed with hacks like <code>unsafePerformIO</code>, laziness makes it hard to reason
+about the ordering of code.</p>
+<p>A teaching language should have a built-in runtime debugger. You should be able
+to pause evaluation at any point, inspect variables, and step into and out of
+functions. Not only does this help diagnose problems, it’s also a good way to
+show how evaluation works.</p>
+<p>Debugging in general is a hugely under-invested area. Most programming languages
+don’t even have a debugger, and the state of the art in mainstream languages has
+not advanced in decades. Taking inspiration from <a href="https://dl.acm.org/doi/abs/10.1145/3290327">recent research</a>
+and the work of people like <a href="http://worrydream.com/#!2/LadderOfAbstraction">Bret Victor</a>,
+we can imagine much more ambitious debugging environments which allow the
+student to explore and interact with their program as it is running.</p>
+<h2 id="everything-else">Everything else</h2>
+<p>Arguably the most important feature of a teaching language is what it lacks.
+Students will inevitably search Google and Stack Overflow for solutions and
+help. With an old, general purpose language like Haskell, they’ll find a zoo of
+different libraries, techniques and language features. They will wonder what
+language extensions they should enable, what packages to install, and what
+advanced type system features to use.</p>
+<p>None of this is helpful in learning the core concepts that we are trying to
+teach. Having an entirely new language with no optional extras bolted on allows
+us to sidestep this problem altogether.</p>
+<h2 id="syllabus">Syllabus</h2>
+<p>What should be taught, and in what order? I think the focus should be on the
+essentials: data types and functions. With that in mind, a possible syllabus
+could be:</p>
+<ol type="1">
+<li>Expressions, let, case, function application</li>
+<li>Functions</li>
+<li>Function types</li>
+<li>Data types: Sums and products</li>
+<li>Polymorphic functions</li>
+<li>Polymorphic data types</li>
+</ol>
+<p>At this point I think you could stop. We’ve covered all the essential aspects of
+typed functional programming which is common to almost every language in the
+family. Further time should be spent applying these concepts by tackling more
+complex problems. Learning how to effectively use a functional programming
+language is often overlooked. For example, how immutable data structures are
+designed, efficient purely functional algorithms, type-driven design.</p>
+<p>One topic we haven’t touched at all is side effects. Arguably this is an
+omission, but i believe this is such a rabbit hole that it might be better
+avoided entirely, and left to a more advanced course. Introducing side effects
+to a pure language requires some kind of effects system, be that monadic IO or
+something more sophisticated as in <a href="https://koka-lang.github.io/koka/doc/index.html">Koka</a>.
+Neither is easy to understand for beginners. In particular, I don’t believe it
+is appropriate to introduce category-theoretic concepts to beginners. And the
+presence of a good interpreter and debugger should obviate the need for most
+side effects.</p>
+      </div>
+    </div>
+  </body>
+</html>

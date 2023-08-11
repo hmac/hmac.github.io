@@ -596,13 +596,13 @@ backtracking, overuse of exceptions, or something else - it would be quite inter
 find out. Until then, just keep in mind that whilst these techniques do translate, the
 tradeoffs might be very different between languages!</p>
 <p>You can find all the code for this post <a href="https://github.com/hmac/rubyparsers">here</a>.</p>
-<section class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1" role="doc-endnote"><p>A more idiomatic definition of <code>take_while</code> would take a block argument rather than
+<li id="fn1"><p>A more idiomatic definition of <code>take_while</code> would take a block argument rather than
 a proc, so that you can write <code>take_while { |c| ... }</code>. I’ve not done this here to keep
 the usage of Procs consistent, but you could certainly do so in the real world.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2" role="doc-endnote"><p>To be specific, the <a href="https://github.com/ruby/ruby/blob/trunk/ext/json/parser/parser.c"><code>ext</code></a> implementation, which is 2000 lines of C, rather than the
+<li id="fn2"><p>To be specific, the <a href="https://github.com/ruby/ruby/blob/trunk/ext/json/parser/parser.c"><code>ext</code></a> implementation, which is 2000 lines of C, rather than the
 pure Ruby implementation.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
