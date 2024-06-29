@@ -16,17 +16,33 @@
         bottom: 0;
         width: 20%;
         left: 80%;
-        height: 90%;
+        height: 80%;
         font-family: monospace;
         font-size: 10px;
       }
 
       #load {
         position: absolute;
+        bottom: 10%;
+        left: 80%;
+        width: 20%;
+        height: 10%;
+      }
+
+      #postcode {
+        position: absolute;
+        bottom: 5%;
+        left: 80%;
+        width: 20%;
+        height: 5%;
+      }
+
+      #lookup_postcode {
+        position: absolute;
         bottom: 0;
         left: 80%;
-        top: 90%;
         width: 20%;
+        height: 5%;
       }
     </style>
 
@@ -171,10 +187,16 @@
 
     <input type="button" id="load" value="Load"/>
 
-    <script>
-      const featureId = 'catchment';
+    <form id="postcode_form" action="#">
+      <input type="text" id="postcode" placeholder="Enter postcode district (not full postcode)" />
+      <input type="submit" id="lookup_postcode" value="Lookup postcode"/>
+    </form>
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiaGF6eiIsImEiOiJuS0ExMVk4In0.SXV9yM_-6TELlrdW0342wg';
+    <script>
+const ACCESS_TOKEN = 'pk.eyJ1IjoiaGF6eiIsImEiOiJuS0ExMVk4In0.SXV9yM_-6TELlrdW0342wg';
+const featureId = 'catchment';
+
+mapboxgl.accessToken = ACCESS_TOKEN;
 const map = new mapboxgl.Map({
   container: 'map', // container ID
 
@@ -243,11 +265,39 @@ const load = () => {
   
   draw.changeMode('direct_select', {featureId});
   
-  console.log(`f: ${f}`)
+  fitMapToBounds(coords);
+}
 
+document.getElementById("load").addEventListener("click", load)
+
+map.on('load', load)
+
+const fetchPostcodeBoundary = async (postcode) => {
+  const area = postcode.match(/[A-za-z]+/)[0];
+  console.log(`Fetching boundaries for postcode area ${area}`)
+  const boundaries = await fetch(`https://raw.githubusercontent.com/missinglink/uk-postcode-polygons/master/geojson/${area}.geojson`)
+    .then((r) => r.json());
+
+  let boundary = boundaries.features.find((feature) => feature.properties.name == postcode);
+
+  if (!boundary) {
+    console.log(`Cannot find district boundary for postcode district ${postcode}.`)
+    return;
+  }
+
+  draw.add({id: 'postcode', ...boundary});
+  fitMapToBounds(boundary.geometry.coordinates[0]);
+}
+
+document.getElementById("postcode_form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  fetchPostcodeBoundary(document.getElementById("postcode").value.toUpperCase());
+})
+
+
+const fitMapToBounds = (coords) => {
 	const bounds = new mapboxgl.LngLatBounds(coords[0], coords[0]);
 
-            
 	for (const coord of coords) {
 		bounds.extend(coord);
 	}
@@ -255,9 +305,6 @@ const load = () => {
   map.fitBounds(bounds, {padding: 10});
 }
 
-document.getElementById("load").addEventListener("click", load)
-
-map.on('load', load)
 </script>
   </body>
 </html>
