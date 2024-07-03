@@ -6,6 +6,7 @@
   <body>
     <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
     <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/@mapbox/mapbox-sdk/umd/mapbox-sdk.min.js"></script>
     <style>
       body { margin: 0; padding: 0; }
       #map { position: absolute; top: 0; bottom: 0; width: 80%; }
@@ -196,6 +197,8 @@
 const ACCESS_TOKEN = 'pk.eyJ1IjoiaGF6eiIsImEiOiJuS0ExMVk4In0.SXV9yM_-6TELlrdW0342wg';
 const featureId = 'catchment';
 
+const mapboxClient = mapboxSdk({accessToken: ACCESS_TOKEN});
+
 mapboxgl.accessToken = ACCESS_TOKEN;
 const map = new mapboxgl.Map({
   container: 'map', // container ID
@@ -285,15 +288,43 @@ const fetchPostcodeBoundary = async (postcode) => {
     return;
   }
 
-  draw.add({id: 'postcode', ...boundary});
+  draw.add({...boundary, id: 'postcode_boundary'});
   fitMapToBounds(boundary.geometry.coordinates[0]);
 }
 
 document.getElementById("postcode_form").addEventListener("submit", (e) => {
   e.preventDefault();
-  fetchPostcodeBoundary(document.getElementById("postcode").value.toUpperCase());
+  const postcode = document.getElementById("postcode").value
+    .toUpperCase()
+    .replaceAll(" ", "")
+    .match(/[A-za-z0-9]+/)[0];
+
+  // If full postcode, pop a pin.
+  // Otherwise draw an area.
+  if (postcode.length > 4) {
+    placePostcodePin(postcode)
+  } else {
+    fetchPostcodeBoundary(document.getElementById("postcode").value.toUpperCase());
+  }
 })
 
+const placePostcodePin = async (postcode) => {
+  const response = await mapboxClient.geocodingV6.forwardGeocode({
+    mode: "structured",
+    postcode
+  }).send();
+
+  const pin = response.body.features[0];
+
+  if (!pin) {
+    console.log(`Cannot find postcode ${postcode}.`)
+    return;
+  }
+
+  draw.delete('postcode');
+  draw.add({...pin, id: 'postcode'});
+  fitMapToBounds([pin.geometry.coordinates]);
+}
 
 const fitMapToBounds = (coords) => {
 	const bounds = new mapboxgl.LngLatBounds(coords[0], coords[0]);
