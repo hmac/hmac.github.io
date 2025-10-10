@@ -1,9 +1,14 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
-  <link rel="stylesheet" src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css">
-  <link rel="stylesheet" src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catchment Area Tool</title>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css">
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
 
 <body>
   <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
@@ -11,118 +16,254 @@
     src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
   <script type="text/javascript" src="https://unpkg.com/@mapbox/mapbox-sdk/umd/mapbox-sdk.min.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
+      height: 100vh;
+      overflow: hidden;
     }
 
     #map {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 80%;
+      width: 75%;
+      border-radius: 0 12px 12px 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
 
-    #output {
+    .sidebar {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 20%;
-      left: 80%;
-      height: 80%;
-      font-family: monospace;
+      left: 75%;
+      width: 25%;
+      background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      color: white;
+      margin-bottom: 4px;
+      padding: 0 20px;
+    }
+
+    .sidebar-header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header p {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    .control-group {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(10px);
+      margin: 0 12px;
+    }
+
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    #output {
+      width: 100%;
+      height: 150px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
       font-size: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 10px;
+      background-color: #f9fafb;
+      color: #374151;
+      resize: vertical;
+      line-height: 1.3;
+      transition: border-color 0.2s ease;
     }
 
-    #load {
-      position: absolute;
-      bottom: 15%;
-      left: 80%;
-      width: 20%;
-      height: 5%;
+    #output:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
     }
 
-    #postcode {
-      position: absolute;
-      bottom: 10%;
-      left: 80%;
-      width: 20%;
-      height: 5%;
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background-color: white;
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
     }
 
-    #lookup_postcode {
-      position: absolute;
-      bottom: 5%;
-      left: 80%;
-      width: 20%;
-      height: 5%;
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
     }
 
-    #circle_radius {
-      position: absolute;
-      bottom: 2.5%;
-      left: 80%;
-      width: 20%;
-      height: 2.5%;
+    input[type="text"]::placeholder {
+      color: #9ca3af;
     }
 
-    #draw_circle {
-      position: absolute;
-      bottom: 0;
-      left: 80%;
-      width: 20%;
-      height: 2.5%;
+    button,
+    input[type="button"],
+    input[type="submit"] {
+      width: 100%;
+      padding: 10px 16px;
+      background: #4b5563;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover,
+    input[type="button"]:hover,
+    input[type="submit"]:hover {
+      background: #374151;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active,
+    input[type="button"]:active,
+    input[type="submit"]:active {
+      transform: translateY(0);
+    }
+
+    #postcode_form {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .form-row input[type="text"] {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .form-row input[type="submit"] {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 10px 14px;
+    }
+
+    @media (max-width: 768px) {
+      #map {
+        width: 100%;
+        height: 60vh;
+        position: relative;
+        border-radius: 0;
+      }
+
+      .sidebar {
+        position: relative;
+        left: 0;
+        width: 100%;
+        height: 40vh;
+        padding: 20px;
+      }
     }
   </style>
 
   <div id="map"></div>
 
-  <textarea id="output">
-    [ { "lng": 0.006756943151742689, "lat": 51.542182841329804 },
-    { "lng": 0.006775522297118641, "lat": 51.54218688226268 },
-    { "lng": 0.006781563558604375, "lat": 51.54219304986566 },
-    { "lng": 0.006810058751767656, "lat": 51.542195885425116 },
-    { "lng": 0.006815757791230226, "lat": 51.54218950541576 },
-    { "lng": 0.006857930676432034, "lat": 51.54219163208566 },
-    { "lng": 0.006863629714871422, "lat": 51.5422008476539 },
-    { "lng": 0.0068898452929317955, "lat": 51.54220368321296 },
-    { "lng": 0.006897823946502513, "lat": 51.54219730320497 },
-    { "lng": 0.0069149210628438595, "lat": 51.54219801209473 },
-    { "lng": 0.006927458947757259, "lat": 51.54220651877179 },
-    { "lng": 0.00694911529447495, "lat": 51.54221006322001 },
-    { "lng": 0.006959373564228599, "lat": 51.54220297432329 },
-    { "lng": 0.006998127027202372, "lat": 51.54220722766141 },
-    { "lng": 0.007010664912172615, "lat": 51.54221573433705 },
-    { "lng": 0.007034600873964791, "lat": 51.54221715211597 },
-    { "lng": 0.007059927900485263, "lat": 51.54221148099208 },
-    { "lng": 0.0070690463622327115, "lat": 51.54222211433509 },
-    { "lng": 0.007095261940264663, "lat": 51.54222424100348 },
-    { "lng": 0.007104380401926846, "lat": 51.54221786099839 },
-    { "lng": 0.00714541348006037, "lat": 51.54221927877725 },
-    { "lng": 0.00715339213368793, "lat": 51.542230621007974 },
-    { "lng": 0.007179607711663039, "lat": 51.542230621007974 },
-    { "lng": 0.0072056310442008, "lat": 51.54222494988687 },
-    { "lng": 0.007245820954040028, "lat": 51.54210235375538 },
-    { "lng": 0.006989364163359824, "lat": 51.54207754254065 },
-    { "lng": 0.006980245701612375, "lat": 51.54209455593855 },
-    { "lng": 0.006938072815415808, "lat": 51.542091720372724 },
-    { "lng": 0.006931233969936557, "lat": 51.54211653156807 },
-    { "lng": 0.006876523198712903, "lat": 51.54211227822117 },
-    { "lng": 0.006883362045243757, "lat": 51.542085340348734 },
-    { "lng": 0.006796736657520341, "lat": 51.5420732891904 },
-    { "lng": 0.006756943151742689, "lat": 51.542182841329804 }
-    ]
-  </textarea>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>Catchment Tool</h1>
+    </div>
 
-  <input type="button" id="load" value="Load" />
+    <div class="control-group">
+      <h3>Coordinate Output</h3>
+      <textarea id="output">[ { "lng": 0.006756943151742689, "lat": 51.542182841329804 },
+        { "lng": 0.006775522297118641, "lat": 51.54218688226268 },
+        { "lng": 0.006781563558604375, "lat": 51.54219304986566 },
+        { "lng": 0.006810058751767656, "lat": 51.542195885425116 },
+        { "lng": 0.006815757791230226, "lat": 51.54218950541576 },
+        { "lng": 0.006857930676432034, "lat": 51.54219163208566 },
+        { "lng": 0.006863629714871422, "lat": 51.5422008476539 },
+        { "lng": 0.0068898452929317955, "lat": 51.54220368321296 },
+        { "lng": 0.006897823946502513, "lat": 51.54219730320497 },
+        { "lng": 0.0069149210628438595, "lat": 51.54219801209473 },
+        { "lng": 0.006927458947757259, "lat": 51.54220651877179 },
+        { "lng": 0.00694911529447495, "lat": 51.54221006322001 },
+        { "lng": 0.006959373564228599, "lat": 51.54220297432329 },
+        { "lng": 0.006998127027202372, "lat": 51.54220722766141 },
+        { "lng": 0.007010664912172615, "lat": 51.54221573433705 },
+        { "lng": 0.007034600873964791, "lat": 51.54221715211597 },
+        { "lng": 0.007059927900485263, "lat": 51.54221148099208 },
+        { "lng": 0.0070690463622327115, "lat": 51.54222211433509 },
+        { "lng": 0.007095261940264663, "lat": 51.54222424100348 },
+        { "lng": 0.007104380401926846, "lat": 51.54221786099839 },
+        { "lng": 0.00714541348006037, "lat": 51.54221927877725 },
+        { "lng": 0.00715339213368793, "lat": 51.542230621007974 },
+        { "lng": 0.007179607711663039, "lat": 51.542230621007974 },
+        { "lng": 0.0072056310442008, "lat": 51.54222494988687 },
+        { "lng": 0.007245820954040028, "lat": 51.54210235375538 },
+        { "lng": 0.006989364163359824, "lat": 51.54207754254065 },
+        { "lng": 0.006980245701612375, "lat": 51.54209455593855 },
+        { "lng": 0.006938072815415808, "lat": 51.542091720372724 },
+        { "lng": 0.006931233969936557, "lat": 51.54211653156807 },
+        { "lng": 0.006876523198712903, "lat": 51.54211227822117 },
+        { "lng": 0.006883362045243757, "lat": 51.542085340348734 },
+        { "lng": 0.006796736657520341, "lat": 51.5420732891904 },
+        { "lng": 0.006756943151742689, "lat": 51.542182841329804 }
+        ]</textarea>
+      <input type="button" id="load" value="Load Coordinates" />
+    </div>
 
-  <form id="postcode_form" action="#">
-    <input type="text" id="postcode" placeholder="Enter postcode district (not full postcode)" />
-    <input type="submit" id="lookup_postcode" value="Lookup postcode" />
-  </form>
+    <div class="control-group">
+      <h3>Postcode Lookup</h3>
+      <form id="postcode_form" action="#">
+        <input type="text" id="postcode" placeholder="Enter postcode (e.g., E15 4BZ)" />
+        <input type="submit" id="lookup_postcode" value="Lookup Postcode" />
+      </form>
+    </div>
 
-  <input type="text" id="circle_radius" placeholder="Circle Radius (km)" />
-  <input type="button" id="draw_circle" value="Draw circle" />
+    <div class="control-group">
+      <h3>Circle Tool</h3>
+      <p style="margin: 0 0 12px 0; font-size: 12px; color: #6b7280;">First lookup a postcode, then draw a circle around
+        it</p>
+      <input type="text" id="circle_radius" placeholder="Circle Radius (km)" />
+      <input type="button" id="draw_circle" value="Draw Circle" />
+    </div>
+  </div>
 
   <script>
     const ACCESS_TOKEN = 'pk.eyJ1IjoiaGF6eiIsImEiOiJuS0ExMVk4In0.SXV9yM_-6TELlrdW0342wg';
@@ -143,7 +284,7 @@
       // Select which mapbox-gl-draw control buttons to add to the map.
       controls: {
         trash: false,
-        polygon: true,
+        polygon: false,
       },
       // Set mapbox-gl-draw to draw by default.
       // The user does not have to click the polygon control button first.
