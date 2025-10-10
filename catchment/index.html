@@ -351,7 +351,8 @@
         return;
       }
       const point = postcode.geometry.coordinates
-      const circle = createGeoJSONCircle(point, 6)
+      const radius = Number(document.getElementById("circle_radius").value || 6);
+      const circle = createGeoJSONCircle(point, radius)
       draw.deleteAll().add({...circle, id: featureId});
       draw.changeMode('direct_select', {featureId});
       fitMapToBounds(circle.geometry.coordinates[0]);
