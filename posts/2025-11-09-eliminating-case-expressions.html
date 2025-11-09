@@ -134,10 +134,12 @@ For example here is a tl function containing two case expression:</p>
 }</code></pre>
 <p><code>[]</code> matches an empty list. <code>[x, ..z]</code> matches a list with at least one element (bound to <code>x</code>) and binds the tail of the list to <code>z</code>.
 <code>opt.Some r</code> matches the constructor <code>Some</code>, binding its one argument to <code>r</code>. <code>opt.None</code> matches the constructor <code>None</code>, which has no arguments.</p>
-<p>Letting this complexity leak down into the VM has three drawbacks:
-- The VM has a complex, recursive <code>match_pattern</code> routine which does pattern matching at runtime
-- The <code>case</code> instruction doesn’t map well onto any instruction in common targets such as x86, ARM or WASM.
-- There’s something aesthetically unpleasant about it</p>
+<p>Letting this complexity leak down into the VM has three drawbacks:</p>
+<ul>
+<li>The VM has a complex, recursive <code>match_pattern</code> routine which does pattern matching at runtime</li>
+<li>The <code>case</code> instruction doesn’t map well onto any instruction in common targets such as x86, ARM or WASM.</li>
+<li>There’s something aesthetically unpleasant about it</li>
+</ul>
 <p>It’s well known that you can compile case expressions into decision trees, for example in <a href="https://citeseerx.ist.psu.edu/document?repid=rep1&amp;type=pdf&amp;doi=aa003e97e38af183aa7bd1fbb2d615d5ae3f57f0">this paper</a>. But I’m not concerned yet about an optimal representation, I’m happy to just match each pattern in order.</p>
 <p>After a bit of thinking I realised that there’s a nice representation that only requires we add one thing to the language: data type eliminators.
 For each type we generate an eliminator, which is a function that can break down a value and give you its constituent parts. Best explained with examples.</p>
@@ -184,7 +186,13 @@ The other tricky thing is that we don’t really want to evaluate the right-hand
 tl is strict and pure so this doesn’t affect the result, but it is wasteful.
 Possibly we adjust the eliminators so that each function argument takes an additional argument which is the Unit type, thereby preventing them from being evaluated eagerly.</p>
 <p>Another thing we could do is inline/partially evaluate the CPS expression, so it would become</p>
-<pre class="text"><code>xs -&gt; elim_List (_unit -&gt; opt.None) (_ _ _unit -&gt; elim_List (_unit -&gt; &lt;panic&gt;) (x z _unit -&gt; rest_of_program)) xs) xs</code></pre>
+<pre class="text"><code>xs -&gt; elim_List
+  (_unit -&gt; opt.None)
+  (_ _ _unit -&gt; elim_List
+    (_unit -&gt; &lt;panic&gt;)
+    (x z _unit -&gt; rest_of_program)
+    xs)
+  xs</code></pre>
 <p>but if the data type has many constructors and there are many branches, this would cause the expression to balloon in size.</p>
       </div>
     </div>
