@@ -32,6 +32,7 @@ firstByOpt : (a -> opt.Option b) -> List a -> opt.Option (a, b) {
 `opt.Some r` matches the constructor `Some`, binding its one argument to `r`. `opt.None` matches the constructor `None`, which has no arguments.
 
 Letting this complexity leak down into the VM has three drawbacks:
+
 - The VM has a complex, recursive `match_pattern` routine which does pattern matching at runtime
 - The `case` instruction doesn't map well onto any instruction in common targets such as x86, ARM or WASM.
 - There's something aesthetically unpleasant about it
@@ -100,7 +101,13 @@ Possibly we adjust the eliminators so that each function argument takes an addit
 Another thing we could do is inline/partially evaluate the CPS expression, so it would become
 
 ```text
-xs -> elim_List (_unit -> opt.None) (_ _ _unit -> elim_List (_unit -> <panic>) (x z _unit -> rest_of_program)) xs) xs
+xs -> elim_List
+  (_unit -> opt.None)
+  (_ _ _unit -> elim_List
+    (_unit -> <panic>)
+    (x z _unit -> rest_of_program)
+    xs)
+  xs
 ```
 
 but if the data type has many constructors and there are many branches, this would cause the expression to balloon in size.
