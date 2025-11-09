@@ -120,10 +120,10 @@
 <p>A quick note to remind myself in future: case expressions can be implemented quite nicely via a combination of eliminators and CPS.</p>
 <p>In <a href="https://github.com/hmac/tl">tl</a> I have a small functional language which compiles to a custom instruction sequence for a simple stack machine.
 All instructions are simple (and have analogues in real assembly languages) except for <code>case</code>, which is used to implement case expressions.</p>
-<pre><code>Case(Vec&lt;(Pattern, usize)&gt;)</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>Case(<span class="dt">Vec</span><span class="op">&lt;</span>(<span class="bu">Pattern</span><span class="op">,</span> <span class="dt">usize</span>)<span class="op">&gt;</span>)</span></code></pre></div>
 <p>The <code>case</code> instruction contains a map of patterns to relative jumps. The patterns themselves are complex nested objects representing the source level patterns in tl.
 For example here is a tl function containing two case expression:</p>
-<pre><code>firstByOpt : (a -&gt; opt.Option b) -&gt; List a -&gt; opt.Option (a, b) {
+<pre class="text"><code>firstByOpt : (a -&gt; opt.Option b) -&gt; List a -&gt; opt.Option (a, b) {
   f xs -&gt; case xs {
     [] -&gt; opt.None,
     [x, ..z] -&gt; case f x {
@@ -142,7 +142,7 @@ For example here is a tl function containing two case expression:</p>
 <p>After a bit of thinking I realised that there’s a nice representation that only requires we add one thing to the language: data type eliminators.
 For each type we generate an eliminator, which is a function that can break down a value and give you its constituent parts. Best explained with examples.</p>
 <p>The eliminator for <code>Bool</code>:</p>
-<pre><code>type Bool { True, False }
+<pre class="text"><code>type Bool { True, False }
 elim_Bool : a -&gt; a -&gt; Bool -&gt; a
 
 type Option a { Some a, None }
@@ -156,7 +156,7 @@ elim_List : (a -&gt; List a -&gt; b) -&gt; b -&gt; List a -&gt; b</code></pre>
 <p>You might notice that the eliminator for <code>Bool</code> is basically an <code>if</code> statement with the arguments swapped around a bit. The eliminator for <code>List</code> is just <code>fold</code>.
 There’s a simple scheme for generating these: 1 function arg for each constructor, each function takes an arg for each constructor arg, then a final arg for the value.</p>
 <p>We can take any case branch from <code>firstByOpt</code> above and rewrite it using an eliminator:</p>
-<pre><code>// [] -&gt; opt.None
+<pre class="text"><code>// [] -&gt; opt.None
 xs -&gt; elim_List (_ _ -&gt; &lt;fail&gt;) opt.None xs
 
 // [x, ..z] -&gt; ...
@@ -165,7 +165,7 @@ xs -&gt; elim_List (x z -&gt; ...) &lt;fail&gt; xs</code></pre>
 <p>Eliminators give us a way to branch on the constructor and also bind its arguments to variables. This is the essence of a case expression.
 The remaining bit is to represent matching case branches, in order. We can do this in continuation-passing style: to each branch function we pass the <em>next</em>
 branch to try. This also gets rid of the special <code>&lt;fail&gt;</code> value at the same time:</p>
-<pre><code>case xs {
+<pre class="text"><code>case xs {
   [] -&gt; opt.None,
   [x, ..z] -&gt; rest_of_program
 }
@@ -184,7 +184,7 @@ The other tricky thing is that we don’t really want to evaluate the right-hand
 tl is strict and pure so this doesn’t affect the result, but it is wasteful.
 Possibly we adjust the eliminators so that each function argument takes an additional argument which is the Unit type, thereby preventing them from being evaluated eagerly.</p>
 <p>Another thing we could do is inline/partially evaluate the CPS expression, so it would become</p>
-<pre><code>xs -&gt; elim_List (_unit -&gt; opt.None) (_ _ _unit -&gt; elim_List (_unit -&gt; &lt;panic&gt;) (x z _unit -&gt; rest_of_program)) xs) xs</code></pre>
+<pre class="text"><code>xs -&gt; elim_List (_unit -&gt; opt.None) (_ _ _unit -&gt; elim_List (_unit -&gt; &lt;panic&gt;) (x z _unit -&gt; rest_of_program)) xs) xs</code></pre>
 <p>but if the data type has many constructors and there are many branches, this would cause the expression to balloon in size.</p>
       </div>
     </div>
