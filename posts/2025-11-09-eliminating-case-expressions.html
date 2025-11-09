@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+  <head>
+  <title>Eliminating case expressions | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+    body { 
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 1.7em;
+    }
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
+    }
+    div.sourceCode {
+      padding: 5px;
+    }
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+    h1, h2, h3 {
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-weight: normal;
+    }
+    ol#post-list {
+      list-style-type: none
+    }
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+    #header a {
+      text-decoration: none;
+    }
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">November  9, 2025</div>
+      </div>
+      <div class="content">
+        <h1 id="eliminating-case-expressions">Eliminating case expressions</h1>
+<p>A quick note to remind myself in future: case expressions can be implemented quite nicely via a combination of eliminators and CPS.</p>
+<p>In <a href="https://github.com/hmac/tl">tl</a> I have a small functional language which compiles to a custom instruction sequence for a simple stack machine.
+All instructions are simple (and have analogues in real assembly languages) except for <code>case</code>, which is used to implement case expressions.</p>
+<pre><code>Case(Vec&lt;(Pattern, usize)&gt;)</code></pre>
+<p>The <code>case</code> instruction contains a map of patterns to relative jumps. The patterns themselves are complex nested objects representing the source level patterns in tl.
+For example here is a tl function containing two case expression:</p>
+<pre><code>firstByOpt : (a -&gt; opt.Option b) -&gt; List a -&gt; opt.Option (a, b) {
+  f xs -&gt; case xs {
+    [] -&gt; opt.None,
+    [x, ..z] -&gt; case f x {
+      opt.Some r -&gt; opt.Some (x, r),
+      opt.None -&gt; firstByOpt f z
+    }
+  }
+}</code></pre>
+<p><code>[]</code> matches an empty list. <code>[x, ..z]</code> matches a list with at least one element (bound to <code>x</code>) and binds the tail of the list to <code>z</code>.
+<code>opt.Some r</code> matches the constructor <code>Some</code>, binding its one argument to <code>r</code>. <code>opt.None</code> matches the constructor <code>None</code>, which has no arguments.</p>
+<p>Letting this complexity leak down into the VM has three drawbacks:
+- The VM has a complex, recursive <code>match_pattern</code> routine which does pattern matching at runtime
+- The <code>case</code> instruction doesn’t map well onto any instruction in common targets such as x86, ARM or WASM.
+- There’s something aesthetically unpleasant about it</p>
+<p>It’s well known that you can compile case expressions into decision trees, for example in <a href="https://citeseerx.ist.psu.edu/document?repid=rep1&amp;type=pdf&amp;doi=aa003e97e38af183aa7bd1fbb2d615d5ae3f57f0">this paper</a>. But I’m not concerned yet about an optimal representation, I’m happy to just match each pattern in order.</p>
+<p>After a bit of thinking I realised that there’s a nice representation that only requires we add one thing to the language: data type eliminators.
+For each type we generate an eliminator, which is a function that can break down a value and give you its constituent parts. Best explained with examples.</p>
+<p>The eliminator for <code>Bool</code>:</p>
+<pre><code>type Bool { True, False }
+elim_Bool : a -&gt; a -&gt; Bool -&gt; a
+
+type Option a { Some a, None }
+elim_Option : (a -&gt; b) -&gt; b -&gt; Option a -&gt; b
+
+type Result a b { Ok a, Err b }
+elim_Result : (a -&gt; c) -&gt; (b -&gt; c) -&gt; Result a b -&gt; c
+
+type List a { Cons a (List a), Nil }
+elim_List : (a -&gt; List a -&gt; b) -&gt; b -&gt; List a -&gt; b</code></pre>
+<p>You might notice that the eliminator for <code>Bool</code> is basically an <code>if</code> statement with the arguments swapped around a bit. The eliminator for <code>List</code> is just <code>fold</code>.
+There’s a simple scheme for generating these: 1 function arg for each constructor, each function takes an arg for each constructor arg, then a final arg for the value.</p>
+<p>We can take any case branch from <code>firstByOpt</code> above and rewrite it using an eliminator:</p>
+<pre><code>// [] -&gt; opt.None
+xs -&gt; elim_List (_ _ -&gt; &lt;fail&gt;) opt.None xs
+
+// [x, ..z] -&gt; ...
+xs -&gt; elim_List (x z -&gt; ...) &lt;fail&gt; xs</code></pre>
+<p>So each branch becomes a function that takes the target as argument and returns its right hand side, or <code>&lt;fail&gt;</code> if the target doesn’t match the pattern.</p>
+<p>Eliminators give us a way to branch on the constructor and also bind its arguments to variables. This is the essence of a case expression.
+The remaining bit is to represent matching case branches, in order. We can do this in continuation-passing style: to each branch function we pass the <em>next</em>
+branch to try. This also gets rid of the special <code>&lt;fail&gt;</code> value at the same time:</p>
+<pre><code>case xs {
+  [] -&gt; opt.None,
+  [x, ..z] -&gt; rest_of_program
+}
+
+
+// becomes
+
+( next xs -&gt; elim_List opt.None (_ _ -&gt; next xs) xs )
+( ( next xs -&gt; elim_List next (x z -&gt; rest_of_program) xs )
+  ( &lt;panic&gt; ) // no branches left!
+)
+xs</code></pre>
+<p>There are two tricky things remaining. One is the special <code>&lt;panic&gt;</code> builtin, which is only really necessary to make sure the program stops rather than carrying on
+and executing some random code. The typechecker should already check for case exhaustiveness (though this doesn’t fully work yet).
+The other tricky thing is that we don’t really want to evaluate the right-hand side of case branches unless the target matches their pattern.
+tl is strict and pure so this doesn’t affect the result, but it is wasteful.
+Possibly we adjust the eliminators so that each function argument takes an additional argument which is the Unit type, thereby preventing them from being evaluated eagerly.</p>
+<p>Another thing we could do is inline/partially evaluate the CPS expression, so it would become</p>
+<pre><code>xs -&gt; elim_List (_unit -&gt; opt.None) (_ _ _unit -&gt; elim_List (_unit -&gt; &lt;panic&gt;) (x z _unit -&gt; rest_of_program)) xs) xs</code></pre>
+<p>but if the data type has many constructors and there are many branches, this would cause the expression to balloon in size.</p>
+      </div>
+    </div>
+  </body>
+</html>
