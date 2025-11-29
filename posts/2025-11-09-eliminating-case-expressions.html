@@ -122,16 +122,16 @@
 All instructions are simple (and have analogues in real assembly languages) except for <code>case</code>, which is used to implement case expressions.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>Case(<span class="dt">Vec</span><span class="op">&lt;</span>(<span class="bu">Pattern</span><span class="op">,</span> <span class="dt">usize</span>)<span class="op">&gt;</span>)</span></code></pre></div>
 <p>The <code>case</code> instruction contains a map of patterns to relative jumps. The patterns themselves are complex nested objects representing the source level patterns in tl.
-For example here is a tl function containing two case expression:</p>
-<pre class="text"><code>firstByOpt : (a -&gt; opt.Option b) -&gt; List a -&gt; opt.Option (a, b) {
-  f xs -&gt; case xs {
-    [] -&gt; opt.None,
-    [x, ..z] -&gt; case f x {
-      opt.Some r -&gt; opt.Some (x, r),
-      opt.None -&gt; firstByOpt f z
-    }
-  }
-}</code></pre>
+For example here is a tl function containing two case expressions:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>firstByOpt <span class="op">:</span> (a <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">Option</span> b) <span class="ot">-&gt;</span> <span class="dt">List</span> a <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">Option</span> (a, b) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  f xs <span class="ot">-&gt;</span> <span class="kw">case</span> xs {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    [] <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">None</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    [x, <span class="op">..</span>z] <span class="ot">-&gt;</span> <span class="kw">case</span> f x {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      opt<span class="op">.</span><span class="dt">Some</span> r <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">Some</span> (x, r),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      opt<span class="op">.</span><span class="dt">None</span> <span class="ot">-&gt;</span> firstByOpt f z</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p><code>[]</code> matches an empty list. <code>[x, ..z]</code> matches a list with at least one element (bound to <code>x</code>) and binds the tail of the list to <code>z</code>.
 <code>opt.Some r</code> matches the constructor <code>Some</code>, binding its one argument to <code>r</code>. <code>opt.None</code> matches the constructor <code>None</code>, which has no arguments.</p>
 <p>Letting this complexity leak down into the VM has three drawbacks:</p>
@@ -144,55 +144,55 @@ For example here is a tl function containing two case expression:</p>
 <p>After a bit of thinking I realised that there’s a nice representation that only requires we add one thing to the language: data type eliminators.
 For each type we generate an eliminator, which is a function that can break down a value and give you its constituent parts. Best explained with examples.</p>
 <p>The eliminator for <code>Bool</code>:</p>
-<pre class="text"><code>type Bool { True, False }
-elim_Bool : a -&gt; a -&gt; Bool -&gt; a
-
-type Option a { Some a, None }
-elim_Option : (a -&gt; b) -&gt; b -&gt; Option a -&gt; b
-
-type Result a b { Ok a, Err b }
-elim_Result : (a -&gt; c) -&gt; (b -&gt; c) -&gt; Result a b -&gt; c
-
-type List a { Cons a (List a), Nil }
-elim_List : (a -&gt; List a -&gt; b) -&gt; b -&gt; List a -&gt; b</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Bool</span> { <span class="dt">True</span>, <span class="dt">False</span> }</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>elim_Bool <span class="op">:</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> a</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Option</span> a { <span class="dt">Some</span> a, <span class="dt">None</span> }</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>elim_Option <span class="op">:</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> <span class="dt">Option</span> a <span class="ot">-&gt;</span> b</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Result</span> a b { <span class="dt">Ok</span> a, <span class="dt">Err</span> b }</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>elim_Result <span class="op">:</span> (a <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> <span class="dt">Result</span> a b <span class="ot">-&gt;</span> c</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">List</span> a { <span class="dt">Cons</span> a (<span class="dt">List</span> a), <span class="dt">Nil</span> }</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>elim_List <span class="op">:</span> (a <span class="ot">-&gt;</span> <span class="dt">List</span> a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> <span class="dt">List</span> a <span class="ot">-&gt;</span> b</span></code></pre></div>
 <p>You might notice that the eliminator for <code>Bool</code> is basically an <code>if</code> statement with the arguments swapped around a bit. The eliminator for <code>List</code> is just <code>fold</code>.
 There’s a simple scheme for generating these: 1 function arg for each constructor, each function takes an arg for each constructor arg, then a final arg for the value.</p>
 <p>We can take any case branch from <code>firstByOpt</code> above and rewrite it using an eliminator:</p>
-<pre class="text"><code>// [] -&gt; opt.None
-xs -&gt; elim_List (_ _ -&gt; &lt;fail&gt;) opt.None xs
-
-// [x, ..z] -&gt; ...
-xs -&gt; elim_List (x z -&gt; ...) &lt;fail&gt; xs</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">//</span> [] <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">None</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">-&gt;</span> elim_List (_ _ <span class="ot">-&gt;</span> <span class="op">&lt;</span><span class="fu">fail</span><span class="op">&gt;</span>) opt<span class="op">.</span><span class="dt">None</span> xs</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">//</span> [x, <span class="op">..</span>z] <span class="ot">-&gt;</span> <span class="op">...</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">-&gt;</span> elim_List (x z <span class="ot">-&gt;</span> <span class="op">...</span>) <span class="op">&lt;</span><span class="fu">fail</span><span class="op">&gt;</span> xs</span></code></pre></div>
 <p>So each branch becomes a function that takes the target as argument and returns its right hand side, or <code>&lt;fail&gt;</code> if the target doesn’t match the pattern.</p>
 <p>Eliminators give us a way to branch on the constructor and also bind its arguments to variables. This is the essence of a case expression.
 The remaining bit is to represent matching case branches, in order. We can do this in continuation-passing style: to each branch function we pass the <em>next</em>
 branch to try. This also gets rid of the special <code>&lt;fail&gt;</code> value at the same time:</p>
-<pre class="text"><code>case xs {
-  [] -&gt; opt.None,
-  [x, ..z] -&gt; rest_of_program
-}
-
-
-// becomes
-
-( next xs -&gt; elim_List opt.None (_ _ -&gt; next xs) xs )
-( ( next xs -&gt; elim_List next (x z -&gt; rest_of_program) xs )
-  ( &lt;panic&gt; ) // no branches left!
-)
-xs</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">case</span> xs {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">None</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  [x, <span class="op">..</span>z] <span class="ot">-&gt;</span> rest_of_program</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">//</span> becomes</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>( next xs <span class="ot">-&gt;</span> elim_List opt<span class="op">.</span><span class="dt">None</span> (_ _ <span class="ot">-&gt;</span> next xs) xs )</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>( ( next xs <span class="ot">-&gt;</span> elim_List next (x z <span class="ot">-&gt;</span> rest_of_program) xs )</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  ( <span class="op">&lt;</span>panic<span class="op">&gt;</span> ) <span class="op">//</span> no branches left<span class="op">!</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>xs</span></code></pre></div>
 <p>There are two tricky things remaining. One is the special <code>&lt;panic&gt;</code> builtin, which is only really necessary to make sure the program stops rather than carrying on
 and executing some random code. The typechecker should already check for case exhaustiveness (though this doesn’t fully work yet).
 The other tricky thing is that we don’t really want to evaluate the right-hand side of case branches unless the target matches their pattern.
 tl is strict and pure so this doesn’t affect the result, but it is wasteful.
 Possibly we adjust the eliminators so that each function argument takes an additional argument which is the Unit type, thereby preventing them from being evaluated eagerly.</p>
 <p>Another thing we could do is inline/partially evaluate the CPS expression, so it would become</p>
-<pre class="text"><code>xs -&gt; elim_List
-  (_unit -&gt; opt.None)
-  (_ _ _unit -&gt; elim_List
-    (_unit -&gt; &lt;panic&gt;)
-    (x z _unit -&gt; rest_of_program)
-    xs)
-  xs</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">-&gt;</span> elim_List</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (_unit <span class="ot">-&gt;</span> opt<span class="op">.</span><span class="dt">None</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  (_ _ _unit <span class="ot">-&gt;</span> elim_List</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    (_unit <span class="ot">-&gt;</span> <span class="op">&lt;</span>panic<span class="op">&gt;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    (x z _unit <span class="ot">-&gt;</span> rest_of_program)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    xs)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  xs</span></code></pre></div>
 <p>but if the data type has many constructors and there are many branches, this would cause the expression to balloon in size.</p>
       </div>
     </div>

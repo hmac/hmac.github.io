@@ -167,25 +167,25 @@ flow control. In Ruby we’ll model these respectively using Procs and exception
 comfortable with them.</p>
 <h2 id="procs">Procs</h2>
 <p>Ruby’s equivalent of a first class function is the Proc (or lambda):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>add_one <span class="kw">=</span> <span class="fu">proc</span> <span class="kw">{</span> <span class="kw">|</span>x<span class="kw">|</span> x <span class="kw">+</span> <span class="dv">1</span> <span class="kw">}</span></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>add_one <span class="op">=</span> <span class="fu">proc</span> <span class="op">{</span> <span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> <span class="dv">1</span> <span class="op">}</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">&gt;</span> add_one<span class="at">.call</span>(<span class="dv">1</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="dv">2</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> add_one<span class="at">.call</span>(<span class="dv">1</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dv">2</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>id <span class="kw">=</span> <span class="fu">proc</span> <span class="kw">{</span> <span class="kw">|</span>x<span class="kw">|</span> x <span class="kw">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>id <span class="op">=</span> <span class="fu">proc</span> <span class="op">{</span> <span class="op">|</span>x<span class="op">|</span> x <span class="op">}</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">&gt;</span> id<span class="at">.call</span>(<span class="st">&quot;ruby&quot;</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="st">&quot;ruby&quot;</span></span></code></pre></div>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> id<span class="at">.call</span>(<span class="st">&quot;ruby&quot;</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot;ruby&quot;</span></span></code></pre></div>
 <p><code>proc</code> takes as argument a block, which is the body of the function. Any parameters in the
 block become formal parameters to the constructed Proc. Procs have access to any variables
 in scope when they are constructed, meaning that they form closures.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>a <span class="kw">=</span> <span class="dv">1</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>inc_a <span class="kw">=</span> <span class="fu">proc</span> <span class="kw">{</span> a <span class="kw">+=</span> <span class="dv">1</span> <span class="kw">}</span></span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>inc_a <span class="op">=</span> <span class="fu">proc</span> <span class="op">{</span> a <span class="op">+=</span> <span class="dv">1</span> <span class="op">}</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>inc_a<span class="at">.call</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>inc_a<span class="at">.call</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">&gt;</span> a</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="dv">3</span></span></code></pre></div>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> a</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dv">3</span></span></code></pre></div>
 <h2 id="exceptions">Exceptions</h2>
 <p>When we write two sequential statements in a Ruby method, they will be executed in the
 usual imperative order.</p>
@@ -202,10 +202,10 @@ usual imperative order.</p>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  b</span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="kw">&gt;</span> foo</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> foo</span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>a</span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>b</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="dv">nil</span></span></code></pre></div>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dv">nil</span></span></code></pre></div>
 <p><code>a</code> has no way to control whether <code>b</code> is executed after it. However if <code>a</code> raises
 an exception then this changes: control will jump out of the method and any enclosing
 methods until we reach a matching <code>rescue</code> statement. We can abuse this feature to control
@@ -218,8 +218,8 @@ the input is always a string, and we’ll track our progress through it with an 
 (lazy shorthand for “location”).</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">class</span> <span class="dt">Parser</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">def</span> initialize(input)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="ot">@input</span> <span class="kw">=</span> input</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">@loc</span> <span class="kw">=</span> <span class="dv">0</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="ot">@input</span> <span class="op">=</span> input</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">@loc</span> <span class="op">=</span> <span class="dv">0</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ...</span></span>
@@ -227,11 +227,11 @@ the input is always a string, and we’ll track our progress through it with an 
 <p>The intuition is that our parsing methods will “consume” portions of the input, advancing
 the index as they do. Subsequent parses will only see the remaining input.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> input</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">@input</span><span class="at">.byteslice</span>(<span class="ot">@loc</span><span class="kw">..-</span><span class="dv">1</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">@input</span><span class="at">.byteslice</span>(<span class="ot">@loc</span><span class="op">..-</span><span class="dv">1</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> consume(num)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">@loc</span> <span class="kw">+=</span> num</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">@loc</span> <span class="op">+=</span> num</span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p>If a parse fails, we want to reset the index back to where it was before we started that
 parse. This behaviour is called backtracking, and it isn’t the only option in parser
@@ -246,10 +246,10 @@ would have raised an exception and we would never reach the second parser. This 
 allows us to write parsers cleanly (as you’ll see in a minute) without any plumbing of
 checking return values between one and the next.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> backtrack</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  loc_before <span class="kw">=</span> <span class="ot">@loc</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  loc_before <span class="op">=</span> <span class="ot">@loc</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">yield</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">rescue</span> <span class="dt">ParseFailure</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">@loc</span> <span class="kw">=</span> loc_before</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">@loc</span> <span class="op">=</span> loc_before</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># re-raise the exception</span></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to propagate the failure</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">raise</span></span>
@@ -258,8 +258,8 @@ checking return values between one and the next.</p>
 them. First up, let’s define the most permissive parser: <code>take</code>. <code>take(n)</code> will parse <code>n</code>
 characters from the input. It will only fail if there are fewer than <code>n</code> characters left.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> take(len)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  match <span class="kw">=</span> input<span class="at">.byteslice</span>(<span class="dv">0</span>, len)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> match<span class="at">.length</span> <span class="kw">&lt;</span> len</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  match <span class="op">=</span> input<span class="at">.byteslice</span>(<span class="dv">0</span>, len)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> match<span class="at">.length</span> <span class="op">&lt;</span> len</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">raise</span> <span class="dt">ParseFailure</span>, <span class="st">&quot;expected </span><span class="sc">#{</span>len<span class="sc">}</span><span class="st"> characters, but saw </span><span class="sc">#{</span>match<span class="at">.length</span><span class="sc">}</span><span class="st">&quot;</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
@@ -269,19 +269,19 @@ characters from the input. It will only fail if there are fewer than <code>n</co
 <p>We first fetch <code>len</code> characters, raising <code>ParseFailure</code> if we don’t get enough characters.
 We then <code>consume</code> the characters we’ve just fetched, and return them. This is how it
 behaves:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span> <span class="kw">=</span> <span class="dt">Parser</span><span class="at">.new</span>(<span class="st">&quot;what a great example&quot;</span>)</span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span> <span class="op">=</span> <span class="dt">Parser</span><span class="at">.new</span>(<span class="st">&quot;what a great example&quot;</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span><span class="at">.take</span>(<span class="dv">100</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="dt">Parser</span><span class="kw">::</span><span class="dt">ParseFailure</span>:</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dt">Parser</span><span class="op">:</span><span class="wa">:ParseFailure</span><span class="op">:</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   expected <span class="dv">100</span> characters, but saw <span class="dv">20</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span><span class="at">.take</span>(<span class="dv">4</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="st">&quot;what&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot;what&quot;</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span><span class="at">.take</span>(<span class="dv">2</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="st">&quot; a&quot;</span></span></code></pre></div>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot; a&quot;</span></span></code></pre></div>
 <p>Next up: string literals.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> string(pat)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  backtrack <span class="cf">do</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    s <span class="kw">=</span> take(pat<span class="at">.length</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fail</span>(pat, s) <span class="cf">unless</span> s <span class="kw">==</span> pat</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> take(pat<span class="at">.length</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fail</span>(pat, s) <span class="cf">unless</span> s <span class="op">==</span> pat</span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    s</span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
@@ -297,69 +297,69 @@ wrap all of this in <code>backtrack</code> to ensure that when we do fail, we ro
 <p>Finally, we’ll want a way to repeatedly parse characters matching some predicate. This is
 <code>take_while</code><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> take_while(pred)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a> input<span class="at">.chars.take_while</span>(<span class="kw">&amp;</span>pred)<span class="at">.join.tap</span> <span class="kw">{</span> <span class="kw">|</span>match<span class="kw">|</span> consume(match<span class="at">.length</span>) <span class="kw">}</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a> input<span class="at">.chars.take_while</span>(<span class="op">&amp;</span>pred)<span class="at">.join.tap</span> <span class="op">{</span> <span class="op">|</span>match<span class="op">|</span> consume(match<span class="at">.length</span>) <span class="op">}</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p>We can now write simple parsers, such as this:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">class</span> <span class="dt">PurchaseOrder</span> <span class="kw">&lt;</span> <span class="dt">Parser</span></span>
+<div class="sourceCode" id="cb13"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">class</span> <span class="dt">PurchaseOrder</span> <span class="op">&lt;</span> <span class="dt">Parser</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">def</span> run</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    string <span class="st">&quot;BUY: &quot;</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    take_while <span class="fu">proc</span> <span class="kw">{</span> <span class="kw">|</span>c<span class="kw">|</span> c !<span class="kw">=</span> <span class="st">&quot;\n&quot;</span> <span class="kw">}</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    take_while <span class="fu">proc</span> <span class="op">{</span> <span class="op">|</span>c<span class="op">|</span> c <span class="op">!=</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span> <span class="op">}</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">&gt;</span> <span class="dt">Order</span><span class="at">.new</span>(<span class="st">&quot;BUY: eggs&quot;</span>)<span class="at">.run</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="st">&quot;eggs&quot;</span></span></code></pre></div>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="dt">Order</span><span class="at">.new</span>(<span class="st">&quot;BUY: eggs&quot;</span>)<span class="at">.run</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot;eggs&quot;</span></span></code></pre></div>
 <h2 id="combinators">Combinators</h2>
 <p>To complete our parser, we need ways to compose these primitives together. This is where
 we’ll meet our combinators. The first is <code>either</code>:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> either(parser1, parser2)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  backtrack <span class="kw">{</span> parser1<span class="at">.call</span> <span class="kw">}</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  backtrack <span class="op">{</span> parser1<span class="at">.call</span> <span class="op">}</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">rescue</span> <span class="dt">ParseFailure</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  parser2<span class="at">.call</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p><code>either</code> takes two parsers as arguments. It tries the first, and if that fails it
 backtracks and tries the second.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>run <span class="kw">=</span> <span class="fu">proc</span> <span class="cf">do</span> <span class="kw">|</span>input<span class="kw">|</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span> <span class="kw">=</span> <span class="dt">Parser</span><span class="at">.new</span>(input)</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> <span class="fu">proc</span> <span class="cf">do</span> <span class="op">|</span>input<span class="op">|</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span> <span class="op">=</span> <span class="dt">Parser</span><span class="at">.new</span>(input)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span><span class="at">.either</span>(</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="kw">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;foo&quot;</span>) <span class="kw">}</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="kw">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;bar&quot;</span>) <span class="kw">}</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="op">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;foo&quot;</span>) <span class="op">}</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="op">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;bar&quot;</span>) <span class="op">}</span>,</span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;foo&quot;</span>)</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="st">&quot;foo&quot;</span></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;bar&quot;</span>)</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="st">&quot;bar&quot;</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;cat&quot;</span>)</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="dt">Parser</span><span class="kw">::</span><span class="dt">ParseFailure</span>:</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;foo&quot;</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot;foo&quot;</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;bar&quot;</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot;bar&quot;</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;cat&quot;</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="dt">Parser</span><span class="op">::</span><span class="dt">ParseFailure</span><span class="op">:</span></span>
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  expected <span class="st">&quot;bar&quot;</span> but saw <span class="st">&quot;cat&quot;</span> (<span class="dv">3</span>)</span></code></pre></div>
 <p>Next we have <code>zero_or_more</code>:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> zero_or_more(parser)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  matches <span class="kw">=</span> <span class="kw">[]</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">loop</span> <span class="kw">{</span> matches <span class="kw">&lt;&lt;</span> backtrack <span class="kw">{</span> parser<span class="at">.call</span> <span class="kw">}</span> <span class="kw">}</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  matches <span class="op">=</span> <span class="kw">[]</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">loop</span> <span class="op">{</span> matches <span class="op">&lt;&lt;</span> backtrack <span class="op">{</span> parser<span class="at">.call</span> <span class="op">}</span> <span class="op">}</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="cf">rescue</span> <span class="dt">ParseFailure</span></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  matches</span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p><code>zero_or_more</code> takes a parser and tries to apply it as many times as possible, returning
 an array of results. It always succeeds, as the parser can match zero times. This is
 analogous to the <code>*</code> regex operator.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>run <span class="kw">=</span> <span class="fu">proc</span> <span class="cf">do</span> <span class="kw">|</span>input<span class="kw">|</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span> <span class="kw">=</span> <span class="dt">Parser</span><span class="at">.new</span>(input)</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span><span class="at">.zero_or_more</span>(<span class="fu">proc</span> <span class="kw">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;a&quot;</span>) <span class="kw">}</span>)</span>
+<div class="sourceCode" id="cb17"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> <span class="fu">proc</span> <span class="cf">do</span> <span class="op">|</span>input<span class="op">|</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span> <span class="op">=</span> <span class="dt">Parser</span><span class="at">.new</span>(input)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span><span class="at">.zero_or_more</span>(<span class="fu">proc</span> <span class="op">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;a&quot;</span>) <span class="op">}</span>)</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;a&quot;</span>)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[</span><span class="st">&quot;a&quot;</span><span class="kw">]</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;aaaabb&quot;</span>)</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[</span><span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span><span class="kw">]</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;baaa&quot;</span>)</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[]</span></span></code></pre></div>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;a&quot;</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[</span><span class="st">&quot;a&quot;</span><span class="kw">]</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;aaaabb&quot;</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[</span><span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;a&quot;</span><span class="kw">]</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;baaa&quot;</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[]</span></span></code></pre></div>
 <p>If we want the behaviour of regex <code>+</code>, we can use <code>at_least_one</code>:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> at_least_one(parser)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  first <span class="kw">=</span> parser<span class="at">.call</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  rest <span class="kw">=</span> zero_or_more(parser)</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">[</span>first, <span class="kw">*</span>rest<span class="kw">]</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  first <span class="op">=</span> parser<span class="at">.call</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  rest <span class="op">=</span> zero_or_more(parser)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">[</span>first, <span class="op">*</span>rest<span class="kw">]</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p><code>at_least_one</code> is identical to <code>zero_or_more</code> except that the parser must succeed at least
 once.</p>
@@ -367,33 +367,33 @@ once.</p>
 example from the start. Given a separator and a parser, it will try to parse repeated
 instances of the parser interspersed with the separator (which is itself a parser).</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> sep_by(separator, parser)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  first <span class="kw">=</span> <span class="cf">begin</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>            backtrack <span class="kw">{</span> parser<span class="at">.call</span> <span class="kw">}</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  first <span class="op">=</span> <span class="cf">begin</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>            backtrack <span class="op">{</span> parser<span class="at">.call</span> <span class="op">}</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>          <span class="cf">rescue</span> <span class="dt">ParseFailure</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">[]</span></span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>          <span class="cf">end</span></span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  combined <span class="kw">=</span> <span class="fu">proc</span> <span class="cf">do</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  combined <span class="op">=</span> <span class="fu">proc</span> <span class="cf">do</span></span>
 <span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    separator<span class="at">.call</span></span>
 <span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    parser<span class="at">.call</span></span>
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  rest <span class="kw">=</span> zero_or_more combined</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">[</span>first, <span class="kw">*</span>rest<span class="kw">]</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  rest <span class="op">=</span> zero_or_more combined</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">[</span>first, <span class="op">*</span>rest<span class="kw">]</span></span>
 <span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
-<div class="sourceCode" id="cb20"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>run <span class="kw">=</span> <span class="fu">proc</span> <span class="cf">do</span> <span class="kw">|</span>input<span class="kw">|</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span> <span class="kw">=</span> <span class="dt">Parser</span><span class="at">.new</span>(input)</span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> <span class="fu">proc</span> <span class="cf">do</span> <span class="op">|</span>input<span class="op">|</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span> <span class="op">=</span> <span class="dt">Parser</span><span class="at">.new</span>(input)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">p</span><span class="at">.sep_by</span>(</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="kw">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;,&quot;</span>) <span class="kw">}</span>,</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="kw">{</span> <span class="fu">p</span><span class="at">.take</span>(<span class="dv">1</span>) <span class="kw">}</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="op">{</span> <span class="fu">p</span><span class="at">.string</span>(<span class="st">&quot;,&quot;</span>) <span class="op">}</span>,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">proc</span> <span class="op">{</span> <span class="fu">p</span><span class="at">.take</span>(<span class="dv">1</span>) <span class="op">}</span>,</span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;&quot;</span>)</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[]</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;1,2,3&quot;</span>)</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[</span><span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span><span class="kw">]</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>run<span class="kw">.</span>(<span class="st">&quot;1,2,3,45&quot;</span>)</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[</span><span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span>, <span class="st">&quot;4&quot;</span><span class="kw">]</span></span></code></pre></div>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;&quot;</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[]</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;1,2,3&quot;</span>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[</span><span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span><span class="kw">]</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>run<span class="at">.</span>(<span class="st">&quot;1,2,3,45&quot;</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[</span><span class="st">&quot;1&quot;</span>, <span class="st">&quot;2&quot;</span>, <span class="st">&quot;3&quot;</span>, <span class="st">&quot;4&quot;</span><span class="kw">]</span></span></code></pre></div>
 <p>That’s basically it! There are a couple more combinators we could define, like <code>optional</code>,
 <code>one_of</code> and <code>between</code>, but they are straightforward. Let’s look instead at writing a real
 world parser with this tooling.</p>
@@ -404,7 +404,7 @@ tested it against the fixtures in the <a href="https://github.com/nst/JSONTestSu
 and it passes 109 of the 141 <code>y_</code> tests (samples that must be accepted by the parser). In
 total, the whole parser is 119 lines long.</p>
 <p>To start, we define our class and entrypoint</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="cf">class</span> <span class="dt">JsonParser</span> <span class="kw">&lt;</span> <span class="dt">Parser</span></span>
+<div class="sourceCode" id="cb21"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="cf">class</span> <span class="dt">JsonParser</span> <span class="op">&lt;</span> <span class="dt">Parser</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">def</span> run</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    json_value</span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span></code></pre></div>
@@ -426,21 +426,21 @@ convert them to first class objects using
 allow us to <code>#call</code> them just like Procs. We’ll walk through each of these methods in
 turn.</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> object</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  inner <span class="kw">=</span> <span class="fu">proc</span> <span class="cf">do</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    kvs <span class="kw">=</span> sep_by method(<span class="wa">:comma</span>), method(<span class="wa">:key_value_pair</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  inner <span class="op">=</span> <span class="fu">proc</span> <span class="cf">do</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    kvs <span class="op">=</span> sep_by method(<span class="wa">:comma</span>), method(<span class="wa">:key_value_pair</span>)</span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Hash</span><span class="kw">[</span>kvs<span class="kw">]</span></span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  between <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;{&quot;</span> <span class="kw">}</span>,</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;}&quot;</span> <span class="kw">}</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  between <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;{&quot;</span> <span class="op">}</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;}&quot;</span> <span class="op">}</span>,</span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>          inner</span>
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> token(str)</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  string(str)<span class="at">.tap</span> <span class="kw">{</span> skip_spaces <span class="kw">}</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  string(str)<span class="at">.tap</span> <span class="op">{</span> skip_spaces <span class="op">}</span></span>
 <span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> skip_spaces</span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  take_while(<span class="fu">proc</span> <span class="kw">{</span> <span class="kw">|</span>c<span class="kw">|</span> <span class="kw">[</span><span class="st">&quot; &quot;</span>, <span class="st">&quot;\n&quot;</span><span class="kw">]</span><span class="at">.include?</span>(c) <span class="kw">}</span>)</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  take_while(<span class="fu">proc</span> <span class="op">{</span> <span class="op">|</span>c<span class="op">|</span> <span class="kw">[</span><span class="st">&quot; &quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="kw">]</span><span class="at">.include?</span>(c) <span class="op">}</span>)</span>
 <span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p><code>object</code> uses <code>between</code> to parse the opening and closing brackets. Inside the brackets we
 parse a series of key-value pairs. We use <code>sep_by</code> with a separator of <code>comma</code> (which does
@@ -450,16 +450,16 @@ is a wrapper around <code>string</code> which consumes any trailing whitespace. 
 it throughout the parser - it allows us to largely ignore whitespace and keep
 things concise.</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> key_value_pair</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  key <span class="kw">=</span> quoted_string</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  key <span class="op">=</span> quoted_string</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  token <span class="st">&quot;:&quot;</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  value <span class="kw">=</span> json_value</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> json_value</span>
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">[</span>key, value<span class="kw">]</span></span>
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> quoted_string</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  str <span class="kw">=</span> between <span class="fu">proc</span> <span class="kw">{</span> string <span class="st">&quot;\&quot;&quot;</span> <span class="kw">}</span>,</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;\&quot;&quot;</span> <span class="kw">}</span>,</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="kw">{</span> take_while(<span class="fu">proc</span> <span class="kw">{</span> <span class="kw">|</span>c<span class="kw">|</span> c !<span class="kw">=</span> <span class="st">&quot;\&quot;&quot;</span> <span class="kw">}</span>) <span class="kw">}</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  str <span class="op">=</span> between <span class="fu">proc</span> <span class="op">{</span> string <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">&quot;</span> <span class="op">}</span>,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">&quot;</span> <span class="op">}</span>,</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="op">{</span> take_while(<span class="fu">proc</span> <span class="op">{</span> <span class="op">|</span>c<span class="op">|</span> c <span class="op">!=</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">&quot;</span> <span class="op">}</span>) <span class="op">}</span></span>
 <span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  str</span>
 <span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p><code>key_value_pair</code> is a string enclosed in quotes followed by a semicolon, followed by any
@@ -470,17 +470,17 @@ conveniently ignore that. Note that we can’t use <code>token</code> for the op
 string we’re trying to parse.</p>
 <p>That’s JSON objects, then. Next up, arrays:</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> array</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  res <span class="kw">=</span> between <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;[&quot;</span> <span class="kw">}</span>,</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;]&quot;</span> <span class="kw">}</span>,</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="kw">{</span> sep_by method(<span class="wa">:comma</span>), method(<span class="wa">:json_value</span>) <span class="kw">}</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  res <span class="op">=</span> between <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;[&quot;</span> <span class="op">}</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;]&quot;</span> <span class="op">}</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">proc</span> <span class="op">{</span> sep_by method(<span class="wa">:comma</span>), method(<span class="wa">:json_value</span>) <span class="op">}</span></span>
 <span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  res</span>
 <span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p>We again use <code>between</code> to handle the enclosing brackets, and inside them we just parse a
 series of JSON values separated by commas.</p>
 <p>Booleans and <code>null</code>s are very simple:</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> boolean</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  bool <span class="kw">=</span> either <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;true&quot;</span> <span class="kw">}</span>, <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;false&quot;</span> <span class="kw">}</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  bool <span class="kw">==</span> <span class="st">&quot;true&quot;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  bool <span class="op">=</span> either <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;true&quot;</span> <span class="op">}</span>, <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;false&quot;</span> <span class="op">}</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  bool <span class="op">==</span> <span class="st">&quot;true&quot;</span></span>
 <span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> null</span>
@@ -493,63 +493,63 @@ exponents, but we can cater for all of that without a huge amount of code. It is
 a little less clear than what we’ve covered so far. I’ll leave it as an exercise to work
 out what we’re doing here - hopefully it’s not too hard!</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> number</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  sign <span class="kw">=</span> optional method(<span class="wa">:sign</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  result <span class="kw">=</span> integer</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  decimals <span class="kw">=</span> optional(<span class="fu">proc</span> <span class="kw">{</span> string <span class="st">&quot;.&quot;</span>; integer <span class="kw">}</span>)</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  exponent <span class="kw">=</span> optional(<span class="fu">proc</span> <span class="cf">do</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    either(<span class="fu">proc</span> <span class="kw">{</span> string <span class="st">&quot;e&quot;</span> <span class="kw">}</span>, <span class="fu">proc</span> <span class="kw">{</span> string <span class="st">&quot;E&quot;</span> <span class="kw">}</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  sign <span class="op">=</span> optional method(<span class="wa">:sign</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  result <span class="op">=</span> integer</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  decimals <span class="op">=</span> optional(<span class="fu">proc</span> <span class="op">{</span> string <span class="st">&quot;.&quot;</span>; integer <span class="op">}</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  exponent <span class="op">=</span> optional(<span class="fu">proc</span> <span class="cf">do</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    either(<span class="fu">proc</span> <span class="op">{</span> string <span class="st">&quot;e&quot;</span> <span class="op">}</span>, <span class="fu">proc</span> <span class="op">{</span> string <span class="st">&quot;E&quot;</span> <span class="op">}</span>)</span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    signed_integer</span>
 <span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span>)</span>
 <span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  result <span class="kw">=</span> result<span class="at">.to_f</span> <span class="cf">if</span> decimals <span class="kw">||</span> exponent</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  result <span class="kw">+=</span> (decimals<span class="at">.to_f</span> <span class="kw">/</span> (<span class="dv">10</span><span class="kw">**</span>decimals<span class="at">.to_s.length</span>)) <span class="cf">if</span> decimals</span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  result <span class="kw">*=</span> <span class="dv">10</span><span class="kw">**</span>exponent<span class="at">.to_f</span> <span class="cf">if</span> exponent</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  sign <span class="kw">==</span> <span class="st">&quot;-&quot;</span> ? <span class="dv">0</span> <span class="kw">-</span> result : result</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  result <span class="op">=</span> result<span class="at">.to_f</span> <span class="cf">if</span> decimals <span class="op">||</span> exponent</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  result <span class="op">+=</span> (decimals<span class="at">.to_f</span> <span class="op">/</span> (<span class="dv">10</span><span class="op">**</span>decimals<span class="at">.to_s.length</span>)) <span class="cf">if</span> decimals</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  result <span class="op">*=</span> <span class="dv">10</span><span class="op">**</span>exponent<span class="at">.to_f</span> <span class="cf">if</span> exponent</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  sign <span class="op">==</span> <span class="st">&quot;-&quot;</span> <span class="op">?</span> <span class="dv">0</span> <span class="op">-</span> result <span class="op">:</span> result</span>
 <span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> signed_integer</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  sign <span class="kw">=</span> optional method(<span class="wa">:sign</span>)</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  n <span class="kw">=</span> integer</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  sign <span class="kw">==</span> <span class="st">&quot;-&quot;</span> ? <span class="dv">0</span> <span class="kw">-</span> n : n</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  sign <span class="op">=</span> optional method(<span class="wa">:sign</span>)</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  n <span class="op">=</span> integer</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  sign <span class="op">==</span> <span class="st">&quot;-&quot;</span> <span class="op">?</span> <span class="dv">0</span> <span class="op">-</span> n <span class="op">:</span> n</span>
 <span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a><span class="cn">INTEGERS</span> <span class="kw">=</span> (<span class="dv">0</span><span class="kw">..</span><span class="dv">9</span>)<span class="at">.map</span>(<span class="kw">&amp;</span><span class="wa">:to_s</span>)</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a><span class="cn">INTEGERS</span> <span class="op">=</span> (<span class="dv">0</span><span class="op">..</span><span class="dv">9</span>)<span class="at">.map</span>(<span class="op">&amp;</span><span class="wa">:to_s</span>)</span>
 <span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> integer</span>
-<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  int <span class="kw">=</span> <span class="fu">proc</span> <span class="cf">do</span></span>
-<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    char <span class="kw">=</span> take <span class="dv">1</span></span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  int <span class="op">=</span> <span class="fu">proc</span> <span class="cf">do</span></span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    char <span class="op">=</span> take <span class="dv">1</span></span>
 <span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fail</span>(<span class="st">&quot;one of </span><span class="sc">#{</span><span class="cn">INTEGERS</span><span class="sc">}</span><span class="st">&quot;</span>, char) <span class="cf">unless</span> <span class="cn">INTEGERS</span><span class="at">.include?</span>(char)</span>
 <span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>    char</span>
 <span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
 <span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>  numstr <span class="kw">=</span> at_least_one int</span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>  numstr <span class="op">=</span> at_least_one int</span>
 <span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>  skip_spaces</span>
 <span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>  numstr<span class="at">.join.to_i</span></span>
 <span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span>
 <span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a><span class="cf">def</span> sign</span>
-<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>  either <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;-&quot;</span> <span class="kw">}</span>,</span>
-<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a>         <span class="fu">proc</span> <span class="kw">{</span> token <span class="st">&quot;+&quot;</span> <span class="kw">}</span></span>
+<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>  either <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;-&quot;</span> <span class="op">}</span>,</span>
+<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a>         <span class="fu">proc</span> <span class="op">{</span> token <span class="st">&quot;+&quot;</span> <span class="op">}</span></span>
 <span id="cb27-39"><a href="#cb27-39" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span></span></code></pre></div>
 <p>That’s the whole thing. Let’s try it out on some JSON.</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="st">&quot;{}&quot;</span>)<span class="at">.run</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">{}</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="op">{}</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="st">&quot;[]&quot;</span>)<span class="at">.run</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">[]</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="kw">[]</span></span>
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="st">&quot;4&quot;</span>)<span class="at">.run</span></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="dv">4</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dv">4</span></span>
 <span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="kw">&lt;&lt;</span><span class="cf">EOF</span><span class="do">).run</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="op">&lt;&lt;</span><span class="cf">EOF</span><span class="do">).run</span></span>
 <span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="do">{</span></span>
 <span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="do">  &quot;a&quot;:   &quot;sample&quot;,</span></span>
 <span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="do">  &quot;json&quot;  : &quot;object&quot;</span></span>
 <span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="do">}</span></span>
 <span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="cf">EOF</span></span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">{</span><span class="st">&quot;a&quot;</span><span class="kw">=&gt;</span><span class="st">&quot;sample&quot;</span>, <span class="st">&quot;json&quot;</span><span class="kw">=&gt;</span><span class="st">&quot;object&quot;</span><span class="kw">}</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="op">{</span><span class="st">&quot;a&quot;</span><span class="op">=&gt;</span><span class="st">&quot;sample&quot;</span>, <span class="st">&quot;json&quot;</span><span class="op">=&gt;</span><span class="st">&quot;object&quot;</span><span class="op">}</span></span>
 <span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="kw">&lt;&lt;</span><span class="cf">EOF</span><span class="do">).run</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="op">&lt;&lt;</span><span class="cf">EOF</span><span class="do">).run</span></span>
 <span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="do">{</span></span>
 <span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="do">  &quot;a&quot;: &quot;sample&quot;,</span></span>
 <span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a><span class="do">  &quot;json&quot;: &quot;object&quot;,</span></span>
@@ -561,19 +561,19 @@ out what we’re doing here - hopefully it’s not too hard!</p>
 <span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a><span class="do">  ]</span></span>
 <span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a><span class="do">}</span></span>
 <span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a><span class="cf">EOF</span></span>
-<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="kw">{</span></span>
-<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>     <span class="st">&quot;a&quot;</span> <span class="kw">=&gt;</span> <span class="st">&quot;sample&quot;</span>,</span>
-<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>     <span class="st">&quot;json&quot;</span> <span class="kw">=&gt;</span> <span class="st">&quot;object&quot;</span>,</span>
-<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>     <span class="st">&quot;with&quot;</span> <span class="kw">=&gt;</span> <span class="kw">[</span></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>     <span class="st">&quot;a&quot;</span> <span class="op">=&gt;</span> <span class="st">&quot;sample&quot;</span>,</span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>     <span class="st">&quot;json&quot;</span> <span class="op">=&gt;</span> <span class="st">&quot;object&quot;</span>,</span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>     <span class="st">&quot;with&quot;</span> <span class="op">=&gt;</span> <span class="kw">[</span></span>
 <span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;an&quot;</span>,</span>
 <span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;array&quot;</span>,</span>
-<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>       <span class="kw">-</span><span class="fl">1230.0</span>,</span>
-<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>       <span class="kw">{</span> <span class="st">&quot;two&quot;</span> <span class="kw">=&gt;</span> <span class="st">&quot;three&quot;</span> <span class="kw">}</span></span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>       <span class="op">-</span><span class="fl">1230.0</span>,</span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>       <span class="op">{</span> <span class="st">&quot;two&quot;</span> <span class="op">=&gt;</span> <span class="st">&quot;three&quot;</span> <span class="op">}</span></span>
 <span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a>      <span class="kw">]</span></span>
-<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a>   <span class="kw">}</span></span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a>   <span class="op">}</span></span>
 <span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="st">&quot;bad input&quot;</span>)<span class="at">.run</span></span>
-<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a><span class="kw">=&gt;</span> <span class="dt">Parser</span><span class="kw">::</span><span class="dt">ParseFailure</span>: expected one <span class="wa">of: </span><span class="kw">[</span></span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dt">Parser</span><span class="op">:</span><span class="wa">:ParseFailure</span><span class="op">:</span> expected one <span class="wa">of:</span> <span class="kw">[</span></span>
 <span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#object&gt;,</span></span>
 <span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#array&gt;,</span></span>
 <span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#quoted_string&gt;,</span></span>
@@ -581,7 +581,7 @@ out what we’re doing here - hopefully it’s not too hard!</p>
 <span id="cb28-47"><a href="#cb28-47" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#null&gt;,</span></span>
 <span id="cb28-48"><a href="#cb28-48" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#number&gt;</span></span>
 <span id="cb28-49"><a href="#cb28-49" aria-hidden="true" tabindex="-1"></a><span class="kw">]</span></span>
-<span id="cb28-50"><a href="#cb28-50" aria-hidden="true" tabindex="-1"></a>from lib<span class="kw">/</span>parser<span class="at">.rb</span>:<span class="dv">60</span><span class="wa">:in</span> <span class="in">`one_of'</span></span></code></pre></div>
+<span id="cb28-50"><a href="#cb28-50" aria-hidden="true" tabindex="-1"></a>from lib<span class="op">/</span>parser<span class="at">.rb</span><span class="op">:</span><span class="dv">60</span><span class="op">:</span><span class="cf">in</span> <span class="in">`one_of'</span></span></code></pre></div>
 <p>And that’s it! A (mostly) complete JSON parser in around 100 LOC. Hopefully that gives you
 an idea of how you can take these parsing techniques and apply them outside of functional
 programming languages.</p>
