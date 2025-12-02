@@ -167,6 +167,10 @@
       gap: 0;
     }
 
+    .overlay_postcode {
+      margin-bottom: 2px;
+    }
+
     .form-row {
       display: flex;
       gap: 8px;
@@ -205,10 +209,6 @@
   <div id="map"></div>
 
   <div class="sidebar">
-    <div class="sidebar-header">
-      <h1>Catchment Tool</h1>
-    </div>
-
     <div class="control-group">
       <h3>Coordinate Output</h3>
       <textarea id="output">[ { "lng": 0.006756943151742689, "lat": 51.542182841329804 },
@@ -252,7 +252,8 @@
       <h3>Postcode Lookup</h3>
       <form id="postcode_form" action="#">
         <input type="text" id="postcode" placeholder="Enter postcode (e.g., E15 4BZ)" />
-        <input type="submit" id="lookup_postcode" value="Lookup Postcode" />
+        <input type="submit" class="overlay_postcode" id="overlay_postcode" value="Overlay Postcode" />
+        <input type="submit" class="add_edit_postcode" id="add_edit_postcode" value="Add and edit Postcode" />
       </form>
     </div>
 
@@ -364,7 +365,7 @@
 
     map.on('load', onLoad)
 
-    const fetchPostcodeBoundary = async (postcode) => {
+    const fetchPostcodeBoundary = async (postcode, featureId) => {
       const area = postcode.match(/[A-za-z]+/)[0];
       console.log(`Fetching boundaries for postcode area ${area}`)
       const boundaries = await fetch(`https://raw.githubusercontent.com/missinglink/uk-postcode-polygons/master/geojson/${area}.geojson`)
@@ -377,13 +378,23 @@
         return;
       }
 
-      draw.add({...boundary, id: 'postcode_boundary'});
+      draw.add({...boundary, id: featureId});
       fitMapToBounds(boundary.geometry.coordinates[0]);
     };
 
-    document.getElementById("postcode_form").addEventListener("submit", (e) => {
-      console.log({e});
+    document.getElementById("overlay_postcode").addEventListener("click", (e) => {
       e.preventDefault();
+      handlePostcode("postcode_boundary");
+    });
+
+    document.getElementById("add_edit_postcode").addEventListener("click", (e) => {
+      e.preventDefault();
+      handlePostcode("catchment");
+    })
+
+    // if featureId=catchment, the postcode area is editable
+    // if featureId=postcode_boundary, it is blue and not editable
+    const handlePostcode = (featureId) => {
       const postcode = document.getElementById("postcode").value
         .toUpperCase()
         .replaceAll(" ", "")
@@ -394,9 +405,9 @@
       if (postcode.length > 4) {
         placePostcodePin(postcode)
       } else {
-        fetchPostcodeBoundary(document.getElementById("postcode").value.toUpperCase());
+        fetchPostcodeBoundary(document.getElementById("postcode").value.toUpperCase(), featureId);
       }
-    });
+    }
 
     const placePostcodePin = async (postcode) => {
       const response = await mapboxClient.geocodingV6.forwardGeocode({
