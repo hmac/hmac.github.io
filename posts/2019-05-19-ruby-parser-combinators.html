@@ -271,7 +271,7 @@ We then <code>consume</code> the characters we’ve just fetched, and return the
 behaves:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span> <span class="op">=</span> <span class="dt">Parser</span><span class="at">.new</span>(<span class="st">&quot;what a great example&quot;</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span><span class="at">.take</span>(<span class="dv">100</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dt">Parser</span><span class="op">:</span><span class="wa">:ParseFailure</span><span class="op">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dt">Parser</span><span class="op">::</span><span class="dt">ParseFailure</span><span class="op">:</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   expected <span class="dv">100</span> characters, but saw <span class="dv">20</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">p</span><span class="at">.take</span>(<span class="dv">4</span>)</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="st">&quot;what&quot;</span></span>
@@ -573,7 +573,7 @@ out what we’re doing here - hopefully it’s not too hard!</p>
 <span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a>   <span class="op">}</span></span>
 <span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a><span class="dt">JsonParser</span><span class="at">.new</span>(<span class="st">&quot;bad input&quot;</span>)<span class="at">.run</span></span>
-<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dt">Parser</span><span class="op">:</span><span class="wa">:ParseFailure</span><span class="op">:</span> expected one <span class="wa">of:</span> <span class="kw">[</span></span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a><span class="op">=&gt;</span> <span class="dt">Parser</span><span class="op">::</span><span class="dt">ParseFailure</span><span class="op">:</span> expected one <span class="wa">of:</span> <span class="kw">[</span></span>
 <span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#object&gt;,</span></span>
 <span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#array&gt;,</span></span>
 <span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a>  <span class="co">#&lt;Method: JsonParser#quoted_string&gt;,</span></span>
