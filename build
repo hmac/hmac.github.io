@@ -15,7 +15,7 @@ import Text.Pandoc.Walk ( walk )
 import Control.Monad (filterM)
 
 main =
-  hakyll $ do
+  hakyllWith config $ do
     match "templates/*" $ compile templateCompiler
     match "css/*" $ do
         route   idRoute
@@ -38,6 +38,9 @@ main =
               >>= applyAsTemplate indexContext
               >>= loadAndApplyTemplate "templates/index.html" indexContext
               >>= relativizeUrls
+
+config :: Configuration
+config = defaultConfiguration { destinationDirectory = "docs" }
 
 published :: MonadMetadata m => Item String -> m Bool
 published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)

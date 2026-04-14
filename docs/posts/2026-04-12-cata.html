@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+  <head>
+  <title>Data type encodings | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+    body { 
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 1.7em;
+    }
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
+    }
+    .content pre {
+      background-color: #f7f5ef;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+    .content pre code {
+      background-color: transparent;
+    }
+    div.sourceCode {
+      padding: 5px;
+    }
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+    h1, h2, h3 {
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-weight: normal;
+    }
+    ol#post-list {
+      list-style-type: none
+    }
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+    #header a {
+      text-decoration: none;
+    }
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">April 12, 2026</div>
+      </div>
+      <div class="content">
+        <h1 id="data-type-encodings">Data type encodings</h1>
+<p>In the last post I incorrectly said that the case eliminator for the List type was fold. Of course it isn’t, the type of <code>fold(r)</code> is</p>
+<pre><code>b -&gt; (a -&gt; b -&gt; b) -&gt; List a -&gt; b</code></pre>
+<p>whereas the case eliminator for List is</p>
+<pre><code>b -&gt; (a -&gt; List a -&gt; b) -&gt; List a -&gt; b</code></pre>
+<p>The difference is in the second argument. In fold we have already transformed the tail of the list and are given the transformed value b. In the eliminator we are given the list tail directly. In a case expression, we’re just unwrapping one level, so this second form is what we want. When we case match on a list, we have two cases:
+- the empty list, where we have to produce a value of type <code>b</code>
+- the head of the list (type <code>a</code>) and the remaining list (<code>List a</code>), from which we have to produce a value of type <code>b</code>.</p>
+<p>But you could ask, what if case didn’t do one-level unwrapping but did a full recursive transformation? What if it worked like fold on lists?</p>
+<pre><code>someList : List a
+case someList {
+  [] -&gt; // we have to return something of type b
+  x r -&gt; // x : a, r : b, we have to return something of type b
+}</code></pre>
+<p>In this world, when we case match on a list we have again two cases:
+- the empty list, as before, where we produce a <code>b</code>
+- the head of the list (type <code>a</code>), along with a value of type <code>b</code>. This value is the result running our case match on the tail of the list, which has already happened!
+So operationally a “fold case match” like this behaves very differently: it does a recursive transformation on the structure instead of a single unwrapping.</p>
+<p>It turns out that these two styles (“normal” eliminator and “fold” eliminator) are two data type encodings that already have names. The normal eliminator is called the Scott Encoding. The fold eliminator is called Church Encoding.</p>
+<p>Here are church encodings of some common data types:</p>
+<pre><code>type Bool { True, False }
+a -&gt; a -&gt; a
+
+type List a { Nil, Cons a (List a) }
+b -&gt; (a -&gt; b -&gt; b) -&gt; b
+
+type Option a { None, Some a }
+b -&gt; (a -&gt; b) -&gt; b
+
+type Foo { Bar Bool }
+(Bool -&gt; a) -&gt; a</code></pre>
+<p>For each type I’ve written the tl syntax for the type, then the encoding. The encoding is, in each case, a function which is observably identical to the type. Any data you could store in the type can equivalently be stored using the function.</p>
+<p>For example  the value <code>Some 5</code> can be encoded as <code>_ f -&gt; f 5</code>. Here we ignore the default value passed if we are <code>None</code>, and instead call the function for when we are <code>Some</code>, passing the inner value <code>5</code>.</p>
+<p>The list <code>[3, 4]</code> can be encoded as <code>l1 = z f -&gt; f 3 (f 4 z)</code>. This is a function that takes two arguments which correspond to the two branches of the fold case we saw earlier. <code>z</code> takes no arguments and has to produce a value of type <code>b</code> (or whatever the result type is). <code>f</code> takes two arguments: the head of the list (3) and the result of applying <code>f</code> to the tail of the list.</p>
+<p>To use this list value, because it’s a function we just use it directly. Let’s say we want to add 2 to the front of it:</p>
+<pre><code>l2 = z f -&gt; f 2 (l1 z f)</code></pre>
+<p>Or if we want to sum the numbers in the list:</p>
+<pre><code>l1 0 (x r -&gt; + x r)</code></pre>
+<p>Church encoding embodies the principle that <strong>something is what it does</strong>. This style seems similar to a “final encoding”, which also expresses a data type in terms of what you can do with it but I’m not sure if these two things are the same or just similar.</p>
+<p>If we designed “Church style” eliminators for tl, they’d look like this:</p>
+<pre><code>Bool
+a -&gt; a -&gt; Bool -&gt; a
+
+List
+b -&gt; (a -&gt; b -&gt; b) -&gt; List a -&gt; b</code></pre>
+<p>We could have a syntactic case form for this, called <code>cata</code>, which does a recursive case match on its argument. For example, a function that sums a list could be written like this:</p>
+<pre><code>sum {
+  l -&gt; cata l {
+    [] -&gt; 0,
+    x r -&gt; + x r
+  }
+}</code></pre>
+<p>A more interesting example is folding a tree</p>
+<pre><code>type Tree a {
+  L a,
+  B (Tree a) (Tree a)
+}
+
+t : Tree Int { … }
+
+t_sum : Int {
+  cata t {
+    L x -&gt; x,
+    B l r -&gt; l + r
+  }
+}
+
+// tree depth
+cata t {
+  L _ -&gt; 1,
+  B l r -&gt; + 1 (max l r)
+}</code></pre>
+<p><code>cata</code> is useful anywhere you’re doing a lot of folding or recursive transformations. We can use it to evaluate a small language:</p>
+<pre><code>type E {
+  I Int,
+  Add E E,
+  Sub E E,
+  Var Nat,
+  Let E E
+}
+
+at : Nat -&gt; List a -&gt; a {
+  // look up elem at index
+}
+
+eval : E -&gt; Int {
+  e -&gt; let f = {
+    // recursively fold over the expression,
+    // producing a function from environment 'c'
+    // to an integer.
+    cata e {
+	  // I is just an int
+      I n -&gt; (_ -&gt; n)
+      // Add and Sub evaluate their arguments and then +/- them
+      Add x y -&gt; (c -&gt; + (x c) (y c)),
+      Sub x y -&gt; (c -&gt; - (x c) (y c)),
+      // Var looks up v in the environment
+      Var v -&gt; (c -&gt; at c v)
+      // Let evaluates e1 and then adds it to the environment
+      Let e1 e2 -&gt; (c -&gt; e2 [e1 c, ..c])
+  } {
+  // c starts as an empty list
+  f []
+  }
+}</code></pre>
+<p>So this construct can definitely be nice for some types of program.</p>
+<p>Beyond Scott and Church, there are other encodings. For example the Parigot encoding gives you the transformed value but <em>also</em> the original untransformed value. The Parigot encoding for a list would be something like</p>
+<pre><code>b -&gt; (a -&gt; List a -&gt; b -&gt; b) -&gt; b</code></pre>
+<p>In the recursive case you get the head of the list <code>a</code>, the tail of the list <code>List a</code>, and <em>also</em> the result from transforming the tail of the list <code>b</code>. This allows you to “remember” what the value was before transformation, which I guess can be useful for some algorithms. I haven’t found an obvious use for it yet.</p>
+<p>I thought for a while that it might be interesting to be able to swap out your eliminator in the language for a different one, or maybe define it per type. But I didn’t really get anywhere with that train of thought. I definitely think there’s something valuable about automatically deriving the correct fold for your data types, and making that easy to use. That’s all I’ve got for now though.</p>
+      </div>
+    </div>
+  </body>
+</html>
