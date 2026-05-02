@@ -20,6 +20,12 @@ main =
     match "css/*" $ do
         route   idRoute
         compile compressCssCompiler
+    match "CNAME" $ do
+        route   idRoute
+        compile copyFileCompiler
+    match ("lc/**" .||. "eval-game/**") $ do
+        route   idRoute
+        compile copyFileCompiler
 
     match "posts/*" $ do
       route $ setExtension ".html"
