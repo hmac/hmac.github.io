@@ -1,0 +1,137 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Lambda Calculus Experiments</title>
+    <script src="./app.js"></script>
+    <style>
+      textarea {
+        font-family: Courier New;
+        font-size: 12pt;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- GitHub link --!>
+    <a href="https://github.com/hmac/lc" class="github-corner" aria-label="View source on GitHub">
+      <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg>
+    </a>
+    <style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <h3>Input</h3>
+    <label>Type System:</label>
+    <select id="picker">
+      <option value="untyped">Untyped Lambda Calculus</option>
+      <option value="stlc">Simply Typed Lambda Calculus</option>
+      <option value="systemt">System T</option>
+      <option value="systemf">System F</option>
+      <option value="hm">Hindley-Milner</option>
+      <option value="pi">λP</option>
+    </select>
+    <p></p>
+    <textarea id="input" cols=80 rows=32>
+-- Write your program here
+
+1</textarea>
+    <h3>Output</h3>
+    <textarea id="output" cols=80 rows=5></textarea>
+    <script>
+      let type_system = "untyped";
+
+      let runFuncs = {
+        "untyped": "runUntyped",
+        "stlc": "runSimple",
+        "systemt": "runSystemT",
+        "systemf": "runSystemF",
+        "hm": "runHM",
+        "pi": "runDependent"
+      };
+
+      let input_box = document.querySelector("#input");
+      let output_box = document.querySelector("#output");
+      let evaluate = function() {
+        output_box.value = PS["Main"][runFuncs[type_system]](input_box.value);
+      };
+      input_box.addEventListener("input", evaluate);
+
+      let picker = document.querySelector("#picker");
+      picker.addEventListener("change", function(event) {
+        type_system = event.target.value;
+        evaluate();
+      });
+
+      evaluate();
+    </script>
+
+    <p>Untyped Lambda Calculus Prelude</p>
+    <pre>
+id = \x. x
+
+-- Booleans
+true = \x. \y. x
+false = \x. \y. y
+
+-- Pairs
+MkPair = \a. \b. \x. x a b
+fst = \p. p true
+snd = \p. p false
+
+-- Natural numbers
+zero = \f. \x. x
+succ = \n. \f. \x. f (n f x)
+
+-- (for convenience, you can use integer literals)
+three = 3
+
+-- predecessor of a natural number (pred 4 == 3)
+pred = \n. fst (predHelper n)
+predHelper = \n. n (\p. \x. x (snd p) (succ (snd p))) (MkPair 0 0)
+
+isZero = \n. n (\t. false) true
+
+plus = \n. \m. \f. \x. n f (m f x)
+minus = \n. \m. m pred n
+mult = \n. \m. n (plus m) 0
+exp = \n. \m. m (mult n) 1
+    </pre>
+    <p>Simply Typed Lambda Calculus Prelude</p>
+    <pre>
+-- Natural numbers
+succ = \n : (N -> N) -> N -> N. \f : N -> N. \x : N. f (n f x)
+plus = \n : (N -> N) -> N -> N. \m : (N -> N) -> N -> N. \f : N -> N. \x : N. n f (m f x)
+mult = \n : (N -> N) -> N -> N. \m : (N -> N) -> N -> N. \f : N -> N. \x : N. n (m f) x
+    </pre>
+    <p>System T Prelude</p>
+    <pre>
+-- Natural numbers:
+-- Succ and Zero are built in
+-- As is Rec, the generic recursion combinator
+
+plus = \m : Nat. \n : Nat. Rec (\x : Nat. \k : Nat. Succ k) m n
+mult = \m : Nat. \n : Nat. Rec (\x : Nat. \k : Nat. plus k m) 0 n
+    </pre>
+    <p>λP Prelude</p>
+    <pre>
+plus : forall (n : Nat). forall (m : Nat). Nat
+plus = (\n. \m. natElim (\_. Nat) n (\k. \rec. S rec) m)
+
+mult : forall (n : Nat). forall (m : Nat). Nat
+mult = (\n. \m. natElim (\_. Nat) Z (\k. \recn. plus recn n) m)
+
+dec : forall (n : Nat). Nat
+dec = \n. natElim (\_. Nat) Z (\k. \rec. k) n
+
+sub : forall (n : Nat). forall (m : Nat). Nat
+sub = \n. \m. natElim (\_. Nat) n (\k. \rec. dec rec) m
+
+isZero : forall (n : Nat). Bool
+isZero = \n. natElim (\_. Bool) True (\_. \_. False) n
+
+natEq : forall (n : Nat). forall (m : Nat). Bool
+natEq = \m. \n. natElim (\_. forall (_ : Nat). Bool) (\k. natElim  (\_. Bool) True (\_. \_. False) k) (\j. \rec. \n. natElim (\_. Bool) False (\k. \_. rec k) n) m n
+
+-- N.B. this doesn't quite work yet
+append : forall (a : Type). forall (k1 : Nat). forall (v1 : Vec a k1). forall (k2 : Nat). forall (v2: Vec a k2). Vec a (plus k1 k2) 
+append = (\a. \k1. \v1. \k2. \v2. vecElim a (\m. \_. Vec a (plus k1 m)) v1 (\m. \v. \vs. \rec. VCons a (S m) v rec) k2 v2)
+    </pre>
+  </body>
+</html>
