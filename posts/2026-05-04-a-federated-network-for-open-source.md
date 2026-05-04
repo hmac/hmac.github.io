@@ -23,7 +23,7 @@ This is about who is who. An actor is identified by a public-private keypair. Th
 ## Source
 This is about who wrote what. Source code is identified by the hash of its content. If I want to publish a library `mylib` to the network, I hash the library to get `sha256-abc123`, then publish an assertion (signed by my private key) that `mylib@1.2.3` is `sha256-abc123`.
 
-This merely establishes that I (i.e. my public key) claim that `mylib@1.2.3` has hash `sha256-abc123`. There's no guarantee that I am the "rightful" maintainer of `mylib` or that `sha256-abc123` is really the hash of the "correct" that corresponds to `mylib@1.2.3` or even that `mylib` is a real project at all. The network makes no attempt to answer these questions. These are left to clients to decide. More on this later.
+This merely establishes that I (i.e. my public key) claim that `mylib@1.2.3` has hash `sha256-abc123`. There's no guarantee that I am the "rightful" maintainer of `mylib` or that `sha256-abc123` is really the hash of the "correct" source code that corresponds to `mylib@1.2.3` or even that `mylib` is a real project at all. The network makes no attempt to answer these questions. These are left to clients to decide. More on this later.
 
 Once I've published this claim, a client who trusts me can use it to fetch the source of `mylib@1.2.3` from _any_ cache, without needing to trust the cache. It just needs to check that the hash of the fetched code matches the hash in my claim.
 
