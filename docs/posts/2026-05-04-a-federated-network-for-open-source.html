@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+  <head>
+  <title>A federated network for open source | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+    body { 
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 1.7em;
+    }
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
+    }
+    .content pre {
+      background-color: #f7f5ef;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+    .content pre code {
+      background-color: transparent;
+    }
+    div.sourceCode {
+      padding: 5px;
+    }
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+    h1, h2, h3 {
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-weight: normal;
+    }
+    ol#post-list {
+      list-style-type: none
+    }
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+    #header a {
+      text-decoration: none;
+    }
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">May  4, 2026</div>
+      </div>
+      <div class="content">
+        <h1 id="a-federated-network-for-open-source">A federated network for open source</h1>
+<p>GitHub is dying and people are starting to notice. Other forges are gaining popularity (<a href="https://sr.ht">SourceHut</a>, <a href="https://forgejo.org/">Forgejo</a>), new ones are springing up (<a href="https://ersc.io">ERSC</a>, <a href="https://code.storage">code.storage</a>) and there are some interesting decentralised options (<a href="https://radicle.xyz">Radicle</a>, <a href="https://tangled.org">Tangled</a>).</p>
+<p>I’m very interested in the decentralised approaches because I think depending on a single private entity for the open source ecosystem is a bad idea that we’re only now coming to realise and regret as a community.</p>
+<p>The core problems you need to solve with a decentralised approach are <em>who made this</em> and <em>who do I trust</em>. Most of the complexity in these systems comes down to how they answer these questions. As an industry right now we can’t reliably answer them, and this is at the heart of the supply chain security crisis that we find ourselves in.</p>
+<p>It’s not enough to solve this at the source code level, because we increasingly rely on public caches of built artefacts: docker images, pre-built binaries or shared libraries in package repositories, mirror servers, CI caches, Nix binary caches. It’s just too inefficient to build everything from source, every time. So we need to know <em>who built this binary</em> and <em>do I trust the builder</em>. There are projects that aim to tackle this as well, like <a href="https://slsa.dev/">SLSA</a> and <a href="https://github.com/nix-community/trustix">Trustix</a>.</p>
+<p>All of these projects are going in the right direction, but I think there’s a core set of concepts that we could share so they can interoperate and we don’t recreate the same thing N times. This is a sketch of those core concepts, as a starting point.</p>
+<p>It breaks down into three networks: identity, source, and build.</p>
+<h2 id="identity">Identity</h2>
+<p>This is about who is who. An actor is identified by a public-private keypair. They don’t have a permanent “name” of any sort. They can claim a particular alias via an assertion, for example I might claim hmac.dev as “me” by publishing a signed proof as a DNS record. The link between hmac.dev and my public key is not permanent or canonical, and the network doesn’t trust it. Clients may choose to trust this, or not, based on their own policy (more on this later). As another example, I might post my public key on my GitHub account or Bluesky account or somewhere, and clients might choose to trust that if they can find N other corroborating posts on other platforms. This is essentially the <a href="https://book.keybase.io/account#proofs">Keybase model</a>.</p>
+<h2 id="source">Source</h2>
+<p>This is about who wrote what. Source code is identified by the hash of its content. If I want to publish a library <code>mylib</code> to the network, I hash the library to get <code>sha256-abc123</code>, then publish an assertion (signed by my private key) that <code>mylib@1.2.3</code> is <code>sha256-abc123</code>.</p>
+<p>This merely establishes that I (i.e. my public key) claim that <code>mylib@1.2.3</code> has hash <code>sha256-abc123</code>. There’s no guarantee that I am the “rightful” maintainer of <code>mylib</code> or that <code>sha256-abc123</code> is really the hash of the “correct” that corresponds to <code>mylib@1.2.3</code> or even that <code>mylib</code> is a real project at all. The network makes no attempt to answer these questions. These are left to clients to decide. More on this later.</p>
+<p>Once I’ve published this claim, a client who trusts me can use it to fetch the source of <code>mylib@1.2.3</code> from <em>any</em> cache, without needing to trust the cache. It just needs to check that the hash of the fetched code matches the hash in my claim.</p>
+<h2 id="build">Build</h2>
+<p>A client can fetch the source code of my library, if they trust me, but they still have to build it themselves. Extend this model to all dependencies, including your language toolchain, system libraries, your OS, and it’s clear that this is not enough. We can’t be compiling the world from scratch each time we build our application.</p>
+<p>An actor in the network can fetch the source code for <code>mylib</code>, compile it themselves, and then share the compiled binary for others to use. They do this by publishing an assertion that they (identified by their public key) built <code>sha256-abc123</code> and it produced a binary with hash <code>sha256-def456</code>. The binary itself, like the source code, can be hosted by any cache.</p>
+<p>To use this cached binary, a client must choose to trust the builder. If it trusts the builder and the author (me) then it can be happy that no other actor can have tampered with the result.</p>
+<p>There’s a lot more complexity here, around what environment and inputs are provided to a build. Some builders may care about this and impose constraints on library authors (e.g. Nix builders would require the source code to include a Nix file). Others might be more lax, and use “sane defaults” (e.g. a recent fresh Ubuntu VM). So there’s no guarantee that two builders will produce the same result. The network doesn’t care about this, but clients may choose to if they wish. For example they might only use binary Nix caches and require that at least two independent caches agree on a build hash in order to trust it (this is the Trustix model). Other clients may have a higher risk appetite and be happy to trust a particular builder, e.g. <code>ubuntu.com</code>.</p>
+<h2 id="trust">Trust</h2>
+<p>These networks rely on a fundamental model of trust. The network holds and propagates signed assertions of the form “(actor) claims (fact) about (object) at time (timestamp)”. For example:</p>
+<ul>
+<li><code>pubkey-789</code> claims <code>mylib@1.2.3</code> is <code>sha256-abc123</code> at time <code>1777895712055</code></li>
+<li><code>pubkey-678</code> claims <code>sha256-abc123</code> builds with output <code>sha256-def456</code> at time <code>1777895712056</code></li>
+<li><code>pubkey-345</code> claims that <code>pubkey-789</code> is an author of <code>mylib</code> at time <code>1777895712057</code></li>
+</ul>
+<p>There’s no single log of these assertions - they are shared across the network via gossip. They are self-verifiable by their signature.</p>
+<p>The last example shows how we can build a web of trust. A client may not trust me (<code>pubkey-789</code>) but they may trust <code>pubkey-345</code> because they know them, or because they appear to be ubuntu.com via a DNS record, or because they trust their organisation acme.org and acme.org trusts <code>pubkey-345</code>.</p>
+<p>Clients can choose their trust policy based on their own risk appetite. The trust system applies to identity, source and build in the same way.</p>
+<p>This system is general enough to support many different workflows, for example:</p>
+<ul>
+<li>Audits and code review: <code>pubkey-X</code> claims they have reviewed the source for <code>sha256-Y</code></li>
+<li>Ownership transfer: <code>pubkey-X</code> claims <code>pubkey-Y</code> is an author of <code>mylib</code></li>
+<li>Yanking: <code>pubkey-X</code> claims <code>mylib@1.2.3</code> IS NOT <code>sha256-abc123</code></li>
+<li>Revoking trust (e.g. if a key is compromised): <code>pubkey-X</code> claims that <code>pubkey-Y</code> IS NOT an author of <code>mylib</code></li>
+<li>Propagating trust in builders: <code>pubkey-X</code> claims that <code>pubkey-Y</code> is a trusted builder</li>
+</ul>
+<p>The network doesn’t define these assertions, it just propagates them. Clients must decide what assertions they will interpret and publish. This hopefully means the system can be extended to support any future workflow.</p>
+<h2 id="interop">Interop</h2>
+<p>The network can bridge between other ecosystems by modelling their level of trust. For example an actor (<code>pubkey-X</code>) can automatically publish facts about npm:
+- <code>pubkey-X</code> claims that <code>npmjs.com</code> has published <code>left-pad@1.2.3</code> as <code>sha256-ghi789</code> at time <code>1777895712058</code></p>
+<p>This is just another assertion by a particular actor in the network, and the client can choose whether to trusted it based on their particular trust policy. If npmjs.com chose to participate directly in the network in the future, it would publish its own public key and then start publishing assertions under that key.</p>
+<h2 id="summary">Summary</h2>
+<p>That’s the general idea. The system is simple and generic enough to cover every use case I can think of. I see this as a sketch of a standard that multiple systems can build on and extend, so that they can all interoperate and contribute to a shared commons of software. I don’t want a single forge to win, even if it is decentralised. I want lots of different approaches and I want them to be able to build on top of one another in a mutually beneficial way.</p>
+<p>There are some areas I haven’t thought about or intentionally am not solving:</p>
+<ul>
+<li>Mutation for security/legal reasons. I think this is solved by publishing negative assertions</li>
+<li>Privacy: some actors may not want to publish their trust assertions. I think this is probably solvable by running a node inside an internal network, and choosing how to communicate with public nodes.</li>
+<li>Economics: the infrastructure for this will cost money. But I don’t think it’s infeasible compared to other options, and the proper use of binary caching could actually save money over the long term.</li>
+</ul>
+<p>I’m writing this less as a solid spec and more as an idea dump. I think there’s decent overlap with some existing projects but I don’t know if any of them have gone as far as this. If there is prior art I’ve missed or people already thinking about this, I’d love to know.</p>
+      </div>
+    </div>
+  </body>
+</html>
