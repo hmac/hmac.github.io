@@ -61,7 +61,8 @@ The network doesn't define these assertions, it just propagates them. Clients mu
 
 ## Interop
 The network can bridge between other ecosystems by modelling their level of trust. For example an actor (`pubkey-X`) can automatically publish facts about npm:
-- `pubkey-X` claims that `npmjs.com` has published `left-pad@1.2.3` as `sha256-ghi789` at time `1777895712058`
+
+`pubkey-X` claims that `npmjs.com` has published `left-pad@1.2.3` as `sha256-ghi789` at time `1777895712058`
 
 This is just another assertion by a particular actor in the network, and the client can choose whether to trusted it based on their particular trust policy. If npmjs.com chose to participate directly in the network in the future, it would publish its own public key and then start publishing assertions under that key.
 

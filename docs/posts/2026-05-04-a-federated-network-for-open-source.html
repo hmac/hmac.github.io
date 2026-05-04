@@ -164,8 +164,8 @@
 </ul>
 <p>The network doesn’t define these assertions, it just propagates them. Clients must decide what assertions they will interpret and publish. This hopefully means the system can be extended to support any future workflow.</p>
 <h2 id="interop">Interop</h2>
-<p>The network can bridge between other ecosystems by modelling their level of trust. For example an actor (<code>pubkey-X</code>) can automatically publish facts about npm:
-- <code>pubkey-X</code> claims that <code>npmjs.com</code> has published <code>left-pad@1.2.3</code> as <code>sha256-ghi789</code> at time <code>1777895712058</code></p>
+<p>The network can bridge between other ecosystems by modelling their level of trust. For example an actor (<code>pubkey-X</code>) can automatically publish facts about npm:</p>
+<p><code>pubkey-X</code> claims that <code>npmjs.com</code> has published <code>left-pad@1.2.3</code> as <code>sha256-ghi789</code> at time <code>1777895712058</code></p>
 <p>This is just another assertion by a particular actor in the network, and the client can choose whether to trusted it based on their particular trust policy. If npmjs.com chose to participate directly in the network in the future, it would publish its own public key and then start publishing assertions under that key.</p>
 <h2 id="summary">Summary</h2>
 <p>That’s the general idea. The system is simple and generic enough to cover every use case I can think of. I see this as a sketch of a standard that multiple systems can build on and extend, so that they can all interoperate and contribute to a shared commons of software. I don’t want a single forge to win, even if it is decentralised. I want lots of different approaches and I want them to be able to build on top of one another in a mutually beneficial way.</p>
