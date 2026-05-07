@@ -1,6 +1,6 @@
 ---
 title: A federated network for open source
-publish: false
+publish: true
 ---
 
 # A federated network for open source
