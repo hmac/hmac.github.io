@@ -1,0 +1,67 @@
+---
+title: Virtual Memory
+publish: false
+---
+On modern operating systems, each process gets its own “virtual” 64-bit address space. 0x1234 in process A refers to a completely separate piece of memory from 0x1234 on process B. The actual physical location of the data could be anywhere in RAM. This has a number of benefits, primarily security and stability: it’s not possible for one process to access the memory of another process. 
+
+But while this approach has been used in every mainstream operating system for a long time, it’s actually really tricky to get it to run at an acceptable speed. Specific hardware features on the CPU must work closely with the operating system to get adequate performance, and some of these tricks opened the door for Meltdown, arguably the most famous and catastrophic security vulnerability in the past decade.
+
+So when a process loads or stores data at a particular virtual address, it needs to translate it to a physical address which tells the physical memory subsystem where to find it. This translation is done via a set of page tables. A process is given memory in contiguous chunks called pages, which are all the same size[^1] - typically 4KB, 2MB or 1GB. Each process has a page table stored in memory, set up by the OS when the process is created. A page table is conceptually a list of (virtual address, physical address) pairs, one for each allocated page. The actual structure in modern systems is a bit more complex, because it must strike a balance between lookup speed, memory usage and address space range.
+
+We'll look at the page table design on x86_64 Linux, because it's well-documented. Each process has 4 levels of page tables. The level 4 table contains entries which point to level 3 tables, the level 3 tables contains entries which point to level 2 tables, which in turn point to level 1 tables. Each level 1 table contains entries which point to a physical page. The 64-bit virtual address is split into parts:
+
+```
+|63          48|47        39|38        30|29     21|20     12|11     0|
+|--------------|------------|------------|---------|---------|--------|
+|    unused    |  level 4   |   level 3  | level 2 | level 1 | offset |
+```
+
+The high 16 bits are not used. The lower 48 bits are split into 5 parts. 4 of these are indices into each successive page table, and the lowest 12 bits hold the offset within the page to the specific byte that the address points to. Because the offset is 12 bits, we know that the page size is $2^{12}$ bytes or 4KiB. Each level index is 9 bits, so each table can contain a maximum of $2^9 = 512$ entries. The total addressable memory is $512^4 \times 2^{12} = 2^{48}$ bytes, or 256 TiB.
+
+The page tables themselves are stored in main memory, and the CPU keeps the _physical_ address of the level 4 table in a special register (called CR3), so it knows where to start. The translation process is then quite simple (and repetitive):
+- Use bits 39-47 of the virtual address to get the level 4 index and look up the entry at that index
+- The level 4 entry contains the address of a level 3 table. Use bits 30-38 of the virtual address to get the level 3 index and look up the entry at that index.
+- The level 3 entry contains the address of a level 2 table. Use bits 21-29 of the virtual address to get the level 2 index and look up the entry at that index.
+- The level 2 entry contains the address of a level 1 table. Use bits 12-20 of the virtual address to get the level 1 index and look up the entry at that index.
+- The level 1 entry contains the address of the page. Combine this address with the offset (bits 0-11 of the virtual address) to get the final physical address.
+
+Why are page tables structured as a 4-level tree like this? We could address the same amount of memory with a single table containing up to $2^{36}$ entries. The reason we don't do this is we want page tables to be _sparse_: we don't want to use table space for memory that isn't used. A typical process doesn't allocate memory all at one end of the address space. For example, the stack and the heap are often allocated very far from one another so that both can grow without overlapping. And shared libraries are often mapped to randomised addresses as a security measure (this is called Address Space Layout Randomisation or ASLR). With a single table, we would need to allocate a large amount of memory with empty entries to cover the whole address space. With a multi-level page table tree, we can map disparate parts of the address tree with a much smaller amount of memory, by just omitting entries (and thus tables) that aren't used.
+
+So now whenever the CPU encounters a virtual address it must carry out the 5-step process above in order to determine the physical address. This involves 4 memory accesses (1 for each level), and each is dependent on the previous one so they can't be parallelised. This memory might be cached in L1 or L2, but L1 latency is ~3 cycles, so that's 12 cycles for each address translation. This is still way too slow.
+
+To fix this, CPU designers deployed their favourite tool: another cache. This one is confusingly called the Translation Look-Aside Buffer or TLB. It caches the physical page addresses, computed from page table translation. The TLB is designed to be very fast, so it is very small - it might only contain 64 entries. Because the cost of a full page walk is so high, TLB cache misses are an important performance indicator.
+
+The TLB mitigates a lot of the performance penalty of multi-level page tables, but there's a problem: the TLB maps virtual addresses to physical addresses for a particular process, and this mapping is invalid if a new process is scheduled on the CPU core. For example if process A is running and reads some memory, the TLB might contain an entry for virtual address 0x123 which maps to physical address 0x789. If the OS then switches to run process B, and it also reads from 0x123 (in its own virtual address space), the TLB will resolve it to physical address 0x789, which is likely the wrong address and is also memory belonging to a different process - so we have a correctness and security hole.
+
+A simple fix is to empty the TLB whenever the CPU switches to a different process, but this comes with another performance problem! Whenever a process makes a system call (e.g. to read from a file or network socket, or allocate memory) it switches to the kernel. The kernel is just another process, so this empties the TLB. A typical system call handler in the kernel will read and write to a few pages of memory, which will require full page table walks. When the system call completes, the CPU will switch back to the calling process and the TLB will be emptied again. Now any memory access by the process (previously cached) will require more page table walks. So there's a double penalty on every system call.
+
+To fix this, operating systems did something quite clever: they mapped all kernel memory into the address space of all processes. The range between `0xffff800000000000` and `0xffffffffffffffff` in the address space of every process is a 128 TiB region that contains all the memory used by the kernel. Notably, inside this region is a full, direct mapping of the total physical memory of the machine, because the kernel needs to directly access all physical memory in order to manage it. With this in place, the switch between a userspace process and the kernel is treated specially: the OS instructs the CPU _not_ to flush the TLB. Because the kernel's memory is already mapped, any accesses it performs will resolve correctly. A few TLB entries may be evicted to make way for some kernel memory, but largely the TLB contents will remain intact when control returns to the calling process.
+
+Userspace processes can’t be allowed to access kernel memory, despite it being mapped into their address space, so the entries in each process page table that map kernel memory have a permission bit set[^2] that only permits access by the kernel. This permission bit is also cached by the TLB.
+
+This all seems to work well - the cost of context switches is kept low and kernel memory is protected. But it turns out to have a fatal flaw when combined with modern out-of-order CPUs, and that flaw was revealed in the form of Meltdown.
+
+In a nutshell, Meltdown is a security vulnerability published in 2018 which affected almost all Intel processors. It allowed a userspace process to read kernel memory, and because kernel memory includes a full mapping of physical RAM, it also allowed reading the memory of any other process. It’s up there with the most catastrophic vulnerabilities ever discovered[^3], as it broke basically every security control in the most widely used processor brand in the world.
+
+Here’s how it works. Our goal is to read a byte of kernel memory at some address `A`. So we issue an instruction to read that address, giving a value `X`. The CPU will check the permission bit for `A`’s page and reject the read because the current process is not the kernel. But modern CPUs have long instruction pipelines and will execute multiple instructions at once. Intel CPUs at the time would perform the permission check at a late stage of the pipeline, at which point the memory has been fetched from cache and later instructions will have been partially processed. The next instruction we issue is a read of address `B + X`, where `B` is some base address that we choose (eg the address of a 256 byte array we have previously initialised). This instruction will enter the CPU pipeline and be executed while the earlier instruction is still in progress. The CPU will have fetched the value `X` from `A` and will be able to fetch `B + X` as well. All this will happen before the permission check for the first instruction. 
+
+When the permission check finally happens, the CPU will reject the first instruction and throw away any subsequent instructions that could have depended on it - in our case, that’s the read of `B + X`. However it won’t evict the result of the read from the CPU cache.
+
+Now we use a timing attack to discover the value of `X`. We issue reads of `B + i` for values of `i` between 0 and 255. All of these will require a fetch from main memory except one: where `i = X`, because that value is already in the cache. By measuring the latency of these reads, we will learn the value of `X`.
+
+This description is slightly simplified (for example the reads of `B + i` need to be at least 64 bytes apart so each one fetches a new cache line) but the concept is the same.
+
+The software fix for Meltdown was, unsurprisingly, to stop mapping kernel memory into every process. Instead, each process is given _two_ page table trees: one for its own memory, and one for kernel memory. When switching to the kernel, the CR3 register (which points to the top of the page table tree) is updated to point to the kernel tree. We still have the problem of kernel mappings remaining in the TLB after switching back to userspace, and we still don't want to empty the TLB on each context switch because it's so expensive. Luckily, modern CPUs support tagging TLB entries with a namespace, via a feature called PCID[^4]. We can use this to distinguish between kernel TLB entries and user TLB entries. The basic idea is that we tell the CPU what namespace it is in, and it will only use TLB entries with that namespace. When we switch to the kernel we flip the current namespace from user to kernel, and the kernel TLB entries can then be used. Together, this whole approach is called Kernel Page Table Isolation (KPTI).
+
+Had PCID been around earlier, operating systems would never have needed to map kernel memory into each process and Meltdown would never have been possible. It's the drive for greater performance, at the hardware level via out-of-order execution and the software level via virtual memory tricks, that introduced this vulnerability.
+
+I intended to write more about the performance implications of virtual memory - for example how you can use large page sizes to reduce the number page translations - but the connection to Meltdown was too interesting to pass up. I hope you found it interesting too!
+
+[^1]: This is not quite true. The OS has a default page size but usually you can customise this, either for the whole system or per-process. In Linux I believe you can even mix page sizes within the same process.
+
+[^2]: Specifically the User/Supervisor bit. If 0, only the “supervisor” (ie the kernel) is permitted to access the page. If 1, both kernel and userspace can access it. Whether the running code is “supervisor” or “user” is determined by the current privilege level or _ring_. Kernel code runs in ring 0, user code runs in ring 3.
+
+[^3]: I'm not sure if there's an official list, but other contenders are Spectre, Heartbleed and Log4Shell.
+
+[^4]: Process Context ID. This is the name of the Intel version. AMD has a similar feature called Address Space ID (ASID).
+
