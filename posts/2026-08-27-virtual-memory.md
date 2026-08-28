@@ -2,28 +2,30 @@
 title: Virtual Memory
 publish: false
 ---
-On modern operating systems, each process gets its own “virtual” 64-bit address space. 0x1234 in process A refers to a completely separate piece of memory from 0x1234 on process B. The actual physical location of the data could be anywhere in RAM. This has a number of benefits, primarily security and stability: it’s not possible for one process to access the memory of another process. 
+
+# Virtual memory
+
+On modern operating systems, each process gets its own “virtual” 64-bit address space. `0x1234` in process A refers to a completely separate piece of memory from `0x1234` on process B. The actual physical location of the data could be anywhere in RAM. This has a number of benefits, primarily security and stability: it’s not possible for one process to access the memory of another process. 
 
 But while this approach has been used in every mainstream operating system for a long time, it’s actually really tricky to get it to run at an acceptable speed. Specific hardware features on the CPU must work closely with the operating system to get adequate performance, and some of these tricks opened the door for Meltdown, arguably the most famous and catastrophic security vulnerability in the past decade.
 
-So when a process loads or stores data at a particular virtual address, it needs to translate it to a physical address which tells the physical memory subsystem where to find it. This translation is done via a set of page tables. A process is given memory in contiguous chunks called pages, which are all the same size[^1] - typically 4KB, 2MB or 1GB. Each process has a page table stored in memory, set up by the OS when the process is created. A page table is conceptually a list of (virtual address, physical address) pairs, one for each allocated page. The actual structure in modern systems is a bit more complex, because it must strike a balance between lookup speed, memory usage and address space range.
+So when a process loads or stores data at a particular virtual address, it needs to translate it to a physical address which tells the physical memory subsystem where to find it. This translation (also called a _page walk_) is done via a set of page tables. A process is given memory in contiguous chunks called pages, which are all the same size[^1] - typically 4KiB, 2MiB or 1GiB. Each process has a page table stored in memory, set up by the OS when the process is created. A page table is conceptually a list of (virtual address, physical address) pairs, one for each allocated page. The actual structure in modern systems is a bit more complex, because it must strike a balance between lookup speed, memory usage and address space range.
 
-We'll look at the page table design on x86_64 Linux, because it's well-documented. Each process has 4 levels of page tables. The level 4 table contains entries which point to level 3 tables, the level 3 tables contains entries which point to level 2 tables, which in turn point to level 1 tables. Each level 1 table contains entries which point to a physical page. The 64-bit virtual address is split into parts:
+We'll look at the page table design on x86_64 Linux, because it's well-documented. Each process has 4 levels of page tables. The level 4 table contains entries which point to level 3 tables, the level 3 tables contains entries which point to level 2 tables, which in turn point to level 1 tables. Each level 1 table contains entries which point to a physical page. The whole structure is a tree.
+![Page table tree fanout](/images/page_table_tree_fanout.svg)
 
-```
-|63          48|47        39|38        30|29     21|20     12|11     0|
-|--------------|------------|------------|---------|---------|--------|
-|    unused    |  level 4   |   level 3  | level 2 | level 1 | offset |
-```
+A 64-bit virtual address contains the information we need to traverse the page table and find its corresponding physical address. The high 16 bits are not used (they are either all 1 or all 0). The lower 48 bits are split into 5 parts. 4 of these are indices into each successive page table, and the lowest 12 bits hold the offset within the page to the specific byte that the address points to.
 
-The high 16 bits are not used. The lower 48 bits are split into 5 parts. 4 of these are indices into each successive page table, and the lowest 12 bits hold the offset within the page to the specific byte that the address points to. Because the offset is 12 bits, we know that the page size is $2^{12}$ bytes or 4KiB. Each level index is 9 bits, so each table can contain a maximum of $2^9 = 512$ entries. The total addressable memory is $512^4 \times 2^{12} = 2^{48}$ bytes, or 256 TiB.
+![Page table walk with example address](/images/page_table_walk_with_example_address.svg)
+The page tables themselves are stored in main memory, and the CPU keeps the _physical_ address of the level 4 table in a special register (`CR3`), so it knows where to start. The translation process is then quite simple (and repetitive):
 
-The page tables themselves are stored in main memory, and the CPU keeps the _physical_ address of the level 4 table in a special register (called CR3), so it knows where to start. The translation process is then quite simple (and repetitive):
-- Use bits 39-47 of the virtual address to get the level 4 index and look up the entry at that index
-- The level 4 entry contains the address of a level 3 table. Use bits 30-38 of the virtual address to get the level 3 index and look up the entry at that index.
-- The level 3 entry contains the address of a level 2 table. Use bits 21-29 of the virtual address to get the level 2 index and look up the entry at that index.
-- The level 2 entry contains the address of a level 1 table. Use bits 12-20 of the virtual address to get the level 1 index and look up the entry at that index.
-- The level 1 entry contains the address of the page. Combine this address with the offset (bits 0-11 of the virtual address) to get the final physical address.
+- Use bits 39-47 of the virtual address to get the level 4 index and look up the entry at that index. Follow its pointer to a level 3 table.
+- Use bits 30-38 of the virtual address to get the level 3 index and look up the entry at that index. Follow its pointer to a level 2 table.
+- Use bits 21-29 of the virtual address to get the level 2 index and look up the entry at that index. Follow its pointer to a level 1 table.
+- Use bits 12-20 of the virtual address to get the level 1 index and look up the entry at that index.
+- The level 1 entry contains the address of the physical page. Combine this address with the offset (bits 0-11 of the virtual address) to get the final physical address.
+
+ Because the offset is 12 bits, we know that the page size is $2^{12}$ bytes or 4KiB. Each level index is 9 bits, so each table can contain a maximum of $2^9 = 512$ entries. The total addressable memory is $512^4 \times 2^{12} = 2^{48}$ bytes, or 256 TiB.
 
 Why are page tables structured as a 4-level tree like this? We could address the same amount of memory with a single table containing up to $2^{36}$ entries. The reason we don't do this is we want page tables to be _sparse_: we don't want to use table space for memory that isn't used. A typical process doesn't allocate memory all at one end of the address space. For example, the stack and the heap are often allocated very far from one another so that both can grow without overlapping. And shared libraries are often mapped to randomised addresses as a security measure (this is called Address Space Layout Randomisation or ASLR). With a single table, we would need to allocate a large amount of memory with empty entries to cover the whole address space. With a multi-level page table tree, we can map disparate parts of the address tree with a much smaller amount of memory, by just omitting entries (and thus tables) that aren't used.
 
@@ -31,7 +33,9 @@ So now whenever the CPU encounters a virtual address it must carry out the 5-ste
 
 To fix this, CPU designers deployed their favourite tool: another cache. This one is confusingly called the Translation Look-Aside Buffer or TLB. It caches the physical page addresses, computed from page table translation. The TLB is designed to be very fast, so it is very small - it might only contain 64 entries. Because the cost of a full page walk is so high, TLB cache misses are an important performance indicator.
 
-The TLB mitigates a lot of the performance penalty of multi-level page tables, but there's a problem: the TLB maps virtual addresses to physical addresses for a particular process, and this mapping is invalid if a new process is scheduled on the CPU core. For example if process A is running and reads some memory, the TLB might contain an entry for virtual address 0x123 which maps to physical address 0x789. If the OS then switches to run process B, and it also reads from 0x123 (in its own virtual address space), the TLB will resolve it to physical address 0x789, which is likely the wrong address and is also memory belonging to a different process - so we have a correctness and security hole.
+We can optimise for virtual memory performance in a few ways. Firstly, as with all things, it helps if our data is smaller and closer together in memory. Squeezing things into fewer pages reduces page walks and TLB pressure. If we have a large amount of data to process, using larger page sizes can help. Larger pages can hold the same amount of data with fewer page table entries and hence require fewer walks and put less pressure on the TLB. In fact with 2MiB pages, the page offset requires 21 bits and so only 3 levels of table are used. Therefore each page walk requires one less memory access. For 1GiB pages we only need 2 levels of table. The downside of large pages is that a lot of physical memory can get wasted if you aren't careful. If your program uses 1GiB pages but just needs a small amount of memory for something, the OS still has to reserve 1GiB of physical RAM for you, and that RAM has to be in a single contiguous block. This is why the default page size is much lower.
+
+The TLB mitigates a lot of the performance penalty of multi-level page tables, but there's a problem: the TLB maps virtual addresses to physical addresses for a particular process, and this mapping is invalid if a new process is scheduled on the CPU core. For example if process A is running and reads some memory, the TLB might contain an entry for virtual address `0x123` which maps to physical address `0x789`. If the OS then switches to run process B, and it also reads from `0x123` (in its own virtual address space), the TLB will resolve it to physical address `0x789`, which is likely the wrong address and is also memory belonging to a different process - so we have a correctness and security hole.
 
 A simple fix is to empty the TLB whenever the CPU switches to a different process, but this comes with another performance problem! Whenever a process makes a system call (e.g. to read from a file or network socket, or allocate memory) it switches to the kernel. The kernel is just another process, so this empties the TLB. A typical system call handler in the kernel will read and write to a few pages of memory, which will require full page table walks. When the system call completes, the CPU will switch back to the calling process and the TLB will be emptied again. Now any memory access by the process (previously cached) will require more page table walks. So there's a double penalty on every system call.
 
@@ -55,8 +59,6 @@ The software fix for Meltdown was, unsurprisingly, to stop mapping kernel memory
 
 Had PCID been around earlier, operating systems would never have needed to map kernel memory into each process and Meltdown would never have been possible. It's the drive for greater performance, at the hardware level via out-of-order execution and the software level via virtual memory tricks, that introduced this vulnerability.
 
-I intended to write more about the performance implications of virtual memory - for example how you can use large page sizes to reduce the number page translations - but the connection to Meltdown was too interesting to pass up. I hope you found it interesting too!
-
 [^1]: This is not quite true. The OS has a default page size but usually you can customise this, either for the whole system or per-process. In Linux I believe you can even mix page sizes within the same process.
 
 [^2]: Specifically the User/Supervisor bit. If 0, only the “supervisor” (ie the kernel) is permitted to access the page. If 1, both kernel and userspace can access it. Whether the running code is “supervisor” or “user” is determined by the current privilege level or _ring_. Kernel code runs in ring 0, user code runs in ring 3.
@@ -64,4 +66,3 @@ I intended to write more about the performance implications of virtual memory - 
 [^3]: I'm not sure if there's an official list, but other contenders are Spectre, Heartbleed and Log4Shell.
 
 [^4]: Process Context ID. This is the name of the Intel version. AMD has a similar feature called Address Space ID (ASID).
-
