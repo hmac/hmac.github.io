@@ -127,7 +127,7 @@
       </div>
       <div class="content">
         <h1 id="data-type-encodings">Data type encodings</h1>
-<p>In the last post I incorrectly said that the case eliminator for the List type was fold. Of course it isn’t, the type of <code>fold(r)</code> is</p>
+<p>In the <a href="https://hmac.dev/posts/2025-11-09-eliminating-case-expressions.html">last post</a> I incorrectly said that the case eliminator for the List type was fold. Of course it isn’t, the type of <code>fold(r)</code> is</p>
 <pre><code>b -&gt; (a -&gt; b -&gt; b) -&gt; List a -&gt; b</code></pre>
 <p>whereas the case eliminator for List is</p>
 <pre><code>b -&gt; (a -&gt; List a -&gt; b) -&gt; List a -&gt; b</code></pre>
