@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+  <head>
+  <title>Cloning Vecs | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+    body { 
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 1.7em;
+    }
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+    .content code:not(.sourceCode) {
+      background-color: #f7f5ef;
+      color: #444;
+    }
+    .content pre {
+      background-color: #f7f5ef;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+    .content pre code {
+      background-color: transparent;
+    }
+    div.sourceCode {
+      padding: 5px;
+    }
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+    h1, h2, h3 {
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-weight: normal;
+    }
+    ol#post-list {
+      list-style-type: none
+    }
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+    #header a {
+      text-decoration: none;
+    }
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">September  6, 2026</div>
+      </div>
+      <div class="content">
+        <h1 id="cloning-vecs">Cloning Vecs</h1>
+<p>The other day I hit a confusing case with <code>repeat_n</code> that took me a while to figure out.</p>
+<p>I needed to allocate 64 <code>Vec</code>s which would each hold a lot of data, so I used <code>Vec::with_capacity</code> to create them with a large capacity up front and avoid the cost of growing. Instead of writing that out 64 times I used <code>repeat_n</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">std::iter::</span>repeat_n(<span class="dt">Vec</span><span class="pp">::</span>with_capacity(<span class="dv">4096</span>)<span class="op">,</span> <span class="dv">64</span>)<span class="op">.</span>collect()</span></code></pre></div>
+<p>But this <a href="https://play.rust-lang.org/?version=stable&amp;mode=debug&amp;edition=2024&amp;gist=65f3a3c776e6cdfe6d24cc0643e39ff8">doesn’t actually</a> give 64 vectors each with a capacity of 4096, as you might expect.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> x<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">std::iter::</span>repeat_n(<span class="dt">Vec</span><span class="pp">::</span>with_capacity(<span class="dv">4096</span>)<span class="op">,</span> <span class="dv">64</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>	    <span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">dbg!</span>(x<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>a<span class="op">|</span> a<span class="op">.</span>capacity())<span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>())<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre><code>[src/main.rs:5:5] x.iter().map(|a| a.capacity()).collect::&lt;Vec&lt;_&gt;&gt;() = [
+    0,
+    0,
+    // ...
+    0,
+    0,
+    4096,
+]</code></pre>
+<p>Instead, you get one vector with a capacity of 4096 preceded by 63 vectors with a capacity of 0. This happens because <code>repeat_n</code> <a href="https://doc.rust-lang.org/src/core/iter/sources/repeat_n.rs.html#59">works</a> by cloning its argument n-1 times, then yielding the original argument as the last element.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>A<span class="op">:</span> <span class="bu">Clone</span><span class="op">&gt;</span> <span class="bu">Iterator</span> <span class="cf">for</span> RepeatN<span class="op">&lt;</span>A<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Item <span class="op">=</span> A<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> next(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>A<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> inner <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>inner<span class="op">.</span>as_mut()<span class="op">?;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> count <span class="op">=</span> inner<span class="op">.</span>count<span class="op">.</span>get()<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(decremented) <span class="op">=</span> <span class="pp">NonZero::</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;</span><span class="pp">::</span>new(count <span class="op">-</span> <span class="dv">1</span>) <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Order of these is important for optimization</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> tmp <span class="op">=</span> inner<span class="op">.</span>element<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            inner<span class="op">.</span>count <span class="op">=</span> decremented<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">Some</span>(tmp)<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">self</span><span class="op">.</span>take_element()<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>And when you clone a <code>Vec</code>, its capacity gets reset to equal its length. This happens via a slightly convoluted chain of function calls: <code>Vec&lt;T&gt;::clone</code> delegates to <a href="https://doc.rust-lang.org/src/alloc/slice.rs.html#396-398"><code>&lt;[T]&gt;::to_vec_in</code></a>, i.e. a slice method, whose implementation defines an inline trait <code>ConvertVec</code> and <code>impl ConvertVec for T</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> to_vec_in<span class="op">&lt;</span>A<span class="op">:</span> Allocator<span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> alloc<span class="op">:</span> A) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">,</span> A<span class="op">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        T<span class="op">:</span> <span class="bu">Clone</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="pp">T::</span>to_vec(<span class="kw">self</span><span class="op">,</span> alloc)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">trait</span> ConvertVec <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">fn</span> to_vec<span class="op">&lt;</span>A<span class="op">:</span> Allocator<span class="op">&gt;</span>(s<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">Self</span>]<span class="op">,</span> alloc<span class="op">:</span> A) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> A<span class="op">&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="kw">where</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                <span class="dt">Self</span><span class="op">:</span> <span class="bu">Sized</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">impl</span><span class="op">&lt;</span>T<span class="op">:</span> <span class="bu">Clone</span><span class="op">&gt;</span> ConvertVec <span class="cf">for</span> T <span class="op">{</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">#[</span>inline<span class="at">]</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            <span class="kw">default</span> <span class="kw">fn</span> to_vec<span class="op">&lt;</span>A<span class="op">:</span> Allocator<span class="op">&gt;</span>(s<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">Self</span>]<span class="op">,</span> alloc<span class="op">:</span> A) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> A<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                <span class="kw">struct</span> DropGuard<span class="op">&lt;</span><span class="ot">'a</span><span class="op">,</span> T<span class="op">,</span> A<span class="op">:</span> Allocator<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                    vec<span class="op">:</span> <span class="op">&amp;</span><span class="ot">'a</span> <span class="kw">mut</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">,</span> A<span class="op">&gt;,</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>                    num_init<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>                <span class="kw">impl</span><span class="op">&lt;</span><span class="ot">'a</span><span class="op">,</span> T<span class="op">,</span> A<span class="op">:</span> Allocator<span class="op">&gt;</span> <span class="bu">Drop</span> <span class="cf">for</span> DropGuard<span class="op">&lt;</span><span class="ot">'a</span><span class="op">,</span> T<span class="op">,</span> A<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>                    <span class="at">#[</span>inline<span class="at">]</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">fn</span> drop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                        <span class="co">// SAFETY:</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>                        <span class="co">// items were marked initialized in the loop below</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>                            <span class="kw">self</span><span class="op">.</span>vec<span class="op">.</span>set_len(<span class="kw">self</span><span class="op">.</span>num_init)<span class="op">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>                        <span class="op">}</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> vec <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity_in(s<span class="op">.</span>len()<span class="op">,</span> alloc)<span class="op">;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> guard <span class="op">=</span> DropGuard <span class="op">{</span> vec<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> vec<span class="op">,</span> num_init<span class="op">:</span> <span class="dv">0</span> <span class="op">};</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> slots <span class="op">=</span> guard<span class="op">.</span>vec<span class="op">.</span>spare_capacity_mut()<span class="op">;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>                <span class="co">// .take(slots.len()) is necessary for LLVM to remove bounds checks</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>                <span class="co">// and has better codegen than zip.</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> (i<span class="op">,</span> b) <span class="kw">in</span> s<span class="op">.</span>iter()<span class="op">.</span>enumerate()<span class="op">.</span>take(slots<span class="op">.</span>len()) <span class="op">{</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>                    guard<span class="op">.</span>num_init <span class="op">=</span> i<span class="op">;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>                    slots[i]<span class="op">.</span>write(b<span class="op">.</span>clone())<span class="op">;</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>                <span class="pp">core::mem::</span>forget(guard)<span class="op">;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>                <span class="co">// SAFETY:</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>                <span class="co">// the vec was allocated and initialized above to at least this length.</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>                <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>                    vec<span class="op">.</span>set_len(s<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>                vec</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>We can see that this code allocates a <code>Vec</code> with a capacity of <code>s.len()</code>, which explains the behaviour I was seeing. The rest of the function basically iterates over the slice, clones each element and stores it in the <code>Vec</code>. But it does it by directly writing to the uninitialised slots in the <code>Vec</code>, instead of the normal <code>Vec::push</code>. When all elements are written it then initialises the whole thing via <code>Vec::set_len</code>. I can only assume this is a performance optimisation that skips some of the overhead with <code>Vec::push</code>. If we look at the code for <code>Vec::push</code> (well, for <a href="https://doc.rust-lang.org/src/alloc/vec/mod.rs.html#1033"><code>push_mut</code></a> since <code>push</code> just delegates to it):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> push_mut(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> value<span class="op">:</span> T) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="kw">mut</span> T <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>	<span class="co">// Inform codegen that the length does not change across grow_one().</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>	<span class="kw">let</span> len <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>len<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>	<span class="co">// This will panic or abort if we would allocate &gt; isize::MAX bytes</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>	<span class="co">// or if the length increment would overflow for zero-sized types.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>	<span class="cf">if</span> len <span class="op">==</span> <span class="kw">self</span><span class="op">.</span>buf<span class="op">.</span>capacity() <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>		<span class="kw">self</span><span class="op">.</span>buf<span class="op">.</span>grow_one()<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>	<span class="op">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>	<span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>		<span class="kw">let</span> end <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>as_mut_ptr()<span class="op">.</span>add(len)<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>		<span class="pp">ptr::</span>write(end<span class="op">,</span> value)<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>		<span class="kw">self</span><span class="op">.</span>len <span class="op">=</span> len <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>		<span class="co">// SAFETY: We just wrote a value to the pointer that will live the lifetime of the reference.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>		<span class="op">&amp;</span><span class="kw">mut</span> <span class="op">*</span>end</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>	<span class="op">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>There are two bits of this that are technically unnecessary when we’re cloning a <code>Vec</code>. We check to see if we’ve hit capacity and need to grow, which won’t happen because we allocated the Vec to <code>have</code> enough capacity. We also increment <code>self.len</code>, which we will do repeatedly for each element we push.</p>
+<p>So instead, <code>to_vec_in</code> skips the length check and writes to <code>self.len</code> once, at the end. The <code>DropGuard</code> seems intended to ensure that <code>Vec::set_len</code> is called, even if we only copy some of the slice elements. I think this might be to protect against the case where cloning the element panics. In that scenario we would attempt to drop <code>vec</code> as we unwind the stack, but the <code>Drop</code> code for <code>Vec</code> assumes that its length is set correctly, so the <code>DropGuard</code> makes sure of that.</p>
+<p>Why is this implemented via an inline trait definition? I do not know.</p>
+<p>So anyway, if you want to initialise a bunch of <code>Vec</code>s with a specific capacity, don’t use <code>repeat_n</code>. I used this instead:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span><span class="op">..</span><span class="dv">64</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span>map(<span class="op">|</span>_<span class="op">|</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(<span class="dv">4096</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>()</span></code></pre></div>
+      </div>
+    </div>
+  </body>
+</html>
