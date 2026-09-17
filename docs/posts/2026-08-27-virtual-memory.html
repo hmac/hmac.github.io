@@ -196,9 +196,9 @@ _ &lt;- read ($B + X)       ; read the value at address B+X
 
 for i in 0 .. len(B) {   ; now we iterate through the array
  time { B[i] }           ; and measure the time it takes to read each chunk.
-}					               ; the chunk at offset X will be slightly faster
-					               ; to read because it was already cached.
-					               ; this tells us the value of X.</code></pre>
+}                        ; the chunk at offset X will be slightly faster
+                         ; to read because it was already cached.
+                         ; this tells us the value of X.</code></pre>
 <p>Here’s how it works. Our goal is to read a byte of kernel memory at some address <code>A</code>. So we issue an instruction to read that address, giving a value <code>X</code>. The CPU will check the permission bit for <code>A</code>’s page and reject the read because the current process is not the kernel. But modern CPUs have long instruction pipelines and will execute multiple instructions at once. Intel CPUs at the time would perform the permission check at a late stage of the pipeline, at which point the memory has been fetched from cache and later instructions will have been partially processed. The next instruction we issue is a read of address <code>B + X</code>, where <code>B</code> is some base address that we choose (eg the address of a 256 byte array we have previously initialised). This instruction will enter the CPU pipeline and be executed while the earlier instruction is still in progress. The CPU will have fetched the value <code>X</code> from <code>A</code> and will be able to fetch <code>B + X</code> as well. All this will happen before the permission check for the first instruction.</p>
 <p>When the permission check finally happens, the CPU will reject the first instruction and throw away any subsequent instructions that could have depended on it - in our case, that’s the read of <code>B + X</code>. However it won’t evict the result of the read from the CPU cache.</p>
 <p>Now we use a timing attack to discover the value of <code>X</code>. We issue reads of <code>B + i</code> for values of <code>i</code> between 0 and 255. All of these will require a fetch from main memory except one: where <code>i = X</code>, because that value is already in the cache. By measuring the latency of these reads, we will learn the value of <code>X</code>.</p>

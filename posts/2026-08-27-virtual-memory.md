@@ -62,9 +62,9 @@ _ <- read ($B + X)       ; read the value at address B+X
 
 for i in 0 .. len(B) {   ; now we iterate through the array
  time { B[i] }           ; and measure the time it takes to read each chunk.
-}					               ; the chunk at offset X will be slightly faster
-					               ; to read because it was already cached.
-					               ; this tells us the value of X.
+}                        ; the chunk at offset X will be slightly faster
+                         ; to read because it was already cached.
+                         ; this tells us the value of X.
 ```
 
 Here’s how it works. Our goal is to read a byte of kernel memory at some address `A`. So we issue an instruction to read that address, giving a value `X`. The CPU will check the permission bit for `A`’s page and reject the read because the current process is not the kernel. But modern CPUs have long instruction pipelines and will execute multiple instructions at once. Intel CPUs at the time would perform the permission check at a late stage of the pipeline, at which point the memory has been fetched from cache and later instructions will have been partially processed. The next instruction we issue is a read of address `B + X`, where `B` is some base address that we choose (eg the address of a 256 byte array we have previously initialised). This instruction will enter the CPU pipeline and be executed while the earlier instruction is still in progress. The CPU will have fetched the value `X` from `A` and will be able to fetch `B + X` as well. All this will happen before the permission check for the first instruction. 
