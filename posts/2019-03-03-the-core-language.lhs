@@ -290,5 +290,5 @@ extensive section on each of these topics, though the style is somewhat outdated
 
 [intro]: 2019-03-02-implementing-a-functional-language.html
 [book]: https://www.microsoft.com/en-us/research/publication/the-implementation-of-functional-programming-languages/
-[parse]: 2019-03-03-parsing-core.html
+[parse]: 2019-03-08-parsing-core.html
 [print]: 2019-03-03-printing-core.html

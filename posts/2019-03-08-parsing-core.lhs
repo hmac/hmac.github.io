@@ -14,7 +14,7 @@ This is an appendix to a series in implementing a functional language. The intro
 stack --resolver lts-12.2         \
       ghci --package megaparsec   \
            --package text         \
-      2019-03-03-parsing-core.lhs \
+      2019-03-08-parsing-core.lhs \
       2019-03-03-the-core-language.lhs
 ```
 
