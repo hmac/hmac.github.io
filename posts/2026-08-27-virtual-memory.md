@@ -13,11 +13,11 @@ So when a process loads or stores data at a particular virtual address, it needs
 
 We'll look at the page table design on x86_64 Linux, because it's well-documented. Each process has 4 levels of page tables. The level 1 tables contain entries which point to physical memory pages. Entries in the level 2 tables point to level 1 tables. Entries in the level 3 tables point to level 2 tables, and ditto for level 4. The whole structure is a tree.
 
-![Page table tree fanout](/images/page_table_tree_fanout.svg)
+![](/images/page_table_tree_fanout.svg)
 
 A 64-bit virtual address contains the information we need to traverse the page table and find its corresponding physical address. The high 16 bits are not used (they are either all 1 or all 0). The lower 48 bits are split into 5 parts. 4 of these are indices into each successive page table, and the lowest 12 bits hold the offset within the page to the specific byte that the address points to.
 
-![Page table walk with example address](/images/page_table_walk_with_example_address.svg)
+![](/images/page_table_walk_with_example_address.svg)
 
 The page tables themselves are stored in main memory, and the CPU keeps the _physical_ address of the level 4 table in a special register (`CR3`), so it knows where to start. The translation process is then quite simple (and repetitive):
 
