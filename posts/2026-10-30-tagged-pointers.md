@@ -1,5 +1,5 @@
 ---
-title: Virtual Memory
+title: Things you can do with pointers
 publish: false
 ---
 
