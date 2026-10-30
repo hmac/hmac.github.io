@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+  <head>
+  <title>Virtual Memory | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 2em;
+    }
+
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+
+    code:not(.sourceCode) {
+      background-color: #fffdf9;
+      color: #444;
+    }
+
+    .content pre {
+      background-color: #f7f5ef;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+
+    .content pre code {
+      background-color: transparent;
+      font-size: 0.8em;
+      background-color: #f7f5ef;
+    }
+
+    div.sourceCode {
+      padding: 5px;
+    }
+
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: normal;
+    }
+
+    ol#post-list {
+      list-style-type: none
+    }
+
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+
+    #header a {
+      text-decoration: none;
+    }
+
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">October 30, 2026</div>
+      </div>
+      <div class="content">
+        <h1 id="some-things-you-can-do-with-pointers">Some things you can do with pointers</h1>
+<p>Pointers are big! You can fit a lot in 8 bytes. Here are some cool things people have done with them.</p>
+<h2 id="store-numbers">Store numbers</h2>
+<p>It’s quite useful for a language to support arbitrary-precision numbers, so you can do maths without losing precision. Ruby, Python, JS, .NET and Haskell all have support for this, usually via a “Bignum” type which represents an arbitrarily-large, arbitrarily-precise number. This is often implemented via an array of digits.</p>
+<p>Ordinary integer and floating point types are a fixed size and fit in a single CPU register. Bignums can be much bigger, and typically do not. But even in code that needs Bignums, there are often scenarios where the actual numbers are small, and paying the performance cost of a Bignum for these is not worth it. It’s also tedious and error-prone (how?) to convert between ordinary numbers and Bignums. So some languages handle the conversion automatically and offer a single numeric type which will only be a Bignum if it needs to be.</p>
+<p>But then we have a problem: how can we tell what kind of number we are working with? Let’s say we have this function</p>
+<pre><code>def add(x, y):
+  x + y</code></pre>
+<p>In order for this function to run, it needs to know how to perform <code>+</code> on <code>x</code> and <code>y</code>. If both are normal integers, it can use a single CPU instruction (e.g. <code>ADD x1, x1, x2</code> on arm64). If either is a Bignum, it needs to call a bignum-specific addition function. In dynamic languages, usually we approach this by looking up the specific function to use in a hash table that each value points to. So for example if <code>x</code> were a Bignum it would be a pointer to some memory location, and at that location we would have a structure that looks something like this:</p>
+<pre><code>{ methods: HashTable&lt;Symbol, Function&gt;, value: Array&lt;...&gt; }</code></pre>
+<p>To find the function for <code>+</code> we search the hash table for an entry with key <code>+</code>.</p>
+<p>But if <code>x</code> is an ordinary 64-bit integer… it’s not a pointer, so there’s no hash table of methods we can go to. Even worse, we can’t even tell that it’s an integer, because pointers also just look like 64-bit integers! In a statically-typed language this isn’t a problem because the compiler knows the types of everything and can distinguish between these two cases when it compiles the code. But in a dynamically-typed language at runtime, we just can’t tell.</p>
+<p>The solution to this is to <em>tag</em> the pointer. Basically we overwrite some bits in the pointer to store our own data. In this case we only need to store a single bit. We set it to 0 if the pointer is an actual pointer to an object, and 1 if it’s actually a raw integer. Then the code checks this bit and knows whether to follow the pointer to look up the method, or use a basic addition instruction.</p>
+<p>But how is this OK? If we start flipping bits in pointers, aren’t they going to point to the wrong place? Well in general yes, but as we know, the 64-bit address space is huge (see <a href="../posts/2026-08-27-virtual-memory.html">Virtual Memory</a>), and the highest bits are often not used. In Linux, bits 48-63 of a pointer are always set to 0. In addition, most operating systems will always allocate memory with an alignment of 16 bytes, meaning that the start address of any allocated memory will always have the low 4 bits set to 0. So if we ensure that our objects are always stored on the heap at aligned addresses, setting the lowest bit of a pointer to 0 has no effect, because it is already 0. Some pointer tagging schemes use the high bits and some use the low bits, depending on their particular constraints (e.g. portability across architectures).</p>
+<p>Setting the low bit to 1 for a normal integer means that we have one fewer bit to store the actual number in, so our integers are limited to a max value of <span class="math inline">2<sup>63</sup> − 1</span>. But this is often sufficient, and if we need to store a bigger number, we just convert it to a Bignum.</p>
+<p>This general idea, of borrowing unused bits of a pointer to store metadata, is very common anywhere that performance is important. The other examples in this post are largely just applications of the same concept.</p>
+<h2 id="store-strings">Store strings</h2>
+<p>Like Bignums, strings can be arbitrarily large, but often aren’t. We can use the same trick here. 63 bits gives room for 7 bytes and 7 bits left over, which is enough for 7 ASCII characters. But we can do better: most strings use a smaller subset of the ASCII alphabet. If we restrict ourselves to just upper and lowercase letters and digits, that’s 61 variants. That will fit in 6 bits (<span class="math inline">2<sup>6</sup> = 64</span>) with 3 slots left for other common characters like space or dot. With 6 bits per character we can store 9 characters, with 12 bits left for the length (3 bits) and tag (1 bit). We can’t store 10 characters because that would leave only 4 bits for the tag and length, but a length of 10 needs 4 bits to represent (<span class="math inline">2<sup>3</sup> = 8</span>, <span class="math inline">2<sup>4</sup> = 16</span>).</p>
+<p>This is roughly the approach that Objective-C takes, although it is even more clever: it uses three different encodings depending on the size of the string and what characters it uses:
+- for strings up to length 7 , it stores them in the pointer as plain ASCII
+- for strings of length 8 or 9, it uses a custom alphabet of common characters to make a 6-bit encoding. If the string contains only characters in this alphabet, it can be stored inside its pointer.
+- for strings of length 10 or 11, it uses half the alphabet of the 8-9 case to make a 5-bit encoding.</p>
+<p>This is the alphabet<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<pre><code>eilotrm.apdnsIc ufkMShjTRxgC4013bDNvwyUL2O856P-B79AFKEWV_zGJ/HYX</code></pre>
+<p>There’s a <a href="https://mikeash.com/pyblog/friday-qa-2015-07-31-tagged-pointer-strings.html">fantastic blog post</a> by Mike Ash which describes this encoding in more detail. Swift, Objective-C’s successor, has an <a href="https://www.swift.org/blog/utf8-string/">even more complex</a> string representation, I think partly because it aims to provide efficient interop with Objective-C code.</p>
+<h2 id="german-strings">German Strings</h2>
+<p>If we allow ourselves more than 64 bits to store strings, we can do more interesting things. Analytics systems have to deal with a lot of strings, and want to keep them in CPU registers as much as possible to increase performance. They also often want to do prefix matching: for example to run the SQL query <code>SELECT * FROM companies WHERE name = 'Oxide Computer Company'</code>, we want to quickly rule out any rows starting with a letter that isn’t <code>O</code>.</p>
+<p>Many of these systems converged on a design called German Strings. The CedarDB team have <a href="https://cedardb.com/blog/german_strings/">two</a> <a href="https://cedardb.com/blog/strings_deep_dive/">excellent</a> blog posts on this, which you should just go read. I’ll just mention the highlights.</p>
+<p>German Strings are 16 bytes, so they must be passed in two CPU registers. As with Objective-C, small strings up to 12 characters are stored in the pointer, which is tagged. Strings longer than 12 characters are stored on the heap, but only 62 bits are used to point to this. 32 bits are used to hold the length of the string, and another 32 bits hold the first 4 characters of the string.</p>
+<pre><code>Short strings (&lt;= 12 chars)
+
+  32 bits |                       96 bits
+ ----------------------------------------------------------------
+| length  |                       content                        |
+ ----------------------------------------------------------------
+
+Long strings (&gt; 12 chars)
+
+  32 bits | 32 bits |2 bits|              62 bits
+ -----------------------------------------------------------------
+| length  | prefix  |class |              pointer                 |
+ -----------------------------------------------------------------</code></pre>
+<p>This layout has a few advantages. Firstly, the prefix allows us to do fast prefix filtering without fetching the full string from the heap. But cleverly, we can do this prefix filtering on <em>either</em> string representation. In both cases, bytes 5-8 hold the first 4 UTF-8 bytes of the string, so code doesn’t need to branch on the string type and can just plough on regardless.</p>
+<p>Another interesting point is that there’s no explicit tag to indicate what representation is being used. Instead, we can tell from the length. If it’s &lt;=12, we know it’s a short string.</p>
+<p>The <code>class</code> is used to distinguish between different types of heap-allocated string - immutable, mutable and transient. The blog post describes this in more detail. Transient is an interesting case that relates to the next thing we’ll talk about.</p>
+<h2 id="pointer-swizzling">Pointer Swizzling</h2>
+<p>We’ve seen how a pointer can be tagged to tell us if it is a real pointer, or just some data. Pointer swizzling is tagging a pointer to tell us if it is a real pointer, or a reference to something on disk. A particularly interesting application of this technique is in <a href="https://doi.org/10.1109/ICDE.2018.00026">LeanStore</a> (<a href="https://15721.courses.cs.cmu.edu/spring2020/papers/23-largethanmemory/leis-icde2018.pdf">PDF</a>), which is a database storage manager.</p>
+<p>A storage (or buffer) manager is a component in a database which is responsible for keeping track of where the data is stored on disk, and copying it to/from memory when needed. In traditional databases, data is divided into pages which are stored on disk and then copied into memory to be read. When the page is written to in memory, the buffer manager is then responsible for writing it back to disk. Pages are usually kept in memory as long as possible, and when the database is low on memory it will evict pages to disk. The rest of the database only refers to pages via logical IDs which the manager translates into memory addresses on-demand<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<p>The downside of this approach is that the buffer manager typically keeps track of pages in a big hash table, and every time a page is used, the manager must query the hash table to get its address. When the page is already in memory, this is pure overhead, and this overhead can be quite significant once the rest of the system is optimised.</p>
+<p>In LeanStore, pages are referred to directly by a pointer to their memory, so there’s no hash table lookup required. If the page data isn’t actually in memory yet, the pointer instead holds the logical page ID instead. And you guessed it - the pointer is tagged to indicate which is the case. Pointers to in-memory pages are <em>swizzled</em> and pointers to on-disk pages are <em>unswizzled</em><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>This is basically the main idea, but there’s another thing that LeanStore does that I think is particularly cool. When memory is scarce, a buffer manager has to decide what pages to evict, and the accounting required for this can be an additional overhead. For example with a Least Recently Used policy, each page must store a counter or timestamp indicating when it was last used, and this must be updated on every read.</p>
+<p>LeanStore doesn’t store any extra metadata on pages for this. Instead, it periodically picks a random in-memory page and unswizzles its pointer, but doesn’t actually evict the page from memory. The page is placed into a queue of “cooling” pages, and when it reaches the front of the queue its memory will be evicted. While waiting in the queue, if the database reads that page then it will re-swizzle the pointer and remove it from the queue.</p>
+<p>The queue is scaled to hold around 10% of all pages at any time. If a frequently accessed page is added to the queue, it will quickly be removed by a subsequent access. If an infrequently accessed page is added, it is likely to remain until it reaches the front of the queue, and will be evicted. As the paper says:</p>
+<blockquote>
+<p>To summarize, by speculatively unswizzling random pages, we identify infrequently-accessed pages without having to track each access.</p>
+</blockquote>
+<p>This feels like a tactic that we could apply to other problems, too. If you want to classify a pool of things without keeping metadata on each one, randomly move some percentage of them to one side and let their behaviour self-correct it. The analogies I can think of are garbage collection and shutting down unused resources, but I’m sure there are others.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>If you’ve studied any cryptography, you might recognise the first few characters as the <a href="https://en.wikipedia.org/wiki/Etaoin_shrdlu">most common characters</a> in the English language.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>In some ways this general idea is reminiscent of how an OS manages its own page cache of data read from disk, and how it manages memory that has been swapped to disk when the system is low on physical RAM.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>No idea.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+      </div>
+    </div>
+  </body>
+</html>
