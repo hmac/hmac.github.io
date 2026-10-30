@@ -1,0 +1,82 @@
+{-# LANGUAGE OverloadedStrings  #-}
+-- vim: ft=haskell
+
+import Hakyll
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
+import Data.Text (Text)
+import qualified Data.Text as T
+import Text.Pandoc
+import System.Process ( readProcess )
+import System.IO.Unsafe ( unsafePerformIO )
+import Text.Pandoc.Walk ( walk )
+import Control.Monad (filterM)
+
+main =
+  hakyllWith config $ do
+    match "templates/*" $ compile templateCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
+    match "CNAME" $ do
+        route   idRoute
+        compile copyFileCompiler
+    match ("lc/**" .||. "eval-game/**") $ do
+        route   idRoute
+        compile copyFileCompiler
+    match "images/*" $ do
+        route   idRoute
+        compile copyFileCompiler
+
+    match "posts/*" $ do
+      route $ setExtension ".html"
+      compile $ pandocGraphvizCompiler
+        >>= loadAndApplyTemplate "templates/post.html" postContext
+        >>= relativizeUrls
+    match "index.html" $ do
+        route idRoute
+        compile $ do
+          posts <- loadAll "posts/*" >>= filterM published >>= recentFirst
+          let indexContext =
+                  listField "posts" postContext (pure posts) <>
+                  postContext
+
+          getResourceBody
+              >>= applyAsTemplate indexContext
+              >>= loadAndApplyTemplate "templates/index.html" indexContext
+              >>= relativizeUrls
+
+config :: Configuration
+config = defaultConfiguration { destinationDirectory = "docs" }
+
+published :: MonadMetadata m => Item String -> m Bool
+published item = (== Just "true") . lookupString "publish" <$> getMetadata (itemIdentifier item)
+
+postContext :: Context String
+postContext = dateField "date" "%B %e, %Y" <> defaultContext
+
+pandocGraphvizCompiler :: Compiler (Item String)
+pandocGraphvizCompiler = pandocCompilerWithTransform
+    defaultHakyllReaderOptions
+    defaultHakyllWriterOptions
+    graphViz
+
+graphViz :: Pandoc -> Pandoc
+graphViz = walk codeBlock
+
+codeBlock :: Block -> Block
+codeBlock cb@(CodeBlock (id, classes, namevals) contents)
+  | "tree" `elem` classes  = RawBlock (Format "html") $ renderTree contents
+  | "graph" `elem` classes = RawBlock (Format "html") $ renderGraph contents
+  | otherwise              = cb
+codeBlock x = x
+
+renderTree :: Text -> Text
+renderTree contents = T.pack $ unsafePerformIO $
+  readProcess "dot" ["-Nfontname=courier"] (T.unpack contents)
+    >>= readProcess "gvpr" ["-c", "-ftree.gv"]
+    >>= readProcess "neato" ["-n", "-Tsvg"]
+
+renderGraph :: Text -> Text
+renderGraph contents = T.pack $ unsafePerformIO $
+  readProcess "dot" ["-Nfontname=courier", "-Tsvg"] (T.unpack contents)
