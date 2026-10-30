@@ -16,7 +16,7 @@ But then we have a problem: how can we tell what kind of number we are working w
 
 ```
 def add(x, y):
-  x + y
+  return x + y
 ```
 
 In order for this function to run, it needs to know how to perform `+` on `x` and `y`. If both are normal integers, it can use a single CPU instruction (e.g. `ADD x1, x1, x2` on arm64). If either is a Bignum, it needs to call a bignum-specific addition function. In dynamic languages, usually we approach this by looking up the specific function to use in a hash table that each value points to. So for example if `x` were a Bignum it would be a pointer to some memory location, and at that location we would have a structure that looks something like this:
