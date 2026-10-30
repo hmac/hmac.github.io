@@ -183,14 +183,14 @@
 <p>German Strings are 16 bytes, so they must be passed in two CPU registers. As with Objective-C, small strings up to 12 characters are stored in the pointer, which is tagged. Strings longer than 12 characters are stored on the heap, but only 62 bits are used to point to this. 32 bits are used to hold the length of the string, and another 32 bits hold the first 4 characters of the string.</p>
 <pre><code>Short strings (&lt;= 12 chars)
 
-  32 bits |                       96 bits
+| 32 bits |                       96 bits                        |
  ----------------------------------------------------------------
 | length  |                       content                        |
  ----------------------------------------------------------------
 
 Long strings (&gt; 12 chars)
 
-  32 bits | 32 bits |2 bits|              62 bits
+| 32 bits | 32 bits |2 bits|              62 bits                 |
  -----------------------------------------------------------------
 | length  | prefix  |class |              pointer                 |
  -----------------------------------------------------------------</code></pre>

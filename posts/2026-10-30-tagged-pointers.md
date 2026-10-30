@@ -64,14 +64,14 @@ German Strings are 16 bytes, so they must be passed in two CPU registers. As wit
 ```
 Short strings (<= 12 chars)
 
-  32 bits |                       96 bits
+| 32 bits |                       96 bits                        |
  ----------------------------------------------------------------
 | length  |                       content                        |
  ----------------------------------------------------------------
 
 Long strings (> 12 chars)
 
-  32 bits | 32 bits |2 bits|              62 bits
+| 32 bits | 32 bits |2 bits|              62 bits                 |
  -----------------------------------------------------------------
 | length  | prefix  |class |              pointer                 |
  -----------------------------------------------------------------
