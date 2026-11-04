@@ -25,7 +25,7 @@ It's a 64-bit value that can be passed in a register, but only the top 32 bits h
 
 There are two main benefits of this optimisation:
 
-- Small numbers use less memory. `Smi` is not allocated on the heap, it only exists in its own pointer. So storing an array of `Smi` numbers costs just 8 bytes per number. If these were normal heap numbers instead, the array would still hold 8 bytes per number but each number would point to another 16-byte object elsewhere in the heap that we would also need to allocate. So total memory per number would be 24 bytes.
+- Small numbers use less memory. `Smi` is not allocated on the heap, it only exists in its own pointer. So storing an array of `Smi` numbers costs just 8 bytes per number. If these were normal heap numbers instead, the array would still hold 8 bytes per number but each number would point to another 16-byte object elsewhere in the heap that we would also need to allocate. So total memory per number would be 24 bytes[^7].
 - Small numbers are faster to work with. Adding two `Smi` numbers is simple: a single 64-bit `ADD` instruction on the two values gives a 64-bit value with the result in the top 32 bits. If the result is larger than 32 bits, the CPU will set an overflow flag and the code can convert the numbers to normal heap objects and try again.
 
 But how is this OK? If we start flipping bits in pointers, aren't they going to point to the wrong place? Well in general yes, but as we know, the 64-bit address space is huge (see [Virtual Memory](/posts/2026-08-27-virtual-memory.html)), and the highest bits (e.g. bits 48-63 in Linux) are often not used. The OS allocates memory in pages no smaller than 4KB, though memory allocators will typically further divide this up. `malloc` from GNU libc is said to always[^4] return pointers with a minimum alignment of 16 bytes, meaning that the low 4 bits of the pointer are set to 0. So if we ensure that our objects are always stored on the heap at aligned addresses, we can use those 4 bits to store our tag, and converting back to a valid pointer is just a matter of setting those bits back to 0. Some pointer tagging schemes use the high bits and some use the low bits, depending on their particular constraints (e.g. portability across architectures).
@@ -34,7 +34,7 @@ This general idea, of borrowing unused bits of a pointer to store metadata, is v
 
 ## Store strings
 
-Like Bignums, strings can be arbitrarily large, but often aren't. We can use the same trick here. 63 bits gives room for 7 bytes and 7 bits left over, which is enough for 7 ASCII characters. But we can do better: most strings use a smaller subset of the ASCII alphabet. If we restrict ourselves to just upper and lowercase letters and digits, that's 62 variants. That will fit in 6 bits ($2^6 = 64$) with 2 slots left for other common characters like space or dot. With 6 bits per character we can store 9 characters, with 10 bits left for the length (4 bits) and tag (1 bit). We can't store 10 characters because that would leave only 4 bits for the tag and length, but a length of 10 needs 4 bits to represent ($2^3 = 8$, $2^4 = 16$).
+Like numbers, strings can be arbitrarily large, but often aren't. We can use the same trick here. 63 bits gives room for 7 bytes and 7 bits left over, which is enough for 7 ASCII characters. But we can do better: most strings use a smaller subset of the ASCII alphabet. If we restrict ourselves to just upper and lowercase letters and digits, that's 62 variants. That will fit in 6 bits ($2^6 = 64$) with 2 slots left for other common characters like space or dot. With 6 bits per character we can store 9 characters, with 10 bits left for the length (4 bits) and tag (1 bit). We can't store 10 characters because that would leave only 4 bits for the tag and length, but a length of 10 needs 4 bits to represent ($2^3 = 8$, $2^4 = 16$).
 
 This is roughly the approach that Objective-C takes, although it is even more clever: it uses three different encodings depending on the size of the string and what characters it uses:
 - for strings up to length 7 , it stores them in the pointer as plain ASCII
@@ -76,7 +76,7 @@ This layout has a few advantages. Firstly, the prefix allows us to do fast prefi
 
 Another interesting point is that there's no explicit tag to indicate what representation is being used. Instead, we can tell from the length. If it's <=12, we know it's a short string.
 
-The `class` is used to distinguish between different types of heap-allocated string - immutable, mutable and transient. The blog post describes this in more detail. Transient is an interesting case that relates to the next thing we'll talk about. 
+The `class` is used to distinguish between different types of heap-allocated string - temporary, persistent and transient. The blog post describes this in more detail. Transient is an interesting case that relates to the next thing we'll talk about. 
 
 ## Pointer Swizzling
 
@@ -109,3 +109,5 @@ This feels like a tactic that we could apply to other problems, too. If you want
 [^5]: Of course there's a limit even here. We only have so much memory available, and can't truly store the exact value of $\pi$. But we can usually store enough of it that the answer to our calculation is correct up to the precision we need.
 
 [^6]: This is simplified slightly. The layout is different on 32-bit systems and also different if _pointer compression_ is enabled (a v8 feature that sounds very interesting but I haven't researched). The second-lowest bit is also a tag which is used to distinguish between different types of pointers, I think for the garbage collector, but that isn't relevant for our discussion.
+
+[^7]: Again simplified, because V8 has further optimisations to store arrays compactly, but it's a reasonable approximation to illustrate why `Smi` is good for saving memory.
