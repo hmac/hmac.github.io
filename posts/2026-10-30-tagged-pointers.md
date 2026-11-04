@@ -8,32 +8,27 @@ publish: false
 Pointers are big! You can fit a lot in 8 bytes. Here are some cool things people have done with them.
 
 ## Store numbers
-It's quite useful for a language to support arbitrary-precision numbers, so you can do maths without losing precision. Ruby, Python, JS, .NET and Haskell all have support for this, usually via a "Bignum" type which represents an arbitrarily-large, arbitrarily-precise number. This is often implemented via an array of digits.
+Numbers can be stored in many different ways, because there are many kinds of numbers. Positive integers under $2^{64}$ can be stored in binary form in a single 64-bit register. The same applies to negative integers between $-2^{63}$ and $2^{63} - 1$. Non-integers like $1.23$ can be stored as floating point numbers, though with limited precision. If we want higher precision floats or bigger integers, we can use larger blocks of memory: double-precision floats or 128-bit ints.
 
-Ordinary integer and floating point types are a fixed size and fit in a single CPU register. Bignums can be much bigger, and typically do not. But even in code that needs Bignums, there are often scenarios where the actual numbers are small, and paying the performance cost of a Bignum for these is not worth it. It's also tedious and error-prone (how?) to convert between ordinary numbers and Bignums. So some languages handle the conversion automatically and offer a single numeric type which will only be a Bignum if it needs to be.
+But all of these options have limits: there's no way to store an arbitrarily-large or precise number. Obviously in some domains it's necessary to do calculations on big numbers and get the right answer, and for that we can use "bignums". I think of these as basically arrays of digits that can be as long as they need to be. Operations over bignums are slower than over simple numeric types but we can represent more numbers faithfully[^5].
 
-But then we have a problem: how can we tell what kind of number we are working with? Let's say we have this function
-
-```
-def add(x, y):
-  return x + y
-```
-
-In order for this function to run, it needs to know how to perform `+` on `x` and `y`. If both are normal integers, it can use a single CPU instruction (e.g. `ADD x1, x1, x2` on arm64). If either is a Bignum, it needs to call a bignum-specific addition function. In dynamic languages, usually we approach this by looking up the specific function to use in a hash table that each value points to. So for example if `x` were a Bignum it would be a pointer to some memory location, and at that location we would have a structure that looks something like this:
+There are also scenarios where we're dealing with a large quantity of small numbers and even allocating 64 bits for each number is too wasteful. Consider a 1024x1024 matrix of positive integers under 16. At 64 bits per integer this is 8MB, but at 4 bits per integer it's only 512KB. The V8 Javascript engine applies this sort of optimisation by defining a type `Smi` (small integer) which holds any integer that fits in 32 bits. An `Smi` looks like this:
 
 ```
-{ methods: HashTable<Symbol, Function>, value: Array<...> }
+            |----- 32 bits -----|----- 32 bits -----|
+Pointer:    |________________address_______________1|
+   Smi:     |____int32_value____|00................0|
+
 ```
 
-To find the function for `+` we search the hash table for an entry with key `+`.
+It's a 64-bit value that can be passed in a register, but only the top 32 bits hold the actual number. The bottom bit is a _tag_. The lowest bit is always set to 0, and this means that this number is an `Smi`[^6]. When v8 executes an operation on a number, it checks whether it is an `Smi` by testing the low bit, which is very cheap to do, and then uses `Smi`-specific code for that operation. If an operation produces a result that doesn't fit in an `Smi` then v8 falls back to allocating a number object on the heap.
 
-But if `x` is an ordinary 64-bit integer... it's not a pointer, so there's no hash table of methods we can go to. Even worse, we can't even tell that it's an integer, because pointers also just look like 64-bit integers! In a statically-typed language this isn't a problem because the compiler knows the types of everything and can distinguish between these two cases when it compiles the code. But in a dynamically-typed language at runtime, we just can't tell.
+There are two main benefits of this optimisation:
 
-The solution to this is to _tag_ the pointer. Basically we overwrite some bits in the pointer to store our own data. In this case we only need to store a single bit. We set it to 0 if the pointer is an actual pointer to an object, and 1 if it's actually a raw integer. Then the code checks this bit and knows whether to follow the pointer to look up the method, or use a basic addition instruction.
+- Small numbers use less memory. `Smi` is not allocated on the heap, it only exists in its own pointer. So storing an array of `Smi` numbers costs just 8 bytes per number. If these were normal heap numbers instead, the array would still hold 8 bytes per number but each number would point to another 16-byte object elsewhere in the heap that we would also need to allocate. So total memory per number would be 24 bytes.
+- Small numbers are faster to work with. Adding two `Smi` numbers is simple: a single 64-bit `ADD` instruction on the two values gives a 64-bit value with the result in the top 32 bits. If the result is larger than 32 bits, the CPU will set an overflow flag and the code can convert the numbers to normal heap objects and try again.
 
-But how is this OK? If we start flipping bits in pointers, aren't they going to point to the wrong place? Well in general yes, but as we know, the 64-bit address space is huge (see [Virtual Memory](/posts/2026-08-27-virtual-memory.html)), and the highest bits are often not used. In Linux, bits 48-63 of a pointer are always set to 0. In addition, most operating systems will always allocate memory with an alignment of 16 bytes, meaning that the start address of any allocated memory will always have the low 4 bits set to 0. So if we ensure that our objects are always stored on the heap at aligned addresses, setting the lowest bit of a pointer to 0 has no effect, because it is already 0. Some pointer tagging schemes use the high bits and some use the low bits, depending on their particular constraints (e.g. portability across architectures).
-
-Setting the low bit to 1 for a normal integer means that we have one fewer bit to store the actual number in, so our integers are limited to a max value of $2^{63} - 1$. But this is often sufficient, and if we need to store a bigger number, we just convert it to a Bignum.
+But how is this OK? If we start flipping bits in pointers, aren't they going to point to the wrong place? Well in general yes, but as we know, the 64-bit address space is huge (see [Virtual Memory](/posts/2026-08-27-virtual-memory.html)), and the highest bits (e.g. bits 48-63 in Linux) are often not used. The OS allocates memory in pages no smaller than 4KB, though memory allocators will typically further divide this up. `malloc` from GNU libc is said to always[^4] return pointers with a minimum alignment of 16 bytes, meaning that the low 4 bits of the pointer are set to 0. So if we ensure that our objects are always stored on the heap at aligned addresses, setting the lowest bit of a pointer to 0 has no effect, because it is already 0. Some pointer tagging schemes use the high bits and some use the low bits, depending on their particular constraints (e.g. portability across architectures).
 
 This general idea, of borrowing unused bits of a pointer to store metadata, is very common anywhere that performance is important. The other examples in this post are largely just applications of the same concept.
 
@@ -85,13 +80,13 @@ The `class` is used to distinguish between different types of heap-allocated str
 
 ## Pointer Swizzling
 
-We've seen how a pointer can be tagged to tell us if it is a real pointer, or just some data. Pointer swizzling is tagging a pointer to tell us if it is a real pointer, or a reference to something on disk. A particularly interesting application of this technique is in [LeanStore](https://doi.org/10.1109/ICDE.2018.00026) ([PDF](https://15721.courses.cs.cmu.edu/spring2020/papers/23-largethanmemory/leis-icde2018.pdf)), which is a database storage manager.
+We've seen how a pointer can be tagged to tell us if it is a real pointer, or just some data. Pointer swizzling is tagging a pointer to tell us if it is a real pointer, or a reference to something on disk. A particularly interesting application of this technique is in [LeanStore](https://doi.org/10.1109/ICDE.2018.00026) ([PDF](https://15721.courses.cs.cmu.edu/spring2020/papers/23-largethanmemory/leis-icde2018.pdf)), a database buffer manager.
 
-A storage (or buffer) manager is a component in a database which is responsible for keeping track of where the data is stored on disk, and copying it to/from memory when needed. In traditional databases, data is divided into pages which are stored on disk and then copied into memory to be read. When the page is written to in memory, the buffer manager is then responsible for writing it back to disk. Pages are usually kept in memory as long as possible, and when the database is low on memory it will evict pages to disk. The rest of the database only refers to pages via logical IDs which the manager translates into memory addresses on-demand[^2].
+A buffer manager is a component in a database which is responsible for keeping track of where the data is stored on disk, and copying it to/from memory when needed. Data in traditional databases is divided into pages which are stored on disk and then copied into memory to be read. When the page is written to in memory, the buffer manager is then responsible for writing it back to disk. Pages are kept in memory as long as possible, and when the database is low on memory it will evict pages to disk. The rest of the database only refers to pages via logical IDs which the manager translates into memory addresses on-demand[^2].
 
-The downside of this approach is that the buffer manager typically keeps track of pages in a big hash table, and every time a page is used, the manager must query the hash table to get its address. When the page is already in memory, this is pure overhead, and this overhead can be quite significant once the rest of the system is optimised.
+The downside of this approach is that the buffer manager typically keeps track of pages in a big hash table, and every time a page is needed its address must be fetched from the hash table. When the page is already in memory this is pure overhead, and this overhead can be quite significant once the rest of the system is optimised.
 
-In LeanStore, pages are referred to directly by a pointer to their memory, so there's no hash table lookup required. If the page data isn't actually in memory yet, the pointer instead holds the logical page ID instead. And you guessed it - the pointer is tagged to indicate which is the case. Pointers to in-memory pages are _swizzled_ and pointers to on-disk pages are _unswizzled_[^3].
+In LeanStore, pages are referred to directly by a pointer to their memory, so there's no hash table lookup required. If the page data isn't actually in memory yet, the pointer instead holds the logical page ID instead. And the pointer is tagged to indicate which is the case. Pointers to in-memory pages are _swizzled_ and pointers to on-disk pages are _unswizzled_[^3]. With just this optimisation, LeanStore gets a significant speed boost: 1.3-1.6x higher transaction throughput than without it.
 
 This is basically the main idea, but there's another thing that LeanStore does that I think is particularly cool. When memory is scarce, a buffer manager has to decide what pages to evict, and the accounting required for this can be an additional overhead. For example with a Least Recently Used policy, each page must store a counter or timestamp indicating when it was last used, and this must be updated on every read.
 
@@ -108,3 +103,9 @@ This feels like a tactic that we could apply to other problems, too. If you want
 [^2]: In some ways this general idea is reminiscent of how an OS manages its own page cache of data read from disk, and how it manages memory that has been swapped to disk when the system is low on physical RAM.
 
 [^3]: No idea.
+
+[^4]: Documented [here](https://sourceware.org/glibc/wiki/MallocInternals) with the caveat "for entertainment purposes only, and are not guaranteed to be correct"
+
+[^5]: Of course there's a limit even here. We only have so much memory available, and can't truly store the exact value of $\pi$. But we can usually store enough of it that the answer to our calculation is correct up to the precision we need.
+
+[^6]: This is simplified slightly. The layout is different on 32-bit systems and also different if _pointer compression_ is enabled (a v8 feature that sounds very interesting but I haven't researched). The second-lowest bit is also a tag which is used to distinguish between different types of pointers, I think for the garbage collector, but that isn't relevant for our discussion.
