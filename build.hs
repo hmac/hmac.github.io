@@ -31,6 +31,7 @@ main =
     match "posts/*" $ do
       route $ setExtension ".html"
       compile $ pandocGraphvizCompiler
+        >>= saveSnapshot "content"
         >>= loadAndApplyTemplate "templates/post.html" postContext
         >>= relativizeUrls
     match "index.html" $ do
@@ -45,6 +46,12 @@ main =
               >>= applyAsTemplate indexContext
               >>= loadAndApplyTemplate "templates/index.html" indexContext
               >>= relativizeUrls
+    create ["atom.xml"] $ do
+      route idRoute
+      compile $ feedPosts >>= renderAtom feedConfig feedContext
+    create ["rss.xml"] $ do
+      route idRoute
+      compile $ feedPosts >>= renderRss feedConfig feedContext
 
 config :: Configuration
 config = defaultConfiguration { destinationDirectory = "docs" }
@@ -54,6 +61,23 @@ published item = (== Just "true") . lookupString "publish" <$> getMetadata (item
 
 postContext :: Context String
 postContext = dateField "date" "%B %e, %Y" <> defaultContext
+
+feedPosts:: Compiler [Item String]
+feedPosts = loadAllSnapshots "posts/*" "content"
+    >>= filterM published
+    >>= recentFirst
+
+feedContext :: Context String
+feedContext = bodyField "description" <> postContext
+
+feedConfig :: FeedConfiguration
+feedConfig = FeedConfiguration
+  { feedTitle = "hmac.dev"
+  , feedDescription = "things I've written"
+  , feedAuthorName = "Harry Maclean"
+  , feedAuthorEmail = "harry@hmac.dev"
+  , feedRoot = "https://hmac.dev"
+  }
 
 pandocGraphvizCompiler :: Compiler (Item String)
 pandocGraphvizCompiler = pandocCompilerWithTransform

@@ -1,45 +1,29 @@
 <div>
   <h2>Posts</h2>
   $for(posts)$
-    <a href="$url$"><h3 class="post-link">$title$</h3></a>
+  <a href="$url$">
+    <h3 class="post-link">$title$</h3>
+  </a>
   $endfor$
-  <br />
+
+  <p>
+    <a href="/atom.xml">atom</a> | <a href="/rss.xml">rss</a>
+  </p>
+
   <h2>Projects</h2>
 
   <div class="project">
     <h3><a href="https://github.com/hmac/kite">Kite</a></h3>
     <p>
-    A small functional programming language.
+      A small functional programming language.
     </p>
   </div>
 
   <div class="project">
     <h3><a href="https://hmac.dev/lc">Type system playground</a></h3>
     <p>
-    A live environment to try out several different type systems, including
-    STLC, System F, System T, Hindley-Milner and λP.
+      A live environment to try out several different type systems, including
+      STLC, System F, System T, Hindley-Milner and λP.
     </p>
   </div>
-
-  <div class="project">
-    <h3><a href="https://hmac.dev/dosage">Medicine dosage calculator</a></h3>
-    <p>
-    An old experiment in making small utilities for doctors.
-    </p>
-  </div>
-
-  <!-- <ul> -->
-  <!--   <li> -->
-  <!--     <a href="https://github.com/hmac/kite">Kite</a>, a small functional programming language. -->
-  <!--   </li> -->
-  <!--   <li> -->
-  <!--       <a href="https://hmac.dev/lc"</a>Type system playground</a>. -->
-  <!--       A live environment to try out several different type systems, including -->
-  <!--       STLC, System F, System T, Hindley-Milner and λP. -->
-  <!--   </li> -->
-  <!--   <li> -->
-  <!--       <a href="https://hmac.dev/dosage"</a>Medicine dosage calculator</a>. -->
-  <!--       An old experiment in making small utilities for doctors. -->
-  <!--     </li> -->
-  <!-- </ul> -->
 </div>
