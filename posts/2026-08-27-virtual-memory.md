@@ -1,6 +1,6 @@
 ---
 title: Virtual Memory
-publish: false
+publish: true
 ---
 
 # Virtual memory

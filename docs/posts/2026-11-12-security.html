@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+  <title>Protecting our fridges | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 2em;
+    }
+
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+
+    code:not(.sourceCode) {
+      background-color: #fffdf9;
+      color: #444;
+    }
+
+    .content pre {
+      background-color: #f7f5ef;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+
+    .content pre code {
+      background-color: transparent;
+      font-size: 0.8em;
+      background-color: #f7f5ef;
+    }
+
+    div.sourceCode {
+      padding: 5px;
+    }
+
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: normal;
+    }
+
+    ol#post-list {
+      list-style-type: none
+    }
+
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+
+    #header a {
+      text-decoration: none;
+    }
+
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">November 12, 2026</div>
+      </div>
+      <div class="content">
+        <h1 id="protecting-our-fridges">Protecting our fridges</h1>
+<p>Recent hacks on supermarket fridges and bomb hoaxes on flights have raised the topic of cyber security in public discourse. In the tech industry we’ve been painfully aware of the how insecure everything is, as we’ve seen a wave of vulnerabilities in every foundational software component on the planet. The source of this is of course recent LLMs, which are remarkably good at discovering vulnerabilities.</p>
+<p>Reactions to this from some people have been, to my mind, a bit weird. The UK government launched a “Be Ready” campaign which advised people to stockpile food. Others have suggested that what we need is better AI that can defend us and our companies.</p>
+<p>I don’t think these are right responses. In reality the attacks that take down public or public-facing infrastructure are unsophisticated. They take advantage of the complete neglect that most organisations have for their security. This is because investing in security doesn’t provide any tangible benefit: it hopefully reduces the risk of a future negative event, but it’s hard to tell by how much, or what the absolute risk is. So organisations will do the minimum necessary to feel reassured.</p>
+<p>There are two mechanisms which should provide a counterbalance to this: certification and insurance. But neither seem to work. Certifications like NCSC’s <a href="https://www.ncsc.gov.uk/cyberessentials/overview">Cyber Essentials</a> are box-ticking exercises which force the bare minimum of security, largely through installing antivirus software and documenting laborious approval processes which are never actually followed. Every company you’ve heard of that has been hacked will have this certification and more like it.</p>
+<p>Insurance seems like it should work. Getting hacked is a low probability, high severity event and insurance is good at mitigating those. In other fields, insurance forces companies to make better decisions which lower their risk, because this lowers their insurance premiums. I think part of the problem is the cost of a hack doesn’t fall solely on the hacked company. If they leak the names, addresses and passwords of a million customers, it is the customers that bear the majority of the cost through identity theft, fraud, and follow-on hacks to their other accounts. Customers aren’t always able to push this cost back onto the company, so the hack is effectively underpriced.</p>
+<p>I think traditional insurance is also going to really struggle soon, as we are going to see more frequent and more severe hacks as LLMs continue to uncover dormant vulnerabilities in foundational software. Insurance will have to pay out much more often, premiums will rise, and companies will have to pay a lot more for their insurance. This doesn’t really help anyone, it just adds a sort of “hack tax” on everything.</p>
+<p>What would actually help is to identify and close vulnerabilities in these systems before they are exploited. Often this is as simple as “keep your software up to date and don’t leave default passwords on things”. Companies will often commission a penetration test by an outside agency to find these flaws, but typically no more than once per year, and the good ones are expensive. LLMs can now do this at very low cost, so we should be doing it widely and continuously.</p>
+<p>We could do this in a variety of ways. We can make the common security certifications require ongoing or more frequent testing. We can staff a small government team to attack our own high value systems. It’s possible that insurance companies start doing this anyway: by continuously testing their clients, they can be more confident that they are secure and hence are able to offer them lower premiums.</p>
+<p>If we really want to protect public and semi-public infrastructure from attack, we need to force companies to get serious about security. And the focus must be on actually becoming more secure, not just security theatre.</p>
+      </div>
+    </div>
+  </body>
+</html>

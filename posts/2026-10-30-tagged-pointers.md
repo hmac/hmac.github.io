@@ -1,6 +1,6 @@
 ---
 title: Things you can do with pointers
-publish: false
+publish: true
 ---
 
 # Some things you can do with pointers
@@ -8,11 +8,7 @@ publish: false
 Pointers are big! You can fit a lot in 8 bytes. Here are some cool things people have done with them.
 
 ## Store numbers
-Numbers can be stored in many different ways, because there are many kinds of numbers. Positive integers under $2^{64}$ can be stored in binary form in a single 64-bit register. The same applies to negative integers between $-2^{63}$ and $2^{63} - 1$. Non-integers like $1.23$ can be stored as floating point numbers, though with limited precision. If we want bigger integers we can use larger blocks of memory such as 128-bit ints.
-
-But all of these options have limits: there's no way to store an arbitrarily-large or precise number. Obviously in some domains it's necessary to do calculations on big numbers and get the right answer, and for that we can use "bignums". I think of these as basically arrays of digits that can be as long as they need to be. Operations over bignums are slower than over simple numeric types but we can represent more numbers faithfully[^5].
-
-There are also scenarios where we're dealing with a large quantity of small numbers and even allocating 64 bits for each number is too wasteful. Consider a 1024x1024 matrix of positive integers under 16. At 64 bits per integer this is 8MB, but at 4 bits per integer it's only 512KB. The V8 Javascript engine applies this sort of optimisation by defining a type `Smi` (small integer) which holds any integer that fits in 32 bits. An `Smi` looks like this:
+Numbers can be stored in many different ways, because there are many kinds of numbers. JS has two numeric types: [Number](https://262.ecma-international.org/#sec-ecmascript-language-types-number-type) and [BigInt](https://262.ecma-international.org/#sec-ecmascript-language-types-bigint-type). Number is a double-precision floating point type, so in principal it only requires 8 bytes of space, but most JS engines will allocate numbers on the heap along with metadata that allows them to look up methods and properties dynamically. This is pretty typical of any dynamic language. A number in V8 will be stored on the heap as an 8 byte header and another 8 bytes holding the actual number. In many scenarios this can be very wasteful: if we're only dealing with smallish integers and ordinary arithmetic operations, we don't need the extra space or dynamism, and we pay for it to the tune of 16 bytes per number. V8 mitigates this by defining a type `Smi` (small integer) which holds any integer that fits in 32 bits. An `Smi` looks like this:
 
 ```
             |----- 32 bits -----|----- 32 bits -----|
@@ -21,7 +17,7 @@ Pointer:    |________________address_______________1|
 
 ```
 
-It's a 64-bit value that can be passed in a register, but only the top 32 bits hold the actual number. The bottom bit is a _tag_. The lowest bit is always set to 0, and this means that this number is an `Smi`[^6]. When v8 executes an operation on a number, it checks whether it is an `Smi` by testing the low bit, which is very cheap to do, and then uses `Smi`-specific code for that operation. If an operation produces a result that doesn't fit in an `Smi` then v8 falls back to allocating a number object on the heap.
+It's a 64-bit value that can be passed in a register, but only the top 32 bits hold the actual number. The bottom bit is a _tag_. The lowest bit is always set to 0, and this means that this number is an `Smi`[^6]. When V8 executes an operation on a number, it checks whether it is an `Smi` by testing the low bit, which is very cheap to do, and then uses `Smi`-specific code for that operation. If an operation produces a result that doesn't fit in an `Smi` then V8 falls back to allocating a number object on the heap.
 
 There are two main benefits of this optimisation:
 
@@ -108,6 +104,6 @@ This feels like a tactic that we could apply to other problems, too. If you want
 
 [^5]: Of course there's a limit even here. We only have so much memory available, and can't truly store the exact value of $\pi$. But we can usually store enough of it that the answer to our calculation is correct up to the precision we need.
 
-[^6]: This is simplified slightly. The layout is different on 32-bit systems and also different if _pointer compression_ is enabled (a v8 feature that sounds very interesting but I haven't researched). The second-lowest bit is also a tag which is used to distinguish between different types of pointers, I think for the garbage collector, but that isn't relevant for our discussion.
+[^6]: This is simplified slightly. The layout is different on 32-bit systems and also different if _pointer compression_ is enabled (a V8 feature that sounds very interesting but I haven't researched). The second-lowest bit is also a tag which is used to distinguish between different types of pointers, I think for the garbage collector, but that isn't relevant for our discussion.
 
 [^7]: Again simplified, because V8 has further optimisations to store arrays compactly, but it's a reasonable approximation to illustrate why `Smi` is good for saving memory.
