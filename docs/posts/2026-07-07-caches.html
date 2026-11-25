@@ -1,0 +1,536 @@
+<!doctype html>
+<html>
+  <head>
+  <title>How do CPU caches work? | hmac.dev</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/syntax.css" />
+  <link rel="alternate" type="application/atom+xml" title="hmac.dev" href="../atom.xml" />
+  <link rel="alternate" type="application/rss+xml" title="hmac.dev" href="../rss.xml" />
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      background-color: #fff;
+      margin: 0px 0px 0px 0px;
+    }
+
+    .main {
+      min-height: 100%;
+      max-width: 900px;
+      font-family: Helvetica Neue;
+      font-size: 16px;
+      line-height: 2em;
+    }
+
+    .content {
+      margin: 0px auto 0px auto;
+      padding-bottom: 8px;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: #333;
+      font-size: 1.1em;
+    }
+
+    code:not(.sourceCode) {
+      background-color: #fffdf9;
+      color: #444;
+    }
+
+    .content pre {
+      background-color: #f7f5ef;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+
+    .content pre code {
+      background-color: transparent;
+      font-size: 0.8em;
+      background-color: #f7f5ef;
+    }
+
+    /* Break out of the text column: 80% of the viewport, but never narrower
+       than the column itself. */
+    .content img.wide {
+      display: block;
+      width: max(100%, 80vw);
+      max-width: none;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    div.sourceCode {
+      padding: 5px;
+    }
+
+    @media (min-width: 701px) {
+      .main {
+        margin: 0px auto 0px auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+
+      .content {
+        max-width: 600px;
+        margin: 0px auto 0px auto;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .main {
+        margin: 0px 0px 0px 0px;
+      }
+
+      .content {
+        max-width: 700px;
+        margin: 0px 8px 0px 8px;
+      }
+
+      .sourceCode {
+        font-size: 13px;
+      }
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: normal;
+    }
+
+    ol#post-list {
+      list-style-type: none
+    }
+
+    #header {
+      border-bottom: 1px solid black;
+      padding: 10px 0px 10px 0px;
+      position: relative;
+      min-height: 30px;
+    }
+
+    #header a {
+      text-decoration: none;
+    }
+
+    #header #back {
+      position: absolute;
+      left: 0;
+    }
+
+    #header #date {
+      position: absolute;
+      right: 1em;
+    }
+
+    #header #name {
+      position: absolute;
+      right: 1em;
+    }
+
+    a {
+      text-decoration: none;
+      color: #e6851f;
+    }
+
+    a:visited {
+      text-decoration: none;
+      color: #e6851f;
+    }
+
+    a:hover {
+      text-decoration: none;
+      color: #233248;
+    }
+
+    .project p {
+      margin-left: 1em;
+    }
+  </style>
+</head>
+  <body>
+    <div class="main">
+      <div id="header">
+        <a id="back" href="../">↩</a>
+        <div id="date">July  7, 2026</div>
+      </div>
+      <div class="content">
+        <p>You may have seen this image before:</p>
+<p><img src="../images/latency_numbers.png" alt="Illustration of latency numbers for different CPU operations" /></p>
+<p>When I first saw this, my main takeaway was “wow, some things in computers are much faster than others”. For example something called “L1 cache reference” takes 0.5 <em>nanoseconds</em> but “main memory reference” takes 100 nanoseconds - i.e. it’s 200x slower.</p>
+<p>But why is it so much slower? And why is this important? I didn’t really have any idea. Until recently, when I read <a href="https://people.freebsd.org/~lstewart/articles/cpumemory.pdf">What Every Programmer Should Know About Memory</a>, a 114 page monster of a paper written by a Red Hat engineer called Ulrich Drepper in 2007. And it turns out that the L1 and L2 caches are crucial to making our computers work at a reasonable speed. Without them, literally every program on our computer would be hundreds of times slower. And some programs already <em>are</em> a hundred times slower than they should be, because they don’t use the cache effectively!</p>
+<p>I will try to explain what these caches do, why they’re faster, and how you can make use of them. A warning: this isn’t something you can immediately apply in your day-to-day JS work, because much of it is abstracted from us. But if you want a better foundational understanding of the limits of your computer, this should help. I’m going to skip a lot of details and simplify some things, and probably make some errors, so apologies in advance.</p>
+<p>OK so how do we actually store data in a computer? Persistent data lives on our SSD, and in olden times this would have been a hard drive or, I dunno, a magnetic tape. These devices are all relatively slow to read and write data - in the case of the hard drive and tape, it has to physically move components around to reach the data. I don’t actually know why SSDs are slow<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> but the image above tells us that they certainly are. For comparison, a CPU running at 3GHz can execute 3 billion instructions per second<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, so one instruction takes an average of 0.3 nanoseconds.</p>
+<p>Anyway, in order to get stuff done we need to keep data closer to the CPU and be able to access it faster. There are two common ways to do this: DRAM and SRAM.</p>
+<p>DRAM (Dynamic Random-Access Memory) is basically made out of two circuit components: a capacitor and a transistor.</p>
+<svg xmlns="http://www.w3.org/2000/svg" width="296" height="272" class="svgbob">
+  <style>.svgbob line, .svgbob path, .svgbob circle, .svgbob rect, .svgbob polygon {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-opacity: 1;
+  fill-opacity: 1;
+  stroke-linecap: round;
+  stroke-linejoin: miter;
+}
+
+.svgbob text {
+  white-space: pre;
+  fill: currentColor;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.svgbob rect.backdrop {
+  stroke: none;
+  fill: transparent;
+}
+
+.svgbob .broken {
+  stroke-dasharray: 8;
+}
+
+.svgbob .filled {
+  fill: currentColor;
+}
+
+.svgbob .bg_filled {
+  fill: transparent;
+  stroke-width: 1;
+}
+
+.svgbob .nofill {
+  fill: transparent;
+}
+
+.svgbob .end_marked_arrow {
+  marker-end: url(#arrow);
+}
+
+.svgbob .start_marked_arrow {
+  marker-start: url(#arrow);
+}
+
+.svgbob .end_marked_diamond {
+  marker-end: url(#diamond);
+}
+
+.svgbob .start_marked_diamond {
+  marker-start: url(#diamond);
+}
+
+.svgbob .end_marked_circle {
+  marker-end: url(#circle);
+}
+
+.svgbob .start_marked_circle {
+  marker-start: url(#circle);
+}
+
+.svgbob .end_marked_open_circle {
+  marker-end: url(#open_circle);
+}
+
+.svgbob .start_marked_open_circle {
+  marker-start: url(#open_circle);
+}
+
+.svgbob .end_marked_big_open_circle {
+  marker-end: url(#big_open_circle);
+}
+
+.svgbob .start_marked_big_open_circle {
+  marker-start: url(#big_open_circle);
+}
+
+</style>
+  <defs>
+    <marker id="arrow" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 0,4 4,2 0,0"></polygon>
+    </marker>
+    <marker id="diamond" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,2 2,0 4,2 2,4 0,2"></polygon>
+    </marker>
+    <marker id="circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="2" class="filled"></circle>
+    </marker>
+    <marker id="open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="2" class="bg_filled"></circle>
+    </marker>
+    <marker id="big_open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="3" class="bg_filled"></circle>
+    </marker>
+  </defs>
+  <rect class="backdrop" x="0" y="0" width="296" height="272"></rect>
+  <text x="2" y="12">row</text>
+  <text x="34" y="12">selector</text>
+  <text x="146" y="60">transistor</text>
+  <text x="2" y="108">bit</text>
+  <text x="34" y="108">line</text>
+  <text x="218" y="172">capacitor</text>
+  <text x="178" y="252">ground</text>
+  <g>
+    <line x1="0" y1="24" x2="116" y2="24" class="solid"></line>
+    <line x1="116" y1="24" x2="116" y2="56" class="solid"></line>
+    <line x1="104" y1="56" x2="128" y2="56" class="solid"></line>
+  </g>
+  <g>
+    <line x1="96" y1="88" x2="136" y2="88" class="solid"></line>
+    <line x1="108" y1="88" x2="108" y2="120" class="solid"></line>
+    <line x1="124" y1="88" x2="124" y2="120" class="solid"></line>
+    <line x1="0" y1="120" x2="108" y2="120" class="solid"></line>
+    <line x1="124" y1="120" x2="188" y2="120" class="solid"></line>
+    <line x1="188" y1="120" x2="188" y2="152" class="solid"></line>
+    <line x1="176" y1="152" x2="200" y2="152" class="solid"></line>
+  </g>
+  <g>
+    <path d="M 176,184 A 8,8 0,0,0 170,188" class="nofill"></path>
+    <line x1="170" y1="188" x2="160" y2="208" class="solid"></line>
+    <line x1="176" y1="184" x2="200" y2="184" class="solid"></line>
+    <line x1="188" y1="184" x2="188" y2="240" class="solid"></line>
+    <path d="M 200,184 A 8,8 0,0,1 206,188" class="nofill"></path>
+    <line x1="206" y1="188" x2="216" y2="208" class="solid"></line>
+  </g>
+</svg>
+
+<p>Arranged like this, the capacitor and transistor form a <em>cell</em> and they can store one bit. To store a <strong>1</strong>, we switch on the transistor using the row selector, then charge the capacitor up via the bit line. To read from it, we again switch on the transistor and then discharge the capacitor into the bit line. To store a <strong>0</strong>, we just don’t charge the capacitor. This is super simple, small, cheap to manufacture and doesn’t use much electrical power. The cells are arranged on a grid so each bit has a unique row and column number, and there are typically 64 grids so we’re able to read/write 64 bits at a time. We make main memory chips out of this. The one in my computer is 24GB so has 24 billion of these cells.o</p>
+<p>Here’s a microscope image of a 16Kb DRAM chip from the 70s. You can see that most of the chip consists of two large uniform grids - these are the DRAM cells.</p>
+<p><img src="../images/dram_die_shot.png" class="wide" alt="Microscope image of a DRAM chip" /></p>
+<p>There are some drawbacks to this design, though. Firstly, the capacitors lose their charge over time. Because they’re so small, they often contain only a few thousand electrons, and they will naturally leak their charge out very quickly. Left alone, within a few seconds the capacitors will drain and all data will be lost. So they have to be frequently refreshed, typically every 60ms. While being refreshed, the cell can’t be read or written to.</p>
+<p>Secondly, since you read a cell by draining its capacitor, you must then recharge it (if it was charged) so it keeps its state.</p>
+<p>Thirdly, draining and charging the capacitor takes time, so you have to wait between each operation to be sure that it’s in the right state. Say you tried to read the same <strong>1</strong> bit twice in quick succession: if the second read was performed before the capacitor had recharged, it would erroneously read <strong>0</strong> instead of <strong>1</strong>. There are other delays related to selecting the correct row and column of the grid that you want to read from.</p>
+<p>To manage these delays, the chip runs operations on a strict schedule according to a clock. To read or write data, you have to send a series of commands to the chip (“select this row”, “select this column”) and each command must wait a certain number of clock cycles before the next one. If you’re familiar with memory timings from buying a gaming PC, these are literally the number of cycles it takes for these various commands to complete.</p>
+<p>If you want even more detail, <a href="https://www.righto.com/2020/11/reverse-engineering-classic-mk4116-16.html">this article</a> from Ken Shirriff is a fantastic breakdown of the chip pictured above, down to the level of individual transistors.</p>
+<p>SRAM (Static Random-Access Memory) is a slightly more complex circuit. It’s typically made from 6 transistors and three lines (i.e. tiny wires): the <em>word line</em> and two <em>bit lines</em>. The word line controls whether to read or write, and the value is read from/written to the two bit lines. This process is extremely fast - the value is read/written basically instantaneously.</p>
+<p><img src="../images/sram_diagram.png" alt="Diagram of an SRAM circuit" /></p>
+<p>Because it’s more complex, SRAM is more expensive to manufacture, and it also consumes more power. It’s used for low capacity, high performance memory banks - CPU registers and caches. Because we want the CPU caches to be fast, economics constrains them to be small. My computer has about 30MB of total CPU cache, which is ~0.1% of the main memory.</p>
+<p>So this explains why an L1 cache read takes 0.5 nanoseconds but a main memory read takes 100 nanoseconds: they use very different circuitry with different latency characteristics. But what’s the point of such fast memory if it can only store a tiny amount of data? How does the CPU actually make use of this?</p>
+<p>They’re called caches but really, these SRAM chips are the door through which all data reaches the CPU. L stands for level, and they’re numbered from 1 upwards, where 1 is the cache closest to the CPU. Higher level caches tend to have larger capacity but higher latency, I think mostly because they are physically further away.</p>
+<p>My computer, an M2 Macbook Air, has 4 “performance” cores and 4 “efficiency” cores. The performance cores each have a 320KB L1 cache and share a 16MB L2 cache. The efficiency cores each have a 192KB L1 cache and share a 4MB L2 cache. There’s also an undocumented L3 of sorts, which is probably around 8MB.</p>
+<svg xmlns="http://www.w3.org/2000/svg" width="488" height="384" class="svgbob">
+  <style>.svgbob line, .svgbob path, .svgbob circle, .svgbob rect, .svgbob polygon {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-opacity: 1;
+  fill-opacity: 1;
+  stroke-linecap: round;
+  stroke-linejoin: miter;
+}
+
+.svgbob text {
+  white-space: pre;
+  fill: currentColor;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.svgbob rect.backdrop {
+  stroke: none;
+  fill: transparent;
+}
+
+.svgbob .broken {
+  stroke-dasharray: 8;
+}
+
+.svgbob .filled {
+  fill: currentColor;
+}
+
+.svgbob .bg_filled {
+  fill: transparent;
+  stroke-width: 1;
+}
+
+.svgbob .nofill {
+  fill: transparent;
+}
+
+.svgbob .end_marked_arrow {
+  marker-end: url(#arrow);
+}
+
+.svgbob .start_marked_arrow {
+  marker-start: url(#arrow);
+}
+
+.svgbob .end_marked_diamond {
+  marker-end: url(#diamond);
+}
+
+.svgbob .start_marked_diamond {
+  marker-start: url(#diamond);
+}
+
+.svgbob .end_marked_circle {
+  marker-end: url(#circle);
+}
+
+.svgbob .start_marked_circle {
+  marker-start: url(#circle);
+}
+
+.svgbob .end_marked_open_circle {
+  marker-end: url(#open_circle);
+}
+
+.svgbob .start_marked_open_circle {
+  marker-start: url(#open_circle);
+}
+
+.svgbob .end_marked_big_open_circle {
+  marker-end: url(#big_open_circle);
+}
+
+.svgbob .start_marked_big_open_circle {
+  marker-start: url(#big_open_circle);
+}
+
+</style>
+  <defs>
+    <marker id="arrow" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 0,4 4,2 0,0"></polygon>
+    </marker>
+    <marker id="diamond" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,2 2,0 4,2 2,4 0,2"></polygon>
+    </marker>
+    <marker id="circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="2" class="filled"></circle>
+    </marker>
+    <marker id="open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="2" class="bg_filled"></circle>
+    </marker>
+    <marker id="big_open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="3" class="bg_filled"></circle>
+    </marker>
+  </defs>
+  <rect class="backdrop" x="0" y="0" width="488" height="384"></rect>
+  <rect x="4" y="40" width="472" height="320" class="solid nofill" rx="0"></rect>
+  <rect x="20" y="168" width="208" height="64" class="solid nofill" rx="0"></rect>
+  <text x="122" y="204">L2</text>
+  <rect x="252" y="168" width="208" height="64" class="solid nofill" rx="0"></rect>
+  <text x="346" y="204">L2</text>
+  <rect x="20" y="264" width="440" height="64" class="solid nofill" rx="0"></rect>
+  <text x="234" y="300">L3</text>
+  <text x="50" y="60">efficiency</text>
+  <text x="138" y="60">cores</text>
+  <text x="34" y="92">E</text>
+  <text x="90" y="92">E</text>
+  <text x="146" y="92">E</text>
+  <text x="34" y="124">L1</text>
+  <text x="90" y="124">L1</text>
+  <text x="146" y="124">L1</text>
+  <text x="290" y="60">peformance</text>
+  <text x="378" y="60">cores</text>
+  <text x="266" y="92">P</text>
+  <text x="322" y="92">P</text>
+  <text x="378" y="92">P</text>
+  <text x="434" y="92">P</text>
+  <text x="266" y="124">L1</text>
+  <text x="322" y="124">L1</text>
+  <text x="378" y="124">L1</text>
+  <text x="434" y="124">L1</text>
+  <text x="202" y="92">E</text>
+  <text x="202" y="124">L1</text>
+  <text x="210" y="12">Apple</text>
+  <text x="258" y="12">M2</text>
+  <g>
+    <line x1="20" y1="72" x2="60" y2="72" class="solid"></line>
+    <line x1="20" y1="72" x2="20" y2="136" class="solid"></line>
+    <line x1="60" y1="72" x2="60" y2="136" class="solid"></line>
+    <line x1="20" y1="104" x2="60" y2="104" class="solid"></line>
+    <line x1="20" y1="136" x2="60" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="76" y1="72" x2="116" y2="72" class="solid"></line>
+    <line x1="76" y1="72" x2="76" y2="136" class="solid"></line>
+    <line x1="116" y1="72" x2="116" y2="136" class="solid"></line>
+    <line x1="76" y1="104" x2="116" y2="104" class="solid"></line>
+    <line x1="76" y1="136" x2="116" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="132" y1="72" x2="172" y2="72" class="solid"></line>
+    <line x1="132" y1="72" x2="132" y2="136" class="solid"></line>
+    <line x1="172" y1="72" x2="172" y2="136" class="solid"></line>
+    <line x1="132" y1="104" x2="172" y2="104" class="solid"></line>
+    <line x1="132" y1="136" x2="172" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="252" y1="72" x2="292" y2="72" class="solid"></line>
+    <line x1="252" y1="72" x2="252" y2="136" class="solid"></line>
+    <line x1="292" y1="72" x2="292" y2="136" class="solid"></line>
+    <line x1="252" y1="104" x2="292" y2="104" class="solid"></line>
+    <line x1="252" y1="136" x2="292" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="308" y1="72" x2="348" y2="72" class="solid"></line>
+    <line x1="308" y1="72" x2="308" y2="136" class="solid"></line>
+    <line x1="348" y1="72" x2="348" y2="136" class="solid"></line>
+    <line x1="308" y1="104" x2="348" y2="104" class="solid"></line>
+    <line x1="308" y1="136" x2="348" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="364" y1="72" x2="404" y2="72" class="solid"></line>
+    <line x1="364" y1="72" x2="364" y2="136" class="solid"></line>
+    <line x1="404" y1="72" x2="404" y2="136" class="solid"></line>
+    <line x1="364" y1="104" x2="404" y2="104" class="solid"></line>
+    <line x1="364" y1="136" x2="404" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="420" y1="72" x2="460" y2="72" class="solid"></line>
+    <line x1="420" y1="72" x2="420" y2="136" class="solid"></line>
+    <line x1="460" y1="72" x2="460" y2="136" class="solid"></line>
+    <line x1="420" y1="104" x2="460" y2="104" class="solid"></line>
+    <line x1="420" y1="136" x2="460" y2="136" class="solid"></line>
+  </g>
+  <g>
+    <line x1="188" y1="72" x2="228" y2="72" class="solid"></line>
+    <line x1="188" y1="72" x2="188" y2="136" class="solid"></line>
+    <line x1="228" y1="72" x2="228" y2="136" class="solid"></line>
+    <line x1="188" y1="104" x2="228" y2="104" class="solid"></line>
+    <line x1="188" y1="136" x2="228" y2="136" class="solid"></line>
+  </g>
+</svg>
+
+<p>Whenever data is loaded from main memory, it is automatically stored in the caches, both L1 and L2 (this actually isn’t always the case and it varies across architectures, but it’s a good first approximation). Data is fetched and stored in <em>cache lines</em>, which are 64 bytes. Even if you only request 1 byte of data, the CPU will always fetch a full 64 bytes. If the same data is needed again, the CPU will first check the L1 cache, then L2, then fall back to main memory.</p>
+<p>If the CPU guesses it will need a particular bit of memory soon, it will prefetch it from main memory and store it in the cache, so when needed it can be fetched quickly.</p>
+<p>When data in memory is updated (e.g. your program does <code>array[i] = "foo"</code>), the CPU will write a full cache line to the L1 cache. It will write fully down to main memory at some later time.</p>
+<p>So in the best case, this makes reads and writes super fast. But it’s easy to fall out of the happy path. Let’s see how that happens.</p>
+<p>Firstly, there’s only so much L1 cache. Once it’s full, cache lines need to be evicted to make room for new ones. If a program on my computer simultaneously needs access to more than 320KB of data, it’s impossible for it to all stay in the L1 cache. You can optimise this, obviously, by just reducing the size of the data you work with - for example if you load a bunch of objects with 10 fields but only use 2 of them, get rid of the other 8. The other important optimisation is to align your data to fit neatly into a 64 byte cache line. This is less relevant in JS land but you may see references to this in high performance code.</p>
+<p>Secondly, the initial read of a cache line is only fast if the CPU has correctly guessed and prefetched it. It uses heuristics to do this, so if you access data in a predictable pattern, then it probably will be prefetched. The two friendliest access patterns are reading data in straight sequences (e.g each element of an array, in order) and in constant offsets or “strides” (e.g the first element of each array in an array-of-arrays). But if there’s no pattern between the memory addresses, the CPU will struggle to guess the next one. For example, if your data consists of a lot of different objects, all allocated separately, and linked by pointers, then the access pattern may be much more random and it’s unlikely that the CPU will have prefetched the next cache line that you need. Sadly this is often the case in JS, because data is stored in large objects managed by the JS engine, allocated individually and linked together by pointers.</p>
+<p>When a cache line is modified, it (usually) isn’t immediately written back to main memory, it’s kept in the L1 cache instead. This is faster, but only works as long as no other core tries to read or write that cache line. If multiple cores access the same chunk of memory, performance degrades drastically.</p>
+<p>If one core writes a cache line and another core then reads it, the cache line will have to be flushed from L1 to L2 so that the other core can then load it from L2. Until this flush and load is completed, the second core can’t read the data and it may be stalled waiting for it.</p>
+<p>If the second core also wants to write to the cache line, things get even more complicated. The CPU doesn’t allow two different cores to write to a cache line at the same time. One core must have exclusive write permission. If another core wants to write to the same cache line, it must broadcast to the other cores that it wants exclusive access to that cache line, wait for the other core to relinquish ownership, then load the cache line from a higher cache if it’s been modified. If two cores are frequently writing to the same cache line, you end up with a sort of ping-pong effect where they are constantly swapping the cache line between them. This tanks the performance of both cores.</p>
+<p>To avoid this you need to minimise the data that you share between threads. This is less relevant to JS because it is single-threaded. A pattern I’ve seen in some systems is that when using multiple threads for parallelism, they avoid using a shared producer-consumer queue because the threads will contend on the queue. Instead, they will try to split the work up-front and have each thread own a chunk of it, such that they don’t need to coordinate.</p>
+<p>This is why high performance software (games, databases, networking code) tends to follow these rules:</p>
+<ul>
+<li>Keep data as small as possible</li>
+<li>Keep related data close together, in a predictable layout (“data locality”)</li>
+<li>Minimise the data shared between threads</li>
+</ul>
+<p>This post is already quite long, so I’ll stop there. I’ve simplified and skipped a lot of details. For example there are actually two L1 caches per core - one for instructions (the code of the running program) and one for data. If you want to dig deeper on any of these topics, here’s some links:</p>
+<ul>
+<li>caches can map memory addresses to values in <a href="https://en.wikipedia.org/wiki/Cache_placement_policies">different ways</a></li>
+<li>they also use different eviction policies. I can’t find a good article for this, but search “CPU cache eviction policy”</li>
+<li>the model of which core owns which cache line is formally called <a href="https://en.wikipedia.org/wiki/MESI_protocol">MESI</a></li>
+</ul>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>After writing this sentence I did some cursory research and it turns out that SSDs are crazy. Flash memory is made of a special kind of transistor, parts of it are kept at 10 million volts, it physically erodes with every use, and writes data by quantum tunnelling electrons.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>This is a simplification. Modern CPUs have many individual execution units so they can execute multiple instructions per cycle. Instructions also take different numbers of cycles to complete. Some instructions (e.g. moving data between registers, zeroing registers) take 0 cycles because they can be optimised away. Instructions also need to be decoded, which takes additional cycles but can often be done in advance. So there’s no simple answer but 0.3 nanos is probably the right order of magnitude.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+      </div>
+    </div>
+  </body>
+</html>

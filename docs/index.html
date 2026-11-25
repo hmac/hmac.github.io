@@ -54,6 +54,17 @@
       background-color: #f7f5ef;
     }
 
+    /* Break out of the text column: 80% of the viewport, but never narrower
+       than the column itself. */
+    .content img.wide {
+      display: block;
+      width: max(100%, 80vw);
+      max-width: none;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
     div.sourceCode {
       padding: 5px;
     }
@@ -170,6 +181,10 @@
   
   <a href="./posts/2026-08-27-virtual-memory.html">
     <h3 class="post-link">Virtual Memory</h3>
+  </a>
+  
+  <a href="./posts/2026-07-07-caches.html">
+    <h3 class="post-link">How do CPU caches work?</h3>
   </a>
   
   <a href="./posts/2026-05-04-a-federated-network-for-open-source.html">
