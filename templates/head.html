@@ -52,6 +52,17 @@
       background-color: #f7f5ef;
     }
 
+    /* Break out of the text column: 80% of the viewport, but never narrower
+       than the column itself. */
+    .content img.wide {
+      display: block;
+      width: max(100%, 80vw);
+      max-width: none;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
     div.sourceCode {
       padding: 5px;
     }

@@ -81,9 +81,15 @@ feedConfig = FeedConfiguration
 
 pandocGraphvizCompiler :: Compiler (Item String)
 pandocGraphvizCompiler = pandocCompilerWithTransform
-    defaultHakyllReaderOptions
+    readerOptions
     defaultHakyllWriterOptions
     graphViz
+
+-- Without implicit figures, ![alt](img) is just an <img> with alt text and
+-- no visible caption.
+readerOptions :: ReaderOptions
+readerOptions = defaultHakyllReaderOptions
+  { readerExtensions = disableExtension Ext_implicit_figures (readerExtensions defaultHakyllReaderOptions) }
 
 graphViz :: Pandoc -> Pandoc
 graphViz = walk codeBlock
@@ -92,6 +98,7 @@ codeBlock :: Block -> Block
 codeBlock cb@(CodeBlock (id, classes, namevals) contents)
   | "tree" `elem` classes  = RawBlock (Format "html") $ renderTree contents
   | "graph" `elem` classes = RawBlock (Format "html") $ renderGraph contents
+  | "diagram" `elem` classes = RawBlock (Format "html") $ renderDiagram contents
   | otherwise              = cb
 codeBlock x = x
 
@@ -104,3 +111,7 @@ renderTree contents = T.pack $ unsafePerformIO $
 renderGraph :: Text -> Text
 renderGraph contents = T.pack $ unsafePerformIO $
   readProcess "dot" ["-Nfontname=courier", "-Tsvg"] (T.unpack contents)
+
+renderDiagram :: Text -> Text
+renderDiagram contents = T.pack $ unsafePerformIO $
+  readProcess "svgbob" ["--stroke-color", "currentColor", "--fill-color", "currentColor", "--background", "transparent", "--stroke-width", "1", "--font-family", "monospace"] (T.unpack contents)

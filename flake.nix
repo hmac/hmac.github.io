@@ -20,7 +20,7 @@
 
         build-script = pkgs.writeShellApplication {
           name = "build";
-          runtimeInputs = [ pkgs.graphviz ];
+          runtimeInputs = [ pkgs.graphviz pkgs.svgbob ];
           text = ''exec ${build-binary}/bin/build "$@"'';
         };
     in
@@ -29,7 +29,7 @@
     apps.default = { type = "app"; program = "${build-script}/bin/build"; };
 
     devShells.default = pkgs.mkShell {
-      buildInputs = [ ghc pkgs.graphviz ];
+      buildInputs = [ ghc pkgs.graphviz pkgs.svgbob ];
     };
   });
 }
